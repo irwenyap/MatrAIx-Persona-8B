@@ -1,0 +1,248 @@
+schemaVersion: "1.0"
+
+id: dbs_linkedin_reaction_v1
+title: DBS LinkedIn Public Reaction
+description: >
+  Measures how an individual would realistically react to and interpret
+  a public LinkedIn complaint involving DBS, the CEO's intervention,
+  and the subsequent customer follow-up.
+
+questions:
+  # ---------------------------------------------------------------------------
+  # SOCIAL-MEDIA BEHAVIOUR
+  # ---------------------------------------------------------------------------
+
+  - id: engagement_action
+    prompt: >
+      After encountering this LinkedIn thread in your normal social-media feed,
+      what would you most realistically do?
+    type: single_choice
+    construct: social_engagement_action
+    required: true
+    askRationale: true
+    options:
+      - id: scroll_past
+        label: Scroll past without interacting.
+      - id: react_only
+        label: Leave a like or other reaction but do not comment.
+      - id: comment
+        label: Leave a public comment on the thread.
+      - id: repost
+        label: Repost or share it publicly.
+      - id: private_share
+        label: Send or discuss it privately with someone else.
+
+  - id: amplification_likelihood
+    prompt: >
+      How likely would you be to do something that increases the visibility
+      of this incident, such as commenting, reposting, or sharing it?
+    type: likert
+    construct: amplification_intent
+    required: true
+    minValue: 1
+    maxValue: 5
+
+  - id: public_stance
+    prompt: >
+      If your reaction to this thread became visible to others, which stance
+      would best describe it?
+    type: single_choice
+    construct: expressed_public_sentiment
+    required: true
+    askRationale: true
+    options:
+      - id: strongly_critical
+        label: Strongly critical of DBS.
+      - id: somewhat_critical
+        label: Somewhat critical of DBS.
+      - id: mixed
+        label: Mixed — critical of some aspects but positive about others.
+      - id: neutral
+        label: Neutral or largely indifferent.
+      - id: somewhat_supportive
+        label: Somewhat supportive of DBS or its response.
+      - id: strongly_supportive
+        label: Strongly supportive of DBS or its response.
+
+  - id: public_reaction
+    prompt: >
+      What would you realistically say if you chose to comment on or publicly
+      share this thread? Write it naturally in the way you would actually
+      express yourself online. If you would not publicly say anything,
+      answer "No public comment."
+    type: free_text
+    construct: generated_public_reaction
+    required: true
+
+  # ---------------------------------------------------------------------------
+  # WHAT NARRATIVE THE PERSON TAKES AWAY
+  # ---------------------------------------------------------------------------
+
+  - id: dominant_interpretation
+    prompt: >
+      Which interpretation most strongly shapes your overall reaction to
+      the incident?
+    type: single_choice
+    construct: dominant_narrative
+    required: true
+    askRationale: true
+    options:
+      - id: prolonged_service_failure
+        label: >
+          The main issue is that a basic banking service remained unresolved
+          for too long.
+      - id: support_escalation_failure
+        label: >
+          The main issue is that normal customer-support channels apparently
+          failed before the matter became public.
+      - id: executive_escalation_concern
+        label: >
+          It is concerning that CEO-level attention appeared necessary before
+          the issue received rapid action.
+      - id: leadership_responsiveness
+        label: >
+          The CEO's direct and rapid intervention demonstrates responsive
+          leadership.
+      - id: effective_recovery
+        label: >
+          DBS made a mistake, but the fast follow-up and apparent resolution
+          handled the situation well.
+      - id: isolated_resolved_issue
+        label: >
+          This appears to be an isolated customer issue that was ultimately
+          resolved and is not especially significant.
+      - id: broader_reliability_concern
+        label: >
+          The incident reinforces broader concerns about DBS's service or
+          technology reliability.
+      - id: no_strong_interpretation
+        label: >
+          I do not take any particularly strong conclusion from the incident.
+
+  - id: attention_focus
+    prompt: >
+      Which part of the thread would attract most of your attention?
+    type: single_choice
+    construct: attention_focus
+    required: true
+    options:
+      - id: original_failure
+        label: The original service problem lasting more than 15 days.
+      - id: customer_support
+        label: The earlier customer-service complaint apparently not resolving it.
+      - id: ceo_reply
+        label: The CEO personally replying to the customer.
+      - id: rapid_contact
+        label: DBS contacting the customer soon after the CEO's reply.
+      - id: customer_resolution_update
+        label: The customer's positive follow-up saying the issue was being resolved.
+      - id: broader_dbs_context
+        label: What the incident suggests about DBS more generally.
+
+  - id: resolution_effect
+    prompt: >
+      How does the customer's final update saying DBS contacted them and the
+      issue should be resolved affect your reaction to the original complaint?
+    type: single_choice
+    construct: recovery_effect
+    required: true
+    options:
+      - id: fully_offsets
+        label: It largely or completely offsets my concern about the original complaint.
+      - id: partially_offsets
+        label: It improves my view somewhat, but meaningful concerns remain.
+      - id: little_effect
+        label: It has little effect on my view of the original problem.
+      - id: reinforces_concern
+        label: >
+          It actually reinforces my concern because rapid action happened only
+          after public or executive escalation.
+
+  # ---------------------------------------------------------------------------
+  # OUTCOME FOR DBS
+  # ---------------------------------------------------------------------------
+
+  - id: brand_effect
+    prompt: >
+      After reading the complete interaction, how does it affect your overall
+      perception of DBS?
+    type: single_choice
+    construct: brand_perception_change
+    required: true
+    askRationale: true
+    options:
+      - id: much_more_negative
+        label: Much more negative.
+      - id: somewhat_more_negative
+        label: Somewhat more negative.
+      - id: unchanged
+        label: No meaningful change.
+      - id: somewhat_more_positive
+        label: Somewhat more positive.
+      - id: much_more_positive
+        label: Much more positive.
+
+  - id: leadership_effect
+    prompt: >
+      How does Tan Su Shan's direct involvement affect your perception of
+      DBS leadership?
+    type: single_choice
+    construct: leadership_perception_change
+    required: true
+    options:
+      - id: much_more_negative
+        label: Much more negative.
+      - id: somewhat_more_negative
+        label: Somewhat more negative.
+      - id: unchanged
+        label: No meaningful change.
+      - id: somewhat_more_positive
+        label: Somewhat more positive.
+      - id: much_more_positive
+        label: Much more positive.
+
+  - id: operational_confidence
+    prompt: >
+      After seeing this incident, how confident would you feel about DBS's
+      ability to provide reliable day-to-day banking services?
+    type: likert
+    construct: operational_confidence
+    required: true
+    minValue: 1
+    maxValue: 5
+
+  # ---------------------------------------------------------------------------
+  # EXPECTED SOCIAL OUTCOME
+  # ---------------------------------------------------------------------------
+
+  - id: discussion_likelihood
+    prompt: >
+      Based on the nature of this interaction, how likely do you think it is
+      that the post would attract meaningful discussion or sharing beyond
+      the original participants?
+    type: likert
+    construct: perceived_social_spread
+    required: true
+    minValue: 1
+    maxValue: 5
+
+  - id: likely_public_outcome
+    prompt: >
+      If you had to characterize the overall public reaction this interaction
+      is most likely to produce, which outcome seems most plausible to you?
+    type: single_choice
+    construct: perceived_public_outcome
+    required: true
+    options:
+      - id: predominantly_negative
+        label: Predominantly negative toward DBS.
+      - id: somewhat_negative
+        label: Somewhat negative overall, despite the resolution.
+      - id: divided
+        label: Divided or mixed, with substantial positive and negative reactions.
+      - id: mostly_neutral
+        label: Mostly neutral, with limited lasting attention.
+      - id: somewhat_positive
+        label: Somewhat positive because of the rapid leadership response.
+      - id: predominantly_positive
+        label: Predominantly positive toward DBS and its leadership.

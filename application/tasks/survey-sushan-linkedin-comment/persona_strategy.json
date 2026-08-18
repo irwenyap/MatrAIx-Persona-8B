@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "1.0",
+  "pool": "persona/datasets/matraix-persona-1m",
+  "dimensionFilters": {
+    "region": ["Southeast Asia"],
+    "age_bracket": [
+      "18-24",
+      "25-34",
+      "35-44",
+      "45-54",
+      "55-64",
+      "65-74",
+      "75-84",
+      "85+"
+    ],
+    "urbanicity": ["Dense urban", "Suburban"]
+  },
+  "sampling": {
+    "mode": "stratified",
+    "fields": ["age_bracket", "urbanicity"],
+    "allocation": "proportional",
+    "sampleSize": 80
+  },
+  "seed": 42
+}
