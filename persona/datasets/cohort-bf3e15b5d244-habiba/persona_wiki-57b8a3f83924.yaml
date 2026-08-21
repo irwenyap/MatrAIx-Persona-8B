@@ -1,0 +1,330 @@
+persona_id: wiki-57b8a3f83924
+version: '1.0'
+source: wiki
+display_name: Kai Lim
+dimensions:
+  age_bracket: 55-64
+  region: Southeast Asia
+  gender_identity: Man
+  urbanicity: Dense urban
+  socioeconomic_band: Middle
+  primary_language: Burmese
+  english_proficiency: None
+  multilingualism: Monolingual
+  register: Colloquial
+  domain: Arts & Humanities
+  subject_specialty: Culinary arts
+  domain_characteristics: Practitioner
+  highest_education: Secondary
+  academic_field: Humanities
+  institution_tier: Top-tier research
+  seniority: Senior
+  company_size: Solo / freelance
+  role_function: Teaching
+  years_experience: 20+
+  life_stage: Mid-life
+  major_life_events: None notable
+  cultural_background: Collectivist (East Asian)
+  dominant_trait: Balanced
+  values_priority: Achievement
+  fam_special_education: None
+  skill_storytelling: Master
+  skill_public_speaking: Master
+  skill_presenting: Master
+  skill_networking: Advanced
+  topic_film: Passionate
+  topic_tv_series: Interested
+  topic_theater: Passionate
+  lang_english: None
+  lang_mandarin: None
+  lang_cantonese: None
+  lang_spanish: None
+  lang_hindi: None
+  lang_arabic: None
+  lang_french: None
+  lang_portuguese: None
+  lang_bengali: None
+  lang_russian: None
+  lang_japanese: None
+  lang_german: None
+  lang_korean: None
+  lang_italian: None
+  lang_turkish: None
+  lang_vietnamese: None
+  lang_thai: None
+  lang_indonesian: None
+  lang_malay: None
+  lang_swahili: None
+  lang_dutch: None
+  lang_polish: None
+  lang_ukrainian: None
+  lang_persian: None
+  lang_hebrew: None
+  lang_greek: None
+  lang_czech: None
+  lang_hungarian: None
+  lang_romanian: None
+  lang_swedish: None
+  lang_norwegian: None
+  lang_danish: None
+  lang_finnish: None
+  lang_tagalog: None
+  lang_urdu: None
+  lang_tamil: None
+  lang_telugu: None
+  lang_marathi: None
+  lang_punjabi: None
+  lang_gujarati: None
+  lang_hausa: None
+  lang_yoruba: None
+  lang_igbo: None
+  lang_amharic: None
+  lang_zulu: None
+  lang_afrikaans: None
+  lang_serbian: None
+  att_traditional_gender_roles: 'null'
+  ind_technology: None
+  ind_healthcare: None
+  ind_finance: None
+  ind_banking: None
+  ind_insurance: None
+  ind_retail: None
+  ind_e_commerce: None
+  ind_manufacturing: None
+  ind_automotive: None
+  ind_aerospace: None
+  ind_energy: None
+  ind_oil_gas: None
+  ind_utilities: None
+  ind_construction: None
+  ind_real_estate: None
+  ind_hospitality: None
+  ind_travel_tourism: None
+  ind_restaurants: None
+  ind_agriculture: None
+  ind_food_beverage: None
+  ind_pharmaceuticals: None
+  ind_biotech: None
+  ind_telecommunications: None
+  ind_media: Veteran
+  ind_entertainment: Veteran
+  ind_gaming: None
+  ind_publishing: None
+  ind_advertising: None
+  ind_education: None
+  ind_government: None
+  ind_defense: None
+  ind_nonprofit: None
+  ind_logistics: None
+  ind_transportation: None
+  ind_shipping: None
+  ind_mining: None
+  ind_chemicals: None
+  ind_textiles: None
+  ind_apparel: None
+  ind_consumer_electronics: None
+  ind_semiconductors: None
+  ind_legal_services: None
+  ind_consulting: None
+  ind_accounting: None
+  ind_marketing_agencies: None
+  ind_fitness_wellness: None
+  ind_beauty_cosmetics: None
+  ind_sports: None
+  ind_music: None
+  ind_fine_art: None
+  musg_opera: Like
+  filmg_comedy: Love
+  filmg_comedy_drama: Love
+  big5_imagination: High
+  big5_artistic_interest: High
+  big5_emotionality: Average
+  big5_adventurousness: Average
+  big5_intellect: Average
+  big5_liberalism: Average
+  big5_self_efficacy: High
+  big5_orderliness: Average
+  big5_dutifulness: High
+  big5_achievement_striving: High
+  big5_self_discipline: High
+  big5_cautiousness: Average
+  big5_friendliness: High
+  big5_gregariousness: High
+  big5_assertiveness: High
+  big5_activity_level: High
+  big5_excitement_seeking: High
+  big5_cheerfulness: High
+  big5_trust: Average
+  big5_morality: Average
+  big5_altruism: Average
+  big5_cooperation: High
+  big5_modesty: Average
+  big5_sympathy: Average
+  big5_anxiety: Average
+  big5_anger: Average
+  big5_depression: Average
+  big5_self_consciousness: Average
+  big5_immoderation: Average
+  big5_vulnerability: Average
+  lstyle_work_schedule: Freelance
+  lstyle_hobby_intensity: Obsessive
+  acad_algebra: Neutral
+  acad_geometry: Neutral
+  acad_calculus: Neutral
+  acad_statistics: Neutral
+  acad_physics: Neutral
+  acad_chemistry: Neutral
+  acad_biology: Neutral
+  acad_earth_science: Neutral
+  acad_computer_science: Neutral
+  acad_economics: Neutral
+  acad_psychology: Neutral
+  acad_sociology: Neutral
+  acad_world_history: Neutral
+  acad_geography: Neutral
+  acad_civics: Neutral
+  acad_literature: Interested
+  acad_creative_writing: Neutral
+  acad_foreign_languages: Neutral
+  acad_philosophy: Neutral
+  acad_visual_art: Neutral
+  acad_music: Neutral
+  acad_drama: Passionate
+  acad_physical_education: Neutral
+  acad_health_science: Neutral
+  acad_business_studies: Neutral
+  acad_environmental_science: Neutral
+  acad_logic: Neutral
+  acad_astronomy: Neutral
+  acad_anthropology: Neutral
+  trait_curiosity: Moderate
+  trait_creativity: Signature
+  trait_love_of_learning: Moderate
+  trait_open_mindedness: Moderate
+  trait_perspective: Moderate
+  trait_bravery: Moderate
+  trait_perseverance: Strong
+  trait_honesty: Moderate
+  trait_zest: Strong
+  trait_capacity_for_love: Moderate
+  trait_kindness: Moderate
+  trait_social_intelligence: Strong
+  trait_teamwork: Signature
+  trait_fairness: Moderate
+  trait_leadership: Moderate
+  trait_forgiveness: Moderate
+  trait_humility: Moderate
+  trait_prudence: Moderate
+  trait_self_regulation: Moderate
+  trait_appreciation_of_beauty: Moderate
+  trait_gratitude: Moderate
+  trait_hope_optimism: Moderate
+  trait_playfulness: Signature
+  trait_spirituality: Moderate
+  trait_ambition: Strong
+  trait_empathy: Moderate
+  trait_resilience: Strong
+  trait_discipline: Strong
+  trait_generosity: Moderate
+  trait_loyalty: Moderate
+  trait_competitiveness: Moderate
+  trait_adaptability: Strong
+  val_family: Moderate
+  val_career_success: Core value
+  val_tradition: Important
+  val_power_influence: Moderate
+  val_achievement: Core value
+  val_creativity_self_expression: Core value
+  val_community: Moderate
+  val_social_status: Important
+  val_recognition: Core value
+  val_personal_growth: Important
+  val_fun_enjoyment: Core value
+  pref_work_location: Strongly office
+  demo_marital_status: 'null'
+  demo_children_count: 'null'
+  demo_household_income: 'null'
+  demo_employment_status: Full-time
+  demo_housing_status: 'null'
+  demo_generation: Gen X
+  demo_religion_affiliation: 'null'
+  demo_sexual_orientation: 'null'
+  demo_citizenship_status: Citizen by birth
+  demo_ethnicity_broad: 'null'
+  demo_disability_status: No disability
+  demo_veteran_status: Civilian
+  demo_birth_order: Middle
+  demo_home_language: Same as primary
+  demo_political_engagement: 'null'
+  demo_parental_status: 'null'
+  demo_relationship_length: 'null'
+  demo_driver_status: 'null'
+  lifex_childhood_environment: Modest but steady
+  lifex_geographic_mobility: Never left hometown
+  lifex_travel_breadth: Never left country
+  lifex_career_path_shape: Linear climb
+  lifex_education_journey: Traditional track
+  lifex_financial_trajectory: Steady upward
+  lifex_adversity_level: Minor setbacks
+  lifex_immigration_generation: Native multi-generational
+  lifex_military_history: Never served
+  lifex_entrepreneurship_history: Never considered
+  lifex_relationship_history: Limited
+  lifex_parenting_journey: No children
+  lifex_health_journey: No major events
+  lifex_loss_experience: No major loss
+  lifex_faith_journey: Always secular
+  lifex_cultural_exposure: Monocultural
+  lifex_formative_decade: 1980s
+  lifex_public_recognition: Industry-recognized
+  lifex_service_history: None
+  lifex_turning_point: Career break
+  lifex_languages_lifetime: One
+  lifex_hometown_tie: Still there
+  bfi2_domain_extraversion: High
+  bfi2_domain_agreeableness: High
+  bfi2_domain_conscientiousness: High
+  bfi2_domain_negative_emotionality: Average
+  bfi2_domain_open_mindedness: High
+  bfi2_facet_sociability: High
+  bfi2_facet_assertiveness: High
+  bfi2_facet_energy_level: High
+  bfi2_facet_compassion: Average
+  bfi2_facet_respectfulness: Average
+  bfi2_facet_trust: Average
+  bfi2_facet_organization: High
+  bfi2_facet_productiveness: High
+  bfi2_facet_responsibility: High
+  bfi2_facet_anxiety: Average
+  bfi2_facet_depression: Average
+  bfi2_facet_emotional_volatility: Average
+  bfi2_facet_intellectual_curiosity: Average
+  bfi2_facet_aesthetic_sensitivity: High
+  bfi2_facet_creative_imagination: High
+  schwartz_value_self_direction: Average
+  schwartz_value_stimulation: High
+  schwartz_value_hedonism: Average
+  schwartz_value_achievement: High
+  schwartz_value_power: Low
+  schwartz_value_security: Average
+  schwartz_value_conformity: Average
+  schwartz_value_tradition: High
+  schwartz_value_benevolence: Average
+  schwartz_value_universalism: Average
+  sdt_need_autonomy: Average
+  sdt_need_competence: High
+  sdt_need_relatedness: High
+  need_for_cognition: Average
+  code_review_participation_level: No coding activity
+  commit_cadence_style: No coding activity
+  dev_contribution_context: 'null'
+  dev_ic_manager_orientation: 'null'
+  dev_primary_work_surface: 'null'
+  dev_professional_status: Non-developer technologist
+  dev_role_archetype: Other developer
+  dev_toolchain_complexity: 'null'
+  github_contribution_mode: No coding activity
+  issue_engagement_style: No coding activity
+  open_source_activity_level: No coding activity
+  pr_collaboration_style: No coding activity
+  release_maintenance_orientation: No coding activity

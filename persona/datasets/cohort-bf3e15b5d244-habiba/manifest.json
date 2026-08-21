@@ -1,0 +1,1901 @@
+{
+  "kind": "matraix-persona-1m-cohort",
+  "parent_pool": "persona/datasets/matraix-persona-1m",
+  "hf_repo": "MatrAIx2026/MatrAIx_Persona_1M_Public_Release",
+  "count": 150,
+  "seed": 42,
+  "schema_version": "1.0",
+  "smoke_persona_id": "synthetic-6a28f0c5ea82",
+  "source_counts": {
+    "synthetic": 84,
+    "wiki": 66
+  },
+  "dimension_categories": "persona/schema/dimension_categories.json",
+  "created_at": "2026-08-21T06:53:32Z",
+  "personas": [
+    {
+      "persona_id": "synthetic-6a28f0c5ea82",
+      "display_name": "Anh Lim",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-6a28f0c5ea82.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "45-54",
+        "region": "Southeast Asia",
+        "domain": "Engineering",
+        "intent": "Get task done",
+        "life_stage": "Mid-life"
+      }
+    },
+    {
+      "persona_id": "synthetic-eca5e6748fea",
+      "display_name": "Siti Rahman",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-eca5e6748fea.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "55-64",
+        "region": "Southeast Asia",
+        "domain": "Agriculture",
+        "intent": "Learn / explain",
+        "life_stage": "Parent of young kids"
+      }
+    },
+    {
+      "persona_id": "wiki-a46ff0aad51f",
+      "display_name": "Siti Tran",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_wiki-a46ff0aad51f.yaml",
+      "source": "wiki",
+      "dimensions": {
+        "age_bracket": "25-34",
+        "region": "Southeast Asia",
+        "domain": "Arts & Humanities",
+        "life_stage": "Early career"
+      }
+    },
+    {
+      "persona_id": "synthetic-7b5ef3daeb59",
+      "display_name": "Mai Putra",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-7b5ef3daeb59.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "18-24",
+        "region": "Southeast Asia",
+        "domain": "Social Sciences",
+        "intent": "Learn / explain",
+        "life_stage": "Student"
+      }
+    },
+    {
+      "persona_id": "wiki-da615cb75b40",
+      "display_name": "Kai Putra",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_wiki-da615cb75b40.yaml",
+      "source": "wiki",
+      "dimensions": {
+        "age_bracket": "35-44",
+        "region": "Southeast Asia",
+        "domain": "Arts & Humanities",
+        "life_stage": "Mid-life"
+      }
+    },
+    {
+      "persona_id": "synthetic-02f617a8b8f8",
+      "display_name": "Anh Hassan",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-02f617a8b8f8.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "45-54",
+        "region": "Southeast Asia",
+        "domain": "Agriculture",
+        "intent": "Learn / explain",
+        "life_stage": "Mid-life"
+      }
+    },
+    {
+      "persona_id": "wiki-b5b360301699",
+      "display_name": "Arif Lim",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_wiki-b5b360301699.yaml",
+      "source": "wiki",
+      "dimensions": {
+        "age_bracket": "55-64",
+        "region": "Southeast Asia",
+        "domain": "Public Sector",
+        "life_stage": "Mid-life"
+      }
+    },
+    {
+      "persona_id": "synthetic-037ccf9476b3",
+      "display_name": "Kai Lim",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-037ccf9476b3.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "25-34",
+        "region": "Southeast Asia",
+        "domain": "Media & Journalism",
+        "intent": "Vent / support",
+        "life_stage": "Mid-life"
+      }
+    },
+    {
+      "persona_id": "synthetic-8c2192241d4a",
+      "display_name": "Rizal Lim",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-8c2192241d4a.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "35-44",
+        "region": "Southeast Asia",
+        "domain": "Healthcare & Medicine",
+        "intent": "Debug / troubleshoot",
+        "life_stage": "Career change"
+      }
+    },
+    {
+      "persona_id": "synthetic-781bcbac5018",
+      "display_name": "Anh Rahman",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-781bcbac5018.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "18-24",
+        "region": "Southeast Asia",
+        "domain": "Skilled Trades",
+        "intent": "Verify a claim",
+        "life_stage": "Early career"
+      }
+    },
+    {
+      "persona_id": "wiki-ab9bc4ccab86",
+      "display_name": "Rizal Rahman",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_wiki-ab9bc4ccab86.yaml",
+      "source": "wiki",
+      "dimensions": {
+        "age_bracket": "45-54",
+        "region": "Southeast Asia",
+        "domain": "Public Sector",
+        "life_stage": "Mid-life"
+      }
+    },
+    {
+      "persona_id": "synthetic-2e2628812dfb",
+      "display_name": "Anh Tran",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-2e2628812dfb.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "55-64",
+        "region": "Southeast Asia",
+        "domain": "Hospitality",
+        "intent": "Decide",
+        "life_stage": "Mid-life"
+      }
+    },
+    {
+      "persona_id": "synthetic-a05d9796a7d5",
+      "display_name": "Arif Putra",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-a05d9796a7d5.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "25-34",
+        "region": "Southeast Asia",
+        "domain": "Agriculture",
+        "intent": "Learn / explain",
+        "life_stage": "Early career"
+      }
+    },
+    {
+      "persona_id": "wiki-64c32f7ccda2",
+      "display_name": "Siti Nguyen",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_wiki-64c32f7ccda2.yaml",
+      "source": "wiki",
+      "dimensions": {
+        "age_bracket": "55-64",
+        "region": "Southeast Asia",
+        "domain": "Natural Sciences",
+        "life_stage": "Mid-life"
+      }
+    },
+    {
+      "persona_id": "synthetic-0246650fc86e",
+      "display_name": "Mai Hassan",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-0246650fc86e.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "45-54",
+        "region": "Southeast Asia",
+        "domain": "Healthcare & Medicine",
+        "intent": "Verify a claim",
+        "life_stage": "Career change"
+      }
+    },
+    {
+      "persona_id": "wiki-82e0fdaf870b",
+      "display_name": "Rizal Tran",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_wiki-82e0fdaf870b.yaml",
+      "source": "wiki",
+      "dimensions": {
+        "age_bracket": "35-44",
+        "region": "Southeast Asia",
+        "domain": "Arts & Humanities",
+        "life_stage": "Early career"
+      }
+    },
+    {
+      "persona_id": "wiki-41a19e19f9f7",
+      "display_name": "Mai Tran",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_wiki-41a19e19f9f7.yaml",
+      "source": "wiki",
+      "dimensions": {
+        "age_bracket": "55-64",
+        "region": "Southeast Asia",
+        "domain": "Media & Journalism",
+        "life_stage": "Mid-life"
+      }
+    },
+    {
+      "persona_id": "synthetic-1e3fadd3daef",
+      "display_name": "Anh Putra",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-1e3fadd3daef.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "65-74",
+        "region": "Southeast Asia",
+        "domain": "Public Sector",
+        "intent": "Learn / explain",
+        "life_stage": "Empty nester"
+      }
+    },
+    {
+      "persona_id": "synthetic-1e5ca1d1c726",
+      "display_name": "Siti Putra",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-1e5ca1d1c726.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "45-54",
+        "region": "Southeast Asia",
+        "domain": "Finance & Economics",
+        "intent": "Verify a claim",
+        "life_stage": "Retirement"
+      }
+    },
+    {
+      "persona_id": "wiki-6816be0f5df1",
+      "display_name": "Siti Hassan",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_wiki-6816be0f5df1.yaml",
+      "source": "wiki",
+      "dimensions": {
+        "age_bracket": "45-54",
+        "region": "Southeast Asia",
+        "domain": "Media & Journalism",
+        "life_stage": "Mid-life"
+      }
+    },
+    {
+      "persona_id": "wiki-1ab55468f645",
+      "display_name": "Arif Rahman",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_wiki-1ab55468f645.yaml",
+      "source": "wiki",
+      "dimensions": {
+        "age_bracket": "25-34",
+        "region": "Southeast Asia",
+        "domain": "Arts & Humanities",
+        "life_stage": "Early career"
+      }
+    },
+    {
+      "persona_id": "synthetic-0139ce3f5265",
+      "display_name": "Kai Hassan",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-0139ce3f5265.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "45-54",
+        "region": "Southeast Asia",
+        "domain": "Agriculture",
+        "intent": "Decide",
+        "life_stage": "Mid-life"
+      }
+    },
+    {
+      "persona_id": "wiki-f0e675f2ec39",
+      "display_name": "Mai Nguyen",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_wiki-f0e675f2ec39.yaml",
+      "source": "wiki",
+      "dimensions": {
+        "age_bracket": "18-24",
+        "region": "Southeast Asia",
+        "domain": "Skilled Trades",
+        "life_stage": "Student"
+      }
+    },
+    {
+      "persona_id": "synthetic-9ab1517a23a2",
+      "display_name": "Rizal Hassan",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-9ab1517a23a2.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "65-74",
+        "region": "Southeast Asia",
+        "domain": "Public Sector",
+        "intent": "Get task done",
+        "life_stage": "Retirement"
+      }
+    },
+    {
+      "persona_id": "wiki-b012afd91098",
+      "display_name": "Arif Nguyen",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_wiki-b012afd91098.yaml",
+      "source": "wiki",
+      "dimensions": {
+        "age_bracket": "35-44",
+        "region": "Southeast Asia",
+        "domain": "Arts & Humanities",
+        "life_stage": "Early career"
+      }
+    },
+    {
+      "persona_id": "synthetic-0f9d4aaaea6e",
+      "display_name": "Kai Tran",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-0f9d4aaaea6e.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "18-24",
+        "region": "Southeast Asia",
+        "domain": "Agriculture",
+        "intent": "Learn / explain",
+        "life_stage": "Student"
+      }
+    },
+    {
+      "persona_id": "synthetic-a84f4e5de25d",
+      "display_name": "Kai Nguyen",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-a84f4e5de25d.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "45-54",
+        "region": "Southeast Asia",
+        "domain": "Law & Policy",
+        "intent": "Learn / explain",
+        "life_stage": "Career change"
+      }
+    },
+    {
+      "persona_id": "synthetic-18ee64d4fb83",
+      "display_name": "Siti Lim",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-18ee64d4fb83.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "65-74",
+        "region": "Southeast Asia",
+        "domain": "Education",
+        "intent": "Decide",
+        "life_stage": "Retirement"
+      }
+    },
+    {
+      "persona_id": "synthetic-57d3420957e8",
+      "display_name": "Anh Nguyen",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-57d3420957e8.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "65-74",
+        "region": "Southeast Asia",
+        "domain": "Social Sciences",
+        "intent": "Verify a claim",
+        "life_stage": "Retirement"
+      }
+    },
+    {
+      "persona_id": "synthetic-59da5b18abdb",
+      "display_name": "Arif Tran",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-59da5b18abdb.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "45-54",
+        "region": "Southeast Asia",
+        "domain": "Manufacturing",
+        "intent": "Debug / troubleshoot",
+        "life_stage": "Career change"
+      }
+    },
+    {
+      "persona_id": "synthetic-2e0c6a08cf81",
+      "display_name": "Mai Lim",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-2e0c6a08cf81.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "55-64",
+        "region": "Southeast Asia",
+        "domain": "Business & Management",
+        "intent": "Debug / troubleshoot",
+        "life_stage": "Retirement"
+      }
+    },
+    {
+      "persona_id": "synthetic-db4600fc87d3",
+      "display_name": "Kai Rahman",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-db4600fc87d3.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "18-24",
+        "region": "Southeast Asia",
+        "domain": "Engineering",
+        "intent": "Debug / troubleshoot",
+        "life_stage": "Student"
+      }
+    },
+    {
+      "persona_id": "synthetic-a98cd8f84ee5",
+      "display_name": "Rizal Putra",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-a98cd8f84ee5.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "25-34",
+        "region": "Southeast Asia",
+        "domain": "Natural Sciences",
+        "intent": "Probe / red-team",
+        "life_stage": "Early career"
+      }
+    },
+    {
+      "persona_id": "wiki-f7553a1698f0",
+      "display_name": "Rizal Nguyen",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_wiki-f7553a1698f0.yaml",
+      "source": "wiki",
+      "dimensions": {
+        "age_bracket": "35-44",
+        "region": "Southeast Asia",
+        "domain": "Arts & Humanities",
+        "life_stage": "Early career"
+      }
+    },
+    {
+      "persona_id": "wiki-c4688b5bc928",
+      "display_name": "Arif Hassan",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_wiki-c4688b5bc928.yaml",
+      "source": "wiki",
+      "dimensions": {
+        "age_bracket": "55-64",
+        "region": "Southeast Asia",
+        "domain": "Natural Sciences",
+        "life_stage": "Retirement"
+      }
+    },
+    {
+      "persona_id": "synthetic-e3ba12653add",
+      "display_name": "Mai Rahman",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-e3ba12653add.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "65-74",
+        "region": "Southeast Asia",
+        "domain": "Education",
+        "intent": "Get task done",
+        "life_stage": "Career change"
+      }
+    },
+    {
+      "persona_id": "wiki-1ae4ef46542f",
+      "display_name": "Anh Rahman",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_wiki-1ae4ef46542f.yaml",
+      "source": "wiki",
+      "dimensions": {
+        "age_bracket": "55-64",
+        "region": "Southeast Asia",
+        "domain": "Arts & Humanities",
+        "life_stage": "Retirement"
+      }
+    },
+    {
+      "persona_id": "wiki-3d6710efec2c",
+      "display_name": "Rizal Nguyen",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_wiki-3d6710efec2c.yaml",
+      "source": "wiki",
+      "dimensions": {
+        "age_bracket": "35-44",
+        "region": "Southeast Asia",
+        "domain": "Arts & Humanities",
+        "life_stage": "Early career"
+      }
+    },
+    {
+      "persona_id": "synthetic-507b95a56fdf",
+      "display_name": "Kai Lim",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-507b95a56fdf.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "18-24",
+        "region": "Southeast Asia",
+        "domain": "Hospitality",
+        "intent": "Decide",
+        "life_stage": "Student"
+      }
+    },
+    {
+      "persona_id": "synthetic-515fd34b319c",
+      "display_name": "Mai Hassan",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-515fd34b319c.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "18-24",
+        "region": "Southeast Asia",
+        "domain": "Manufacturing",
+        "intent": "Verify a claim",
+        "life_stage": "Career change"
+      }
+    },
+    {
+      "persona_id": "synthetic-a85a5f5ee97a",
+      "display_name": "Mai Tran",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-a85a5f5ee97a.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "25-34",
+        "region": "Southeast Asia",
+        "domain": "Education",
+        "intent": "Debug / troubleshoot",
+        "life_stage": "Mid-life"
+      }
+    },
+    {
+      "persona_id": "wiki-4f41a9144603",
+      "display_name": "Mai Putra",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_wiki-4f41a9144603.yaml",
+      "source": "wiki",
+      "dimensions": {
+        "age_bracket": "55-64",
+        "region": "Southeast Asia",
+        "domain": "Public Sector",
+        "life_stage": "Mid-life"
+      }
+    },
+    {
+      "persona_id": "wiki-57b8a3f83924",
+      "display_name": "Kai Lim",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_wiki-57b8a3f83924.yaml",
+      "source": "wiki",
+      "dimensions": {
+        "age_bracket": "55-64",
+        "region": "Southeast Asia",
+        "domain": "Arts & Humanities",
+        "life_stage": "Mid-life"
+      }
+    },
+    {
+      "persona_id": "synthetic-3341e9f63017",
+      "display_name": "Siti Putra",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-3341e9f63017.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "45-54",
+        "region": "Southeast Asia",
+        "domain": "Manufacturing",
+        "intent": "Decide",
+        "life_stage": "Career change"
+      }
+    },
+    {
+      "persona_id": "wiki-d8e20a0e098d",
+      "display_name": "Rizal Lim",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_wiki-d8e20a0e098d.yaml",
+      "source": "wiki",
+      "dimensions": {
+        "age_bracket": "35-44",
+        "region": "Southeast Asia",
+        "domain": "Arts & Humanities",
+        "life_stage": "Mid-life"
+      }
+    },
+    {
+      "persona_id": "synthetic-c25a42521133",
+      "display_name": "Kai Tran",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-c25a42521133.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "45-54",
+        "region": "Southeast Asia",
+        "domain": "Manufacturing",
+        "intent": "Verify a claim",
+        "life_stage": "Mid-life"
+      }
+    },
+    {
+      "persona_id": "synthetic-d99d5b79e615",
+      "display_name": "Mai Lim",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-d99d5b79e615.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "25-34",
+        "region": "Southeast Asia",
+        "domain": "Manufacturing",
+        "intent": "Get task done",
+        "life_stage": "Early career"
+      }
+    },
+    {
+      "persona_id": "synthetic-2cefbc378755",
+      "display_name": "Arif Hassan",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-2cefbc378755.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "65-74",
+        "region": "Southeast Asia",
+        "domain": "Education",
+        "intent": "Debug / troubleshoot",
+        "life_stage": "Retirement"
+      }
+    },
+    {
+      "persona_id": "synthetic-17803fcc5fb0",
+      "display_name": "Arif Putra",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-17803fcc5fb0.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "35-44",
+        "region": "Southeast Asia",
+        "domain": "Skilled Trades",
+        "intent": "Decide",
+        "life_stage": "Early career"
+      }
+    },
+    {
+      "persona_id": "wiki-4304bdd567e1",
+      "display_name": "Mai Hassan",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_wiki-4304bdd567e1.yaml",
+      "source": "wiki",
+      "dimensions": {
+        "age_bracket": "25-34",
+        "region": "Southeast Asia",
+        "domain": "Arts & Humanities",
+        "life_stage": "Early career"
+      }
+    },
+    {
+      "persona_id": "synthetic-9310229a7938",
+      "display_name": "Siti Rahman",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-9310229a7938.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "65-74",
+        "region": "Southeast Asia",
+        "domain": "Manufacturing",
+        "intent": "Debug / troubleshoot",
+        "life_stage": "Retirement"
+      }
+    },
+    {
+      "persona_id": "wiki-9fc6b2483a4a",
+      "display_name": "Kai Nguyen",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_wiki-9fc6b2483a4a.yaml",
+      "source": "wiki",
+      "dimensions": {
+        "age_bracket": "35-44",
+        "region": "Southeast Asia",
+        "domain": "Arts & Humanities",
+        "life_stage": "Mid-life"
+      }
+    },
+    {
+      "persona_id": "wiki-625ab2dfc038",
+      "display_name": "Mai Nguyen",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_wiki-625ab2dfc038.yaml",
+      "source": "wiki",
+      "dimensions": {
+        "age_bracket": "55-64",
+        "region": "Southeast Asia",
+        "domain": "Law & Policy",
+        "life_stage": "Mid-life"
+      }
+    },
+    {
+      "persona_id": "wiki-b481de6fdeb4",
+      "display_name": "Siti Tran",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_wiki-b481de6fdeb4.yaml",
+      "source": "wiki",
+      "dimensions": {
+        "age_bracket": "35-44",
+        "region": "Southeast Asia",
+        "domain": "Arts & Humanities",
+        "life_stage": "Early career"
+      }
+    },
+    {
+      "persona_id": "synthetic-162005d84fbb",
+      "display_name": "Kai Hassan",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-162005d84fbb.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "55-64",
+        "region": "Southeast Asia",
+        "domain": "Education",
+        "intent": "Learn / explain",
+        "life_stage": "Career change"
+      }
+    },
+    {
+      "persona_id": "synthetic-aba8281e2f23",
+      "display_name": "Arif Lim",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-aba8281e2f23.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "18-24",
+        "region": "Southeast Asia",
+        "domain": "Agriculture",
+        "intent": "Learn / explain",
+        "life_stage": "Career change"
+      }
+    },
+    {
+      "persona_id": "wiki-7b33ad17a39b",
+      "display_name": "Kai Lim",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_wiki-7b33ad17a39b.yaml",
+      "source": "wiki",
+      "dimensions": {
+        "age_bracket": "45-54",
+        "region": "Southeast Asia",
+        "domain": "Arts & Humanities",
+        "life_stage": "Mid-life"
+      }
+    },
+    {
+      "persona_id": "synthetic-1f7d7151671a",
+      "display_name": "Rizal Rahman",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-1f7d7151671a.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "65-74",
+        "region": "Southeast Asia",
+        "domain": "Business & Management",
+        "intent": "Decide",
+        "life_stage": "Retirement"
+      }
+    },
+    {
+      "persona_id": "wiki-046c6b04e6d6",
+      "display_name": "Arif Hassan",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_wiki-046c6b04e6d6.yaml",
+      "source": "wiki",
+      "dimensions": {
+        "age_bracket": "35-44",
+        "region": "Southeast Asia",
+        "domain": "Arts & Humanities",
+        "life_stage": "Early career"
+      }
+    },
+    {
+      "persona_id": "synthetic-942ac4620431",
+      "display_name": "Kai Rahman",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-942ac4620431.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "35-44",
+        "region": "Southeast Asia",
+        "domain": "Arts & Humanities",
+        "intent": "Probe / red-team",
+        "life_stage": "Early career"
+      }
+    },
+    {
+      "persona_id": "synthetic-10ad0162eb3b",
+      "display_name": "Anh Nguyen",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-10ad0162eb3b.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "55-64",
+        "region": "Southeast Asia",
+        "domain": "Business & Management",
+        "intent": "Verify a claim",
+        "life_stage": "Retirement"
+      }
+    },
+    {
+      "persona_id": "wiki-78e0bf8deff1",
+      "display_name": "Anh Lim",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_wiki-78e0bf8deff1.yaml",
+      "source": "wiki",
+      "dimensions": {
+        "age_bracket": "55-64",
+        "region": "Southeast Asia",
+        "domain": "Finance & Economics",
+        "life_stage": "Mid-life"
+      }
+    },
+    {
+      "persona_id": "wiki-2ad039d8a122",
+      "display_name": "Anh Tran",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_wiki-2ad039d8a122.yaml",
+      "source": "wiki",
+      "dimensions": {
+        "age_bracket": "55-64",
+        "region": "Southeast Asia",
+        "domain": "Arts & Humanities",
+        "life_stage": "Mid-life"
+      }
+    },
+    {
+      "persona_id": "synthetic-4af4fddab77f",
+      "display_name": "Arif Lim",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-4af4fddab77f.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "18-24",
+        "region": "Southeast Asia",
+        "domain": "Agriculture",
+        "intent": "Learn / explain",
+        "life_stage": "Student"
+      }
+    },
+    {
+      "persona_id": "synthetic-f255e8942a15",
+      "display_name": "Mai Putra",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-f255e8942a15.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "65-74",
+        "region": "Southeast Asia",
+        "domain": "Finance & Economics",
+        "intent": "Brainstorm",
+        "life_stage": "Retirement"
+      }
+    },
+    {
+      "persona_id": "synthetic-9fd66487e8e5",
+      "display_name": "Anh Lim",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-9fd66487e8e5.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "35-44",
+        "region": "Southeast Asia",
+        "domain": "Agriculture",
+        "intent": "Decide",
+        "life_stage": "Mid-life"
+      }
+    },
+    {
+      "persona_id": "synthetic-531a70885e73",
+      "display_name": "Rizal Hassan",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-531a70885e73.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "18-24",
+        "region": "Southeast Asia",
+        "domain": "Business & Management",
+        "intent": "Brainstorm",
+        "life_stage": "Early career"
+      }
+    },
+    {
+      "persona_id": "synthetic-a697a1d4c757",
+      "display_name": "Rizal Tran",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-a697a1d4c757.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "65-74",
+        "region": "Southeast Asia",
+        "domain": "Agriculture",
+        "intent": "Get task done",
+        "life_stage": "Career change"
+      }
+    },
+    {
+      "persona_id": "wiki-c050667ba6bb",
+      "display_name": "Rizal Putra",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_wiki-c050667ba6bb.yaml",
+      "source": "wiki",
+      "dimensions": {
+        "age_bracket": "65-74",
+        "region": "Southeast Asia",
+        "domain": "Public Sector",
+        "life_stage": "Mid-life"
+      }
+    },
+    {
+      "persona_id": "wiki-dcf5565f9f0e",
+      "display_name": "Kai Tran",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_wiki-dcf5565f9f0e.yaml",
+      "source": "wiki",
+      "dimensions": {
+        "age_bracket": "35-44",
+        "region": "Southeast Asia",
+        "domain": "Arts & Humanities",
+        "life_stage": "Mid-life"
+      }
+    },
+    {
+      "persona_id": "wiki-e614373b81e3",
+      "display_name": "Kai Nguyen",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_wiki-e614373b81e3.yaml",
+      "source": "wiki",
+      "dimensions": {
+        "age_bracket": "65-74",
+        "region": "Southeast Asia",
+        "domain": "Public Sector",
+        "life_stage": "Mid-life"
+      }
+    },
+    {
+      "persona_id": "wiki-991c27fb6887",
+      "display_name": "Rizal Putra",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_wiki-991c27fb6887.yaml",
+      "source": "wiki",
+      "dimensions": {
+        "age_bracket": "55-64",
+        "region": "Southeast Asia",
+        "domain": "Media & Journalism",
+        "life_stage": "Mid-life"
+      }
+    },
+    {
+      "persona_id": "wiki-0159bf09cb61",
+      "display_name": "Anh Rahman",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_wiki-0159bf09cb61.yaml",
+      "source": "wiki",
+      "dimensions": {
+        "age_bracket": "18-24",
+        "region": "Southeast Asia",
+        "domain": "Arts & Humanities",
+        "life_stage": "Early career"
+      }
+    },
+    {
+      "persona_id": "synthetic-daf70f3a80f4",
+      "display_name": "Mai Rahman",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-daf70f3a80f4.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "55-64",
+        "region": "Southeast Asia",
+        "domain": "Media & Journalism",
+        "intent": "Learn / explain",
+        "life_stage": "Mid-life"
+      }
+    },
+    {
+      "persona_id": "synthetic-c4558797fbe1",
+      "display_name": "Rizal Putra",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-c4558797fbe1.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "65-74",
+        "region": "Southeast Asia",
+        "domain": "Agriculture",
+        "intent": "Brainstorm",
+        "life_stage": "Retirement"
+      }
+    },
+    {
+      "persona_id": "synthetic-671794d07389",
+      "display_name": "Siti Putra",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-671794d07389.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "55-64",
+        "region": "Southeast Asia",
+        "domain": "Agriculture",
+        "intent": "Learn / explain",
+        "life_stage": "Career change"
+      }
+    },
+    {
+      "persona_id": "synthetic-c9c9789cc417",
+      "display_name": "Arif Lim",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-c9c9789cc417.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "18-24",
+        "region": "Southeast Asia",
+        "domain": "Finance & Economics",
+        "intent": "Get task done",
+        "life_stage": "Early career"
+      }
+    },
+    {
+      "persona_id": "synthetic-b3af8a705c57",
+      "display_name": "Arif Putra",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-b3af8a705c57.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "18-24",
+        "region": "Southeast Asia",
+        "domain": "Agriculture",
+        "intent": "Learn / explain",
+        "life_stage": "Early career"
+      }
+    },
+    {
+      "persona_id": "synthetic-6076a58a0231",
+      "display_name": "Rizal Lim",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-6076a58a0231.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "55-64",
+        "region": "Southeast Asia",
+        "domain": "Agriculture",
+        "intent": "Verify a claim",
+        "life_stage": "Empty nester"
+      }
+    },
+    {
+      "persona_id": "wiki-330238093593",
+      "display_name": "Siti Nguyen",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_wiki-330238093593.yaml",
+      "source": "wiki",
+      "dimensions": {
+        "age_bracket": "35-44",
+        "region": "Southeast Asia",
+        "domain": "Arts & Humanities",
+        "life_stage": "Early career"
+      }
+    },
+    {
+      "persona_id": "synthetic-599ff7f11d46",
+      "display_name": "Mai Hassan",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-599ff7f11d46.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "45-54",
+        "region": "Southeast Asia",
+        "domain": "Agriculture",
+        "intent": "Learn / explain",
+        "life_stage": "Empty nester"
+      }
+    },
+    {
+      "persona_id": "synthetic-04821e160890",
+      "display_name": "Arif Hassan",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-04821e160890.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "65-74",
+        "region": "Southeast Asia",
+        "domain": "Business & Management",
+        "intent": "Debug / troubleshoot",
+        "life_stage": "Mid-life"
+      }
+    },
+    {
+      "persona_id": "wiki-0f66d9193a8e",
+      "display_name": "Siti Nguyen",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_wiki-0f66d9193a8e.yaml",
+      "source": "wiki",
+      "dimensions": {
+        "age_bracket": "45-54",
+        "region": "Southeast Asia",
+        "domain": "Arts & Humanities",
+        "life_stage": "Mid-life"
+      }
+    },
+    {
+      "persona_id": "synthetic-df9693b4b9ee",
+      "display_name": "Kai Tran",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-df9693b4b9ee.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "25-34",
+        "region": "Southeast Asia",
+        "domain": "Education",
+        "intent": "Get task done",
+        "life_stage": "Early career"
+      }
+    },
+    {
+      "persona_id": "synthetic-4890ea7d8b7d",
+      "display_name": "Kai Putra",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-4890ea7d8b7d.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "18-24",
+        "region": "Southeast Asia",
+        "domain": "Agriculture",
+        "intent": "Decide",
+        "life_stage": "Student"
+      }
+    },
+    {
+      "persona_id": "wiki-ebd3053a330f",
+      "display_name": "Siti Tran",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_wiki-ebd3053a330f.yaml",
+      "source": "wiki",
+      "dimensions": {
+        "age_bracket": "45-54",
+        "region": "Southeast Asia",
+        "domain": "Public Sector",
+        "life_stage": "Mid-life"
+      }
+    },
+    {
+      "persona_id": "wiki-ebf6917e5748",
+      "display_name": "Mai Putra",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_wiki-ebf6917e5748.yaml",
+      "source": "wiki",
+      "dimensions": {
+        "age_bracket": "25-34",
+        "region": "Southeast Asia",
+        "domain": "Arts & Humanities",
+        "life_stage": "Early career"
+      }
+    },
+    {
+      "persona_id": "wiki-0918c8dd20ef",
+      "display_name": "Kai Putra",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_wiki-0918c8dd20ef.yaml",
+      "source": "wiki",
+      "dimensions": {
+        "age_bracket": "25-34",
+        "region": "Southeast Asia",
+        "domain": "Arts & Humanities",
+        "life_stage": "Mid-life"
+      }
+    },
+    {
+      "persona_id": "wiki-d527771d8c18",
+      "display_name": "Arif Putra",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_wiki-d527771d8c18.yaml",
+      "source": "wiki",
+      "dimensions": {
+        "age_bracket": "25-34",
+        "region": "Southeast Asia",
+        "domain": "Arts & Humanities",
+        "life_stage": "Early career"
+      }
+    },
+    {
+      "persona_id": "synthetic-69d763bae8ff",
+      "display_name": "Kai Rahman",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-69d763bae8ff.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "18-24",
+        "region": "Southeast Asia",
+        "domain": "Education",
+        "intent": "Decide",
+        "life_stage": "Student"
+      }
+    },
+    {
+      "persona_id": "wiki-b252db0ca0cd",
+      "display_name": "Arif Putra",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_wiki-b252db0ca0cd.yaml",
+      "source": "wiki",
+      "dimensions": {
+        "age_bracket": "25-34",
+        "region": "Southeast Asia",
+        "domain": "Arts & Humanities",
+        "life_stage": "Early career"
+      }
+    },
+    {
+      "persona_id": "wiki-35d12fa5a93e",
+      "display_name": "Rizal Tran",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_wiki-35d12fa5a93e.yaml",
+      "source": "wiki",
+      "dimensions": {
+        "age_bracket": "35-44",
+        "region": "Southeast Asia",
+        "domain": "Skilled Trades",
+        "life_stage": "Mid-life"
+      }
+    },
+    {
+      "persona_id": "synthetic-7e3429d719cb",
+      "display_name": "Siti Putra",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-7e3429d719cb.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "55-64",
+        "region": "Southeast Asia",
+        "domain": "Agriculture",
+        "intent": "Verify a claim",
+        "life_stage": "Empty nester"
+      }
+    },
+    {
+      "persona_id": "wiki-902d7222b5e8",
+      "display_name": "Kai Tran",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_wiki-902d7222b5e8.yaml",
+      "source": "wiki",
+      "dimensions": {
+        "age_bracket": "35-44",
+        "region": "Southeast Asia",
+        "domain": "Arts & Humanities",
+        "life_stage": "Mid-life"
+      }
+    },
+    {
+      "persona_id": "wiki-5d1fdc163519",
+      "display_name": "Kai Tran",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_wiki-5d1fdc163519.yaml",
+      "source": "wiki",
+      "dimensions": {
+        "age_bracket": "18-24",
+        "region": "Southeast Asia",
+        "domain": "Arts & Humanities",
+        "life_stage": "Early career"
+      }
+    },
+    {
+      "persona_id": "wiki-9e20234e63a7",
+      "display_name": "Mai Putra",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_wiki-9e20234e63a7.yaml",
+      "source": "wiki",
+      "dimensions": {
+        "age_bracket": "35-44",
+        "region": "Southeast Asia",
+        "domain": "Arts & Humanities",
+        "life_stage": "Mid-life"
+      }
+    },
+    {
+      "persona_id": "wiki-ad8d3f014afa",
+      "display_name": "Siti Putra",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_wiki-ad8d3f014afa.yaml",
+      "source": "wiki",
+      "dimensions": {
+        "age_bracket": "18-24",
+        "region": "Southeast Asia",
+        "domain": "Arts & Humanities",
+        "life_stage": "Early career"
+      }
+    },
+    {
+      "persona_id": "wiki-24f369879fd9",
+      "display_name": "Siti Tran",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_wiki-24f369879fd9.yaml",
+      "source": "wiki",
+      "dimensions": {
+        "age_bracket": "45-54",
+        "region": "Southeast Asia",
+        "domain": "Public Sector",
+        "life_stage": "Mid-life"
+      }
+    },
+    {
+      "persona_id": "wiki-f97c2ddd7f4f",
+      "display_name": "Kai Rahman",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_wiki-f97c2ddd7f4f.yaml",
+      "source": "wiki",
+      "dimensions": {
+        "age_bracket": "35-44",
+        "region": "Southeast Asia",
+        "domain": "Public Sector",
+        "life_stage": "Mid-life"
+      }
+    },
+    {
+      "persona_id": "wiki-2825daed83dc",
+      "display_name": "Arif Lim",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_wiki-2825daed83dc.yaml",
+      "source": "wiki",
+      "dimensions": {
+        "age_bracket": "25-34",
+        "region": "Southeast Asia",
+        "domain": "Arts & Humanities",
+        "life_stage": "Early career"
+      }
+    },
+    {
+      "persona_id": "wiki-9b8e273f97ea",
+      "display_name": "Mai Putra",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_wiki-9b8e273f97ea.yaml",
+      "source": "wiki",
+      "dimensions": {
+        "age_bracket": "45-54",
+        "region": "Southeast Asia",
+        "domain": "Arts & Humanities",
+        "life_stage": "Mid-life"
+      }
+    },
+    {
+      "persona_id": "synthetic-29ca39142a13",
+      "display_name": "Mai Putra",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-29ca39142a13.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "18-24",
+        "region": "Southeast Asia",
+        "domain": "Education",
+        "intent": "Vent / support",
+        "life_stage": "Student"
+      }
+    },
+    {
+      "persona_id": "synthetic-e65effa3969f",
+      "display_name": "Mai Nguyen",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-e65effa3969f.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "65-74",
+        "region": "Southeast Asia",
+        "domain": "Agriculture",
+        "intent": "Debug / troubleshoot",
+        "life_stage": "Retirement"
+      }
+    },
+    {
+      "persona_id": "wiki-f03cf6becfe8",
+      "display_name": "Arif Nguyen",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_wiki-f03cf6becfe8.yaml",
+      "source": "wiki",
+      "dimensions": {
+        "age_bracket": "45-54",
+        "region": "Southeast Asia",
+        "domain": "Media & Journalism",
+        "life_stage": "Mid-life"
+      }
+    },
+    {
+      "persona_id": "wiki-e1c0911b095d",
+      "display_name": "Arif Hassan",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_wiki-e1c0911b095d.yaml",
+      "source": "wiki",
+      "dimensions": {
+        "age_bracket": "55-64",
+        "region": "Southeast Asia",
+        "domain": "Business & Management",
+        "life_stage": "Mid-life"
+      }
+    },
+    {
+      "persona_id": "synthetic-5eedcec77c2a",
+      "display_name": "Kai Nguyen",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-5eedcec77c2a.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "25-34",
+        "region": "Southeast Asia",
+        "domain": "Arts & Humanities",
+        "intent": "Debug / troubleshoot",
+        "life_stage": "Career change"
+      }
+    },
+    {
+      "persona_id": "synthetic-7daa81ce3941",
+      "display_name": "Arif Hassan",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-7daa81ce3941.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "18-24",
+        "region": "Southeast Asia",
+        "domain": "Agriculture",
+        "intent": "Learn / explain",
+        "life_stage": "Student"
+      }
+    },
+    {
+      "persona_id": "synthetic-3c33cdaf3066",
+      "display_name": "Anh Nguyen",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-3c33cdaf3066.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "18-24",
+        "region": "Southeast Asia",
+        "domain": "Manufacturing",
+        "intent": "Get task done",
+        "life_stage": "Student"
+      }
+    },
+    {
+      "persona_id": "wiki-2b7e6d899561",
+      "display_name": "Kai Nguyen",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_wiki-2b7e6d899561.yaml",
+      "source": "wiki",
+      "dimensions": {
+        "age_bracket": "55-64",
+        "region": "Southeast Asia",
+        "domain": "Public Sector",
+        "life_stage": "Mid-life"
+      }
+    },
+    {
+      "persona_id": "synthetic-ef8ab832242a",
+      "display_name": "Anh Rahman",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-ef8ab832242a.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "65-74",
+        "region": "Southeast Asia",
+        "domain": "Software & AI",
+        "intent": "Verify a claim",
+        "life_stage": "Retirement"
+      }
+    },
+    {
+      "persona_id": "wiki-3bd615d3b52c",
+      "display_name": "Mai Lim",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_wiki-3bd615d3b52c.yaml",
+      "source": "wiki",
+      "dimensions": {
+        "age_bracket": "55-64",
+        "region": "Southeast Asia",
+        "domain": "Arts & Humanities",
+        "life_stage": "Mid-life"
+      }
+    },
+    {
+      "persona_id": "synthetic-f62c875b07a9",
+      "display_name": "Rizal Putra",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-f62c875b07a9.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "55-64",
+        "region": "Southeast Asia",
+        "domain": "Agriculture",
+        "intent": "Learn / explain",
+        "life_stage": "Parent of young kids"
+      }
+    },
+    {
+      "persona_id": "synthetic-e05bb5b3ab6b",
+      "display_name": "Rizal Hassan",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-e05bb5b3ab6b.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "18-24",
+        "region": "Southeast Asia",
+        "domain": "Software & AI",
+        "intent": "Decide",
+        "life_stage": "Early career"
+      }
+    },
+    {
+      "persona_id": "wiki-2c61f86955aa",
+      "display_name": "Anh Hassan",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_wiki-2c61f86955aa.yaml",
+      "source": "wiki",
+      "dimensions": {
+        "age_bracket": "45-54",
+        "region": "Southeast Asia",
+        "domain": "Natural Sciences",
+        "life_stage": "Mid-life"
+      }
+    },
+    {
+      "persona_id": "synthetic-c64cf5c72949",
+      "display_name": "Kai Nguyen",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-c64cf5c72949.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "55-64",
+        "region": "Southeast Asia",
+        "domain": "Hospitality",
+        "intent": "Verify a claim",
+        "life_stage": "Mid-life"
+      }
+    },
+    {
+      "persona_id": "wiki-e4c3ec04ddc0",
+      "display_name": "Anh Lim",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_wiki-e4c3ec04ddc0.yaml",
+      "source": "wiki",
+      "dimensions": {
+        "age_bracket": "25-34",
+        "region": "Southeast Asia",
+        "domain": "Education",
+        "life_stage": "Early career"
+      }
+    },
+    {
+      "persona_id": "wiki-ea1e1b826aad",
+      "display_name": "Mai Rahman",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_wiki-ea1e1b826aad.yaml",
+      "source": "wiki",
+      "dimensions": {
+        "age_bracket": "45-54",
+        "region": "Southeast Asia",
+        "domain": "Arts & Humanities",
+        "life_stage": "Mid-life"
+      }
+    },
+    {
+      "persona_id": "synthetic-86aeb840a793",
+      "display_name": "Rizal Rahman",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-86aeb840a793.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "35-44",
+        "region": "Southeast Asia",
+        "domain": "Law & Policy",
+        "intent": "Get task done",
+        "life_stage": "Mid-life"
+      }
+    },
+    {
+      "persona_id": "wiki-d3350d41690e",
+      "display_name": "Arif Lim",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_wiki-d3350d41690e.yaml",
+      "source": "wiki",
+      "dimensions": {
+        "age_bracket": "18-24",
+        "region": "Southeast Asia",
+        "domain": "Arts & Humanities",
+        "life_stage": "Early career"
+      }
+    },
+    {
+      "persona_id": "wiki-900abffe0bf6",
+      "display_name": "Rizal Rahman",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_wiki-900abffe0bf6.yaml",
+      "source": "wiki",
+      "dimensions": {
+        "age_bracket": "55-64",
+        "region": "Southeast Asia",
+        "domain": "Arts & Humanities",
+        "life_stage": "Mid-life"
+      }
+    },
+    {
+      "persona_id": "wiki-4efe368e69e2",
+      "display_name": "Arif Tran",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_wiki-4efe368e69e2.yaml",
+      "source": "wiki",
+      "dimensions": {
+        "age_bracket": "35-44",
+        "region": "Southeast Asia",
+        "domain": "Arts & Humanities",
+        "life_stage": "Early career"
+      }
+    },
+    {
+      "persona_id": "synthetic-f11f3c8b2c74",
+      "display_name": "Kai Nguyen",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-f11f3c8b2c74.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "65-74",
+        "region": "Southeast Asia",
+        "domain": "Business & Management",
+        "intent": "Debug / troubleshoot",
+        "life_stage": "Empty nester"
+      }
+    },
+    {
+      "persona_id": "synthetic-b261c5b252c5",
+      "display_name": "Rizal Tran",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-b261c5b252c5.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "25-34",
+        "region": "Southeast Asia",
+        "domain": "Manufacturing",
+        "intent": "Learn / explain",
+        "life_stage": "Mid-life"
+      }
+    },
+    {
+      "persona_id": "synthetic-642746f7709b",
+      "display_name": "Siti Putra",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-642746f7709b.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "35-44",
+        "region": "Southeast Asia",
+        "domain": "Finance & Economics",
+        "intent": "Get task done",
+        "life_stage": "Early career"
+      }
+    },
+    {
+      "persona_id": "synthetic-21d01f4b9bff",
+      "display_name": "Rizal Putra",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-21d01f4b9bff.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "45-54",
+        "region": "Southeast Asia",
+        "domain": "Public Sector",
+        "intent": "Debug / troubleshoot",
+        "life_stage": "Career change"
+      }
+    },
+    {
+      "persona_id": "wiki-c17b7e658612",
+      "display_name": "Mai Nguyen",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_wiki-c17b7e658612.yaml",
+      "source": "wiki",
+      "dimensions": {
+        "age_bracket": "35-44",
+        "region": "Southeast Asia",
+        "domain": "Arts & Humanities",
+        "life_stage": "Early career"
+      }
+    },
+    {
+      "persona_id": "synthetic-048afde2cad6",
+      "display_name": "Arif Rahman",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-048afde2cad6.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "25-34",
+        "region": "Southeast Asia",
+        "domain": "Manufacturing",
+        "intent": "Verify a claim",
+        "life_stage": "Mid-life"
+      }
+    },
+    {
+      "persona_id": "synthetic-a54131aaa958",
+      "display_name": "Kai Putra",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-a54131aaa958.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "55-64",
+        "region": "Southeast Asia",
+        "domain": "Agriculture",
+        "intent": "Brainstorm",
+        "life_stage": "Mid-life"
+      }
+    },
+    {
+      "persona_id": "wiki-b29d7c2f8cf5",
+      "display_name": "Anh Rahman",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_wiki-b29d7c2f8cf5.yaml",
+      "source": "wiki",
+      "dimensions": {
+        "age_bracket": "18-24",
+        "region": "Southeast Asia",
+        "domain": "Arts & Humanities",
+        "life_stage": "Early career"
+      }
+    },
+    {
+      "persona_id": "wiki-8ef1d4e83ad4",
+      "display_name": "Anh Nguyen",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_wiki-8ef1d4e83ad4.yaml",
+      "source": "wiki",
+      "dimensions": {
+        "age_bracket": "25-34",
+        "region": "Southeast Asia",
+        "domain": "Healthcare & Medicine",
+        "life_stage": "Early career"
+      }
+    },
+    {
+      "persona_id": "synthetic-8ed12840b9a0",
+      "display_name": "Kai Rahman",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-8ed12840b9a0.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "45-54",
+        "region": "Southeast Asia",
+        "domain": "Hospitality",
+        "intent": "Vent / support",
+        "life_stage": "Parent of young kids"
+      }
+    },
+    {
+      "persona_id": "wiki-cb6f1398d384",
+      "display_name": "Mai Lim",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_wiki-cb6f1398d384.yaml",
+      "source": "wiki",
+      "dimensions": {
+        "age_bracket": "45-54",
+        "region": "Southeast Asia",
+        "domain": "Media & Journalism",
+        "life_stage": "Mid-life"
+      }
+    },
+    {
+      "persona_id": "synthetic-e5089da41677",
+      "display_name": "Mai Nguyen",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-e5089da41677.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "55-64",
+        "region": "Southeast Asia",
+        "domain": "Agriculture",
+        "intent": "Learn / explain",
+        "life_stage": "Mid-life"
+      }
+    },
+    {
+      "persona_id": "wiki-cc10e51fb02a",
+      "display_name": "Rizal Tran",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_wiki-cc10e51fb02a.yaml",
+      "source": "wiki",
+      "dimensions": {
+        "age_bracket": "25-34",
+        "region": "Southeast Asia",
+        "domain": "Arts & Humanities",
+        "life_stage": "Early career"
+      }
+    },
+    {
+      "persona_id": "synthetic-330845bb4afa",
+      "display_name": "Siti Hassan",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-330845bb4afa.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "18-24",
+        "region": "Southeast Asia",
+        "domain": "Manufacturing",
+        "intent": "Vent / support",
+        "life_stage": "Student"
+      }
+    },
+    {
+      "persona_id": "wiki-9e01c5c3612a",
+      "display_name": "Rizal Tran",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_wiki-9e01c5c3612a.yaml",
+      "source": "wiki",
+      "dimensions": {
+        "age_bracket": "35-44",
+        "region": "Southeast Asia",
+        "domain": "Arts & Humanities",
+        "life_stage": "Mid-life"
+      }
+    },
+    {
+      "persona_id": "synthetic-a10a2ebec8dd",
+      "display_name": "Kai Putra",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-a10a2ebec8dd.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "35-44",
+        "region": "Southeast Asia",
+        "domain": "Agriculture",
+        "intent": "Verify a claim",
+        "life_stage": "Parent of young kids"
+      }
+    },
+    {
+      "persona_id": "synthetic-26ec6316a44a",
+      "display_name": "Arif Lim",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-26ec6316a44a.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "25-34",
+        "region": "Southeast Asia",
+        "domain": "Hospitality",
+        "intent": "Decide",
+        "life_stage": "Early career"
+      }
+    },
+    {
+      "persona_id": "synthetic-dd4678da5a99",
+      "display_name": "Kai Hassan",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-dd4678da5a99.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "45-54",
+        "region": "Southeast Asia",
+        "domain": "Education",
+        "intent": "Decide",
+        "life_stage": "Mid-life"
+      }
+    },
+    {
+      "persona_id": "synthetic-619e13e271a4",
+      "display_name": "Mai Hassan",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-619e13e271a4.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "18-24",
+        "region": "Southeast Asia",
+        "domain": "Agriculture",
+        "intent": "Vent / support",
+        "life_stage": "Early career"
+      }
+    },
+    {
+      "persona_id": "synthetic-f26ef11949cc",
+      "display_name": "Anh Hassan",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-f26ef11949cc.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "45-54",
+        "region": "Southeast Asia",
+        "domain": "Hospitality",
+        "intent": "Get task done",
+        "life_stage": "Mid-life"
+      }
+    },
+    {
+      "persona_id": "synthetic-2b635f2e6359",
+      "display_name": "Kai Rahman",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-2b635f2e6359.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "35-44",
+        "region": "Southeast Asia",
+        "domain": "Law & Policy",
+        "intent": "Get task done",
+        "life_stage": "Mid-life"
+      }
+    },
+    {
+      "persona_id": "synthetic-aa11f4fc36ca",
+      "display_name": "Rizal Lim",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-aa11f4fc36ca.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "55-64",
+        "region": "Southeast Asia",
+        "domain": "Healthcare & Medicine",
+        "intent": "Get task done",
+        "life_stage": "Mid-life"
+      }
+    },
+    {
+      "persona_id": "synthetic-459721d62ff0",
+      "display_name": "Anh Putra",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-459721d62ff0.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "35-44",
+        "region": "Southeast Asia",
+        "domain": "Manufacturing",
+        "intent": "Get task done",
+        "life_stage": "Parent of young kids"
+      }
+    },
+    {
+      "persona_id": "wiki-5f0a1eac5053",
+      "display_name": "Rizal Lim",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_wiki-5f0a1eac5053.yaml",
+      "source": "wiki",
+      "dimensions": {
+        "age_bracket": "55-64",
+        "region": "Southeast Asia",
+        "domain": "Finance & Economics",
+        "life_stage": "Mid-life"
+      }
+    },
+    {
+      "persona_id": "synthetic-84a74b15abb0",
+      "display_name": "Rizal Putra",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-84a74b15abb0.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "35-44",
+        "region": "Southeast Asia",
+        "domain": "Manufacturing",
+        "intent": "Vent / support",
+        "life_stage": "Mid-life"
+      }
+    },
+    {
+      "persona_id": "wiki-53db9ff24c60",
+      "display_name": "Anh Tran",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_wiki-53db9ff24c60.yaml",
+      "source": "wiki",
+      "dimensions": {
+        "age_bracket": "25-34",
+        "region": "Southeast Asia",
+        "domain": "Arts & Humanities",
+        "life_stage": "Mid-life"
+      }
+    },
+    {
+      "persona_id": "synthetic-0e677a62cff9",
+      "display_name": "Rizal Rahman",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-0e677a62cff9.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "55-64",
+        "region": "Southeast Asia",
+        "domain": "Public Sector",
+        "intent": "Get task done",
+        "life_stage": "Retirement"
+      }
+    },
+    {
+      "persona_id": "wiki-ce62d2a40deb",
+      "display_name": "Kai Hassan",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_wiki-ce62d2a40deb.yaml",
+      "source": "wiki",
+      "dimensions": {
+        "age_bracket": "45-54",
+        "region": "Southeast Asia",
+        "domain": "Business & Management",
+        "life_stage": "Mid-life"
+      }
+    },
+    {
+      "persona_id": "synthetic-465fcefb0e38",
+      "display_name": "Kai Lim",
+      "path": "persona/datasets/matraix-persona-1m/cohorts/cohort-bf3e15b5d244/persona_synthetic-465fcefb0e38.yaml",
+      "source": "synthetic",
+      "dimensions": {
+        "age_bracket": "45-54",
+        "region": "Southeast Asia",
+        "domain": "Manufacturing",
+        "intent": "Learn / explain",
+        "life_stage": "Mid-life"
+      }
+    }
+  ]
+}

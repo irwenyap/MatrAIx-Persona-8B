@@ -1,0 +1,326 @@
+persona_id: wiki-82e0fdaf870b
+version: '1.0'
+source: wiki
+display_name: Rizal Tran
+dimensions:
+  age_bracket: 35-44
+  region: Southeast Asia
+  gender_identity: Man
+  urbanicity: Dense urban
+  socioeconomic_band: 'null'
+  primary_language: English
+  english_proficiency: Native
+  multilingualism: Bilingual
+  register: 'null'
+  domain: Arts & Humanities
+  domain_characteristics: Practitioner
+  research_output: None
+  seniority: Mid
+  company_size: Solo / freelance
+  role_function: Executive
+  years_experience: 11-20
+  linkedin_activity: Inactive
+  life_stage: Early career
+  major_life_events: None notable
+  cultural_background: South Asian
+  dominant_trait: High conscientiousness
+  risk_tolerance: Risk-seeking
+  decision_style: Directive
+  safety_sensitivity: Benign
+  topic_sports: Passionate
+  topic_fitness: Passionate
+  lang_english: Native
+  lang_mandarin: Native
+  lang_cantonese: None
+  lang_spanish: None
+  lang_hindi: None
+  lang_arabic: None
+  lang_french: None
+  lang_portuguese: None
+  lang_bengali: None
+  lang_russian: None
+  lang_japanese: None
+  lang_german: None
+  lang_korean: None
+  lang_italian: None
+  lang_turkish: None
+  lang_vietnamese: None
+  lang_thai: None
+  lang_indonesian: None
+  lang_malay: None
+  lang_swahili: None
+  lang_dutch: None
+  lang_polish: None
+  lang_ukrainian: None
+  lang_persian: None
+  lang_hebrew: None
+  lang_greek: None
+  lang_czech: None
+  lang_hungarian: None
+  lang_romanian: None
+  lang_swedish: None
+  lang_norwegian: None
+  lang_danish: None
+  lang_finnish: None
+  lang_tagalog: None
+  lang_urdu: None
+  lang_tamil: None
+  lang_telugu: None
+  lang_marathi: None
+  lang_punjabi: None
+  lang_gujarati: None
+  lang_hausa: None
+  lang_yoruba: None
+  lang_igbo: None
+  lang_amharic: None
+  lang_zulu: None
+  lang_afrikaans: None
+  lang_serbian: None
+  att_traditional_gender_roles: 'null'
+  ind_technology: None
+  ind_healthcare: None
+  ind_finance: None
+  ind_banking: None
+  ind_insurance: None
+  ind_retail: None
+  ind_e_commerce: None
+  ind_manufacturing: None
+  ind_automotive: None
+  ind_aerospace: None
+  ind_energy: None
+  ind_oil_gas: None
+  ind_utilities: None
+  ind_construction: None
+  ind_real_estate: None
+  ind_hospitality: None
+  ind_travel_tourism: None
+  ind_restaurants: None
+  ind_agriculture: None
+  ind_food_beverage: None
+  ind_pharmaceuticals: None
+  ind_biotech: None
+  ind_telecommunications: None
+  ind_media: Some exposure
+  ind_entertainment: Veteran
+  ind_gaming: None
+  ind_publishing: None
+  ind_advertising: None
+  ind_government: None
+  ind_defense: None
+  ind_nonprofit: None
+  ind_logistics: None
+  ind_transportation: None
+  ind_shipping: None
+  ind_mining: None
+  ind_chemicals: None
+  ind_textiles: None
+  ind_apparel: None
+  ind_consumer_electronics: None
+  ind_semiconductors: None
+  ind_legal_services: None
+  ind_consulting: None
+  ind_accounting: None
+  ind_marketing_agencies: None
+  ind_fitness_wellness: Some exposure
+  ind_beauty_cosmetics: None
+  ind_sports: Veteran
+  ind_music: None
+  ind_fine_art: None
+  cult_united_states: Visited
+  cult_canada: Unfamiliar
+  cult_united_kingdom: Unfamiliar
+  cult_france: Unfamiliar
+  cult_germany: Unfamiliar
+  cult_italy: Unfamiliar
+  cult_spain: Unfamiliar
+  cult_netherlands: Unfamiliar
+  cult_sweden: Unfamiliar
+  cult_poland: Unfamiliar
+  cult_russia: Unfamiliar
+  cult_turkey: Unfamiliar
+  cult_egypt: Unfamiliar
+  cult_saudi_arabia: Unfamiliar
+  cult_uae: Unfamiliar
+  cult_israel: Unfamiliar
+  cult_iran: Unfamiliar
+  cult_nigeria: Unfamiliar
+  cult_kenya: Unfamiliar
+  cult_south_africa: Unfamiliar
+  cult_ethiopia: Unfamiliar
+  cult_india: Unfamiliar
+  cult_pakistan: Unfamiliar
+  cult_bangladesh: Unfamiliar
+  cult_china: Unfamiliar
+  cult_japan: Visited
+  cult_south_korea: Unfamiliar
+  cult_vietnam: Unfamiliar
+  cult_thailand: Visited
+  cult_indonesia: Visited
+  cult_philippines: Visited
+  cult_australia: Unfamiliar
+  cult_new_zealand: Unfamiliar
+  cult_singapore: Native
+  cult_malaysia: Visited
+  cult_greece: Unfamiliar
+  cult_portugal: Unfamiliar
+  sport_wrestling: Play
+  big5_imagination: Very high
+  big5_artistic_interest: High
+  big5_emotionality: High
+  big5_adventurousness: High
+  big5_intellect: Average
+  big5_liberalism: Average
+  big5_self_efficacy: Very high
+  big5_orderliness: Average
+  big5_dutifulness: High
+  big5_achievement_striving: Very high
+  big5_self_discipline: Very high
+  big5_cautiousness: Low
+  big5_friendliness: Low
+  big5_gregariousness: Average
+  big5_assertiveness: Very high
+  big5_activity_level: Very high
+  big5_excitement_seeking: High
+  big5_cheerfulness: Low
+  big5_trust: Low
+  big5_morality: Low
+  big5_altruism: Low
+  big5_cooperation: Average
+  big5_modesty: Low
+  big5_sympathy: Low
+  big5_anxiety: Low
+  big5_anger: High
+  big5_depression: Average
+  big5_self_consciousness: Average
+  big5_immoderation: High
+  big5_vulnerability: Low
+  lstyle_exercise_freq: Daily
+  lstyle_work_schedule: Flexible hours
+  lstyle_hobby_intensity: Obsessive
+  health_general_health: Good
+  health_chronic_condition: None
+  health_mobility: Full
+  health_vision: Normal
+  health_hearing: Normal
+  health_color_vision: Typical
+  health_dexterity: Full
+  health_mental_health: Stable
+  health_stress_level: High
+  health_energy_level: High
+  health_sleep_quality: None
+  health_pain_level: None
+  health_medication_use: None
+  health_dietary_restriction: None
+  health_neurodivergence: Neurotypical
+  health_caregiver_status: Not a caregiver
+  health_health_literacy: None
+  health_insurance_status: None
+  health_fitness_level: Athlete
+  health_cognitive_load_capacity: High
+  health_contrast_need: 'No'
+  health_text_size_need: 'No'
+  health_assistive_tech: None
+  health_motion_sensitivity: None
+  health_attention_condition: None
+  trait_curiosity: Moderate
+  trait_creativity: Signature
+  trait_love_of_learning: Strong
+  trait_open_mindedness: Moderate
+  trait_bravery: Signature
+  trait_perseverance: Signature
+  trait_honesty: Slight
+  trait_zest: Strong
+  trait_capacity_for_love: Slight
+  trait_kindness: Slight
+  trait_social_intelligence: Moderate
+  trait_teamwork: Strong
+  trait_fairness: Slight
+  trait_leadership: Moderate
+  trait_forgiveness: Slight
+  trait_humility: Slight
+  trait_prudence: Moderate
+  trait_self_regulation: Strong
+  trait_appreciation_of_beauty: Absent
+  trait_gratitude: Slight
+  trait_hope_optimism: Strong
+  trait_playfulness: Slight
+  trait_spirituality: Absent
+  trait_ambition: Signature
+  trait_empathy: Slight
+  trait_resilience: Signature
+  trait_discipline: Signature
+  trait_generosity: Slight
+  trait_loyalty: Slight
+  trait_competitiveness: Signature
+  trait_adaptability: Strong
+  pref_work_location: Strongly office
+  pref_team_vs_solo: Team-leaning
+  pref_lead_vs_follow: Leans lead
+  pref_competition_vs_collab: Highly competitive
+  demo_marital_status: 'null'
+  demo_children_count: 'null'
+  demo_household_income: 'null'
+  demo_employment_status: Self-employed
+  demo_housing_status: 'null'
+  demo_generation: Millennial
+  demo_religion_affiliation: 'null'
+  demo_sexual_orientation: 'null'
+  demo_citizenship_status: Citizen by birth
+  demo_ethnicity_broad: 'null'
+  demo_disability_status: 'null'
+  demo_veteran_status: Civilian
+  demo_birth_order: 'null'
+  demo_home_language: 'null'
+  demo_political_engagement: 'null'
+  demo_parental_status: 'null'
+  demo_relationship_length: 'null'
+  demo_driver_status: 'null'
+  lifex_geographic_mobility: Never left hometown
+  lifex_travel_breadth: Never left country
+  lifex_career_path_shape: Linear climb
+  lifex_adversity_level: Minor setbacks
+  lifex_immigration_generation: Native multi-generational
+  lifex_military_history: Never served
+  lifex_entrepreneurship_history: Never considered
+  lifex_health_journey: No major events
+  lifex_loss_experience: No major loss
+  lifex_cultural_exposure: Monocultural
+  lifex_formative_decade: 2000s
+  lifex_public_recognition: Industry-recognized
+  lifex_service_history: None
+  lifex_turning_point: No single one
+  lifex_languages_lifetime: One
+  lifex_hometown_tie: Still there
+  bfi2_domain_extraversion: High
+  bfi2_domain_agreeableness: Low
+  bfi2_domain_conscientiousness: High
+  bfi2_domain_negative_emotionality: Average
+  bfi2_domain_open_mindedness: High
+  bfi2_facet_sociability: Average
+  bfi2_facet_assertiveness: Very high
+  bfi2_facet_energy_level: Very high
+  bfi2_facet_compassion: Low
+  bfi2_facet_respectfulness: Low
+  bfi2_facet_trust: Low
+  bfi2_facet_organization: Average
+  bfi2_facet_productiveness: Very high
+  bfi2_facet_responsibility: High
+  bfi2_facet_anxiety: Low
+  bfi2_facet_depression: Average
+  bfi2_facet_emotional_volatility: Average
+  bfi2_facet_intellectual_curiosity: Average
+  bfi2_facet_aesthetic_sensitivity: High
+  bfi2_facet_creative_imagination: Very high
+  need_for_closure: High
+  dospert_ethical_risk_tolerance: Very high
+  dospert_financial_risk_tolerance: Average
+  dospert_recreational_risk_tolerance: Very high
+  dospert_social_risk_tolerance: High
+  interpersonal_agency_dominance: Very high
+  interpersonal_communion_warmth: Very low
+  dev_contribution_context: Not applicable
+  dev_ic_manager_orientation: Not applicable
+  dev_primary_work_surface: Not applicable
+  dev_professional_status: Non-developer technologist
+  dev_role_archetype: Other developer
+  dev_toolchain_complexity: Not applicable

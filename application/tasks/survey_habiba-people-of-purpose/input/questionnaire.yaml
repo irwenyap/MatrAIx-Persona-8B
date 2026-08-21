@@ -1,0 +1,336 @@
+schemaVersion: "1.0"
+
+id: habiba_people_of_purpose_v1
+title: Habiba People of Purpose Social Media Reaction
+description: >
+  Measures how an individual would realistically respond to a DBS/POSB
+  human-interest social media post featuring Habiba Begum Hajamohidin,
+  including attention, emotional response, authenticity, engagement behaviour,
+  and any resulting change in brand perception.
+
+questions:
+  # ------------------------------------------------------------
+  # ATTENTION
+  # ------------------------------------------------------------
+
+  - id: feed_attention
+    prompt: >
+      If this post appeared naturally while you were scrolling Facebook or
+      Instagram, how much attention would you realistically give it?
+    type: single_choice
+    construct: feed_attention
+    required: true
+    options:
+      - id: scroll_immediately
+        label: I would scroll past almost immediately.
+      - id: glance_only
+        label: I would briefly glance at it but probably not read the caption.
+      - id: partial_read
+        label: I would look at the images and read part of the caption.
+      - id: full_read
+        label: I would probably read most or all of the post.
+      - id: strong_attention
+        label: I would stop and pay close attention to the post.
+
+  - id: attention_driver
+    prompt: >
+      What, if anything, would be most likely to make you stop and look at
+      this post?
+    type: single_choice
+    construct: attention_driver
+    required: true
+    options:
+      - id: habiba_personal_story
+        label: Habiba's personal story.
+      - id: ndp
+        label: The National Day Parade setting.
+      - id: employee_photos
+        label: The photographs of Habiba and her colleagues.
+      - id: customer_work
+        label: Her story about helping customers facing financial difficulties.
+      - id: dbs_posb
+        label: The DBS/POSB association.
+      - id: leadership
+        label: The involvement of DBS/POSB senior leaders shown in the images.
+      - id: sneakers
+        label: The customised "Live More, Bank Less" sneakers.
+      - id: nothing
+        label: Nothing in particular would make me stop for this post.
+
+  # ------------------------------------------------------------
+  # CONTENT REACTION
+  # ------------------------------------------------------------
+
+  - id: emotional_resonance
+    prompt: >
+      How emotionally engaging do you personally find Habiba's story?
+    type: likert
+    construct: emotional_resonance
+    required: true
+    minValue: 1
+    maxValue: 5
+
+  - id: relatability
+    prompt: >
+      How relatable does Habiba's story feel to you personally?
+    type: likert
+    construct: relatability
+    required: true
+    minValue: 1
+    maxValue: 5
+
+  - id: authenticity
+    prompt: >
+      How authentic or genuine does the post feel to you?
+    type: likert
+    construct: perceived_authenticity
+    required: true
+    minValue: 1
+    maxValue: 5
+    askRationale: true
+
+  - id: corporate_feeling
+    prompt: >
+      Which best describes how the post feels to you overall?
+    type: single_choice
+    construct: editorial_perception
+    required: true
+    askRationale: true
+    options:
+      - id: very_personal
+        label: Primarily a genuine personal story.
+      - id: mostly_personal
+        label: Mostly personal, with some corporate branding.
+      - id: balanced
+        label: A fairly even mix of personal storytelling and corporate messaging.
+      - id: mostly_corporate
+        label: Mostly corporate messaging presented through a personal story.
+      - id: very_corporate
+        label: Primarily corporate or promotional content.
+
+  - id: story_length
+    prompt: >
+      How does the length of the caption affect your willingness to read it?
+    type: single_choice
+    construct: content_length_effect
+    required: true
+    options:
+      - id: much_too_long
+        label: It is much too long and I would likely stop reading early.
+      - id: somewhat_long
+        label: It feels somewhat long, but I might still read parts of it.
+      - id: appropriate
+        label: The length feels appropriate for the story.
+      - id: engaging_enough
+        label: The story is engaging enough that the length would not bother me.
+
+  # ------------------------------------------------------------
+  # MESSAGE TAKEAWAY
+  # ------------------------------------------------------------
+
+  - id: primary_takeaway
+    prompt: >
+      After seeing the post, what would be your strongest takeaway?
+    type: single_choice
+    construct: primary_message_takeaway
+    required: true
+    options:
+      - id: habiba_resilience
+        label: Habiba's resilience and personal journey.
+      - id: customer_empathy
+        label: Habiba's empathy toward customers facing financial difficulties.
+      - id: employee_camaraderie
+        label: The friendships and camaraderie among DBS/POSB employees.
+      - id: national_pride
+        label: DBS/POSB employees participating in Singapore's National Day Parade.
+      - id: human_side
+        label: Seeing a more human side of DBS/POSB and its employees.
+      - id: corporate_branding
+        label: DBS/POSB promoting its corporate brand.
+      - id: little_takeaway
+        label: The post would leave little or no lasting impression on me.
+
+  - id: employee_impression
+    prompt: >
+      What impression does the post leave you with of Habiba?
+    type: single_choice
+    construct: featured_employee_impression
+    required: true
+    options:
+      - id: very_positive
+        label: Very positive.
+      - id: somewhat_positive
+        label: Somewhat positive.
+      - id: neutral
+        label: Neutral or no strong impression.
+      - id: somewhat_negative
+        label: Somewhat negative.
+      - id: very_negative
+        label: Very negative.
+
+  # ------------------------------------------------------------
+  # BRAND EFFECT
+  # ------------------------------------------------------------
+
+  - id: humanisation
+    prompt: >
+      Does seeing Habiba's story make DBS/POSB feel more human or personally
+      relatable to you?
+    type: single_choice
+    construct: brand_humanisation
+    required: true
+    askRationale: true
+    options:
+      - id: much_more_human
+        label: Much more human and relatable.
+      - id: somewhat_more_human
+        label: Somewhat more human and relatable.
+      - id: no_change
+        label: It does not meaningfully change my impression.
+      - id: somewhat_less_genuine
+        label: It makes the organisation feel somewhat less genuine because it feels promotional.
+      - id: much_less_genuine
+        label: It makes the organisation feel much less genuine because it feels heavily corporate.
+
+  - id: brand_perception
+    prompt: >
+      After seeing the complete post, how would it affect your overall
+      perception of DBS/POSB?
+    type: single_choice
+    construct: brand_perception_change
+    required: true
+    askRationale: true
+    options:
+      - id: much_more_negative
+        label: Much more negative.
+      - id: somewhat_more_negative
+        label: Somewhat more negative.
+      - id: unchanged
+        label: No meaningful change.
+      - id: somewhat_more_positive
+        label: Somewhat more positive.
+      - id: much_more_positive
+        label: Much more positive.
+
+  - id: customer_centricity
+    prompt: >
+      Based only on this post, how strongly does DBS/POSB come across as an
+      organisation that cares about customers as people?
+    type: likert
+    construct: perceived_customer_centricity
+    required: true
+    minValue: 1
+    maxValue: 5
+
+  # ------------------------------------------------------------
+  # REALISTIC SOCIAL-MEDIA BEHAVIOUR
+  # ------------------------------------------------------------
+
+  - id: engagement_action
+    prompt: >
+      After seeing this post naturally in your feed, what would you most
+      realistically do?
+    type: single_choice
+    construct: social_engagement_action
+    required: true
+    askRationale: true
+    options:
+      - id: scroll_past
+        label: Scroll past without interacting.
+      - id: read_only
+        label: Read or view the post but leave no visible interaction.
+      - id: like_react
+        label: Like or react to the post.
+      - id: comment
+        label: Leave a public comment.
+      - id: share_private
+        label: Send or mention the post privately to someone.
+      - id: share_public
+        label: Share or repost it publicly.
+
+  - id: like_likelihood
+    prompt: >
+      How likely would you realistically be to like or react to this post?
+    type: likert
+    construct: reaction_likelihood
+    required: true
+    minValue: 1
+    maxValue: 5
+
+  - id: comment_likelihood
+    prompt: >
+      How likely would you realistically be to leave a public comment on
+      this post?
+    type: likert
+    construct: comment_likelihood
+    required: true
+    minValue: 1
+    maxValue: 5
+
+  - id: share_likelihood
+    prompt: >
+      How likely would you realistically be to share or repost this content,
+      either publicly or privately?
+    type: likert
+    construct: sharing_likelihood
+    required: true
+    minValue: 1
+    maxValue: 5
+
+  - id: public_comment
+    prompt: >
+      If you would genuinely leave a public comment on this Facebook or
+      Instagram post, what would you write? Write it naturally as you would
+      online. If you would not comment, answer "No public comment."
+    type: free_text
+    construct: generated_public_comment
+    required: true
+
+  # ------------------------------------------------------------
+  # MEMORY / LASTING EFFECT
+  # ------------------------------------------------------------
+
+  - id: memorability
+    prompt: >
+      After continuing to scroll through your feed, how likely do you think
+      you would be to remember this post later?
+    type: likert
+    construct: memorability
+    required: true
+    minValue: 1
+    maxValue: 5
+
+  - id: strongest_element
+    prompt: >
+      Which element of the post would have the strongest effect on your
+      impression, whether positive, negative, or neutral?
+    type: single_choice
+    construct: strongest_content_element
+    required: true
+    options:
+      - id: separation_recovery
+        label: Habiba describing her separation and personal recovery.
+      - id: friendships
+        label: The friendships she formed through NDP rehearsals.
+      - id: collections_role
+        label: Her explanation of how she approaches customers facing debt.
+      - id: ndp_participation
+        label: Her repeated participation in the National Day Parade.
+      - id: employee_group
+        label: Seeing the larger DBS/POSB employee contingent.
+      - id: leadership
+        label: Seeing DBS/POSB senior leaders engaging with the contingent.
+      - id: branded_sneakers
+        label: The customised "Live More, Bank Less" sneakers.
+      - id: overall_story
+        label: The combination of the story rather than one specific element.
+      - id: none
+        label: None of the elements would meaningfully affect me.
+
+  - id: overall_response
+    prompt: >
+      In a few sentences, describe your overall reaction to the post and
+      anything that particularly strengthened or weakened its impact on you.
+    type: free_text
+    construct: overall_qualitative_response
+    required: true

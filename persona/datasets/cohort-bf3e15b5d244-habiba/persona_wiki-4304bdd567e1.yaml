@@ -1,0 +1,268 @@
+persona_id: wiki-4304bdd567e1
+version: '1.0'
+source: wiki
+display_name: Mai Hassan
+dimensions:
+  age_bracket: 25-34
+  region: Southeast Asia
+  gender_identity: Man
+  urbanicity: Dense urban
+  socioeconomic_band: Upper-middle
+  primary_language: Indonesian
+  english_proficiency: None
+  multilingualism: Monolingual
+  register: Formal / standard
+  domain: Arts & Humanities
+  domain_characteristics: Practitioner
+  seniority: Mid
+  company_size: SMB (50-500)
+  role_function: Executive
+  years_experience: 3-5
+  life_stage: Early career
+  major_life_events: None notable
+  cultural_background: Indonesian
+  dominant_trait: Balanced
+  values_priority: Achievement
+  religiosity: 'null'
+  safety_sensitivity: Benign
+  economic_motivation: 'null'
+  topic_sports: Passionate
+  topic_fitness: Passionate
+  lang_english: None
+  lang_mandarin: None
+  lang_cantonese: None
+  lang_spanish: None
+  lang_hindi: None
+  lang_arabic: None
+  lang_french: None
+  lang_portuguese: None
+  lang_bengali: None
+  lang_russian: None
+  lang_japanese: None
+  lang_german: None
+  lang_korean: None
+  lang_italian: None
+  lang_turkish: None
+  lang_vietnamese: None
+  lang_thai: None
+  lang_indonesian: Native
+  lang_malay: None
+  lang_swahili: None
+  lang_dutch: None
+  lang_polish: None
+  lang_ukrainian: None
+  lang_persian: None
+  lang_hebrew: None
+  lang_greek: None
+  lang_czech: None
+  lang_hungarian: None
+  lang_romanian: None
+  lang_swedish: None
+  lang_norwegian: None
+  lang_danish: None
+  lang_finnish: None
+  lang_tagalog: None
+  lang_urdu: None
+  lang_tamil: None
+  lang_telugu: None
+  lang_marathi: None
+  lang_punjabi: None
+  lang_gujarati: None
+  lang_hausa: None
+  lang_yoruba: None
+  lang_igbo: None
+  lang_amharic: None
+  lang_zulu: None
+  lang_afrikaans: None
+  lang_serbian: None
+  ind_technology: None
+  ind_healthcare: None
+  ind_finance: None
+  ind_banking: None
+  ind_insurance: None
+  ind_retail: None
+  ind_e_commerce: None
+  ind_manufacturing: None
+  ind_automotive: None
+  ind_aerospace: None
+  ind_energy: None
+  ind_oil_gas: None
+  ind_utilities: None
+  ind_construction: None
+  ind_real_estate: None
+  ind_hospitality: None
+  ind_travel_tourism: None
+  ind_restaurants: None
+  ind_agriculture: None
+  ind_food_beverage: None
+  ind_pharmaceuticals: None
+  ind_biotech: None
+  ind_telecommunications: None
+  ind_media: None
+  ind_entertainment: None
+  ind_gaming: None
+  ind_publishing: None
+  ind_advertising: None
+  ind_government: None
+  ind_defense: None
+  ind_nonprofit: None
+  ind_logistics: None
+  ind_transportation: None
+  ind_shipping: None
+  ind_mining: None
+  ind_chemicals: None
+  ind_textiles: None
+  ind_apparel: None
+  ind_consumer_electronics: None
+  ind_semiconductors: None
+  ind_legal_services: None
+  ind_consulting: None
+  ind_accounting: None
+  ind_marketing_agencies: None
+  ind_fitness_wellness: None
+  ind_beauty_cosmetics: None
+  ind_sports: Veteran
+  ind_music: None
+  ind_fine_art: None
+  cult_united_states: Unfamiliar
+  cult_canada: Unfamiliar
+  cult_mexico: Unfamiliar
+  cult_brazil: Unfamiliar
+  cult_argentina: Unfamiliar
+  cult_united_kingdom: Unfamiliar
+  cult_france: Unfamiliar
+  cult_germany: Unfamiliar
+  cult_italy: Unfamiliar
+  cult_spain: Unfamiliar
+  cult_netherlands: Unfamiliar
+  cult_sweden: Unfamiliar
+  cult_poland: Unfamiliar
+  cult_russia: Unfamiliar
+  cult_turkey: Unfamiliar
+  cult_egypt: Unfamiliar
+  cult_saudi_arabia: Unfamiliar
+  cult_uae: Unfamiliar
+  cult_israel: Unfamiliar
+  cult_iran: Unfamiliar
+  cult_nigeria: Unfamiliar
+  cult_kenya: Unfamiliar
+  cult_south_africa: Unfamiliar
+  cult_ethiopia: Unfamiliar
+  cult_india: Unfamiliar
+  cult_pakistan: Unfamiliar
+  cult_bangladesh: Unfamiliar
+  cult_china: Unfamiliar
+  cult_japan: Unfamiliar
+  cult_south_korea: Unfamiliar
+  cult_vietnam: Unfamiliar
+  cult_thailand: Unfamiliar
+  cult_indonesia: Native
+  cult_philippines: Unfamiliar
+  cult_australia: Unfamiliar
+  cult_new_zealand: Unfamiliar
+  cult_singapore: Unfamiliar
+  cult_malaysia: Unfamiliar
+  cult_greece: Unfamiliar
+  cult_portugal: Unfamiliar
+  sport_soccer: Play
+  lstyle_exercise_freq: Daily
+  lstyle_work_schedule: Shift work
+  trait_curiosity: Absent
+  trait_creativity: Absent
+  trait_love_of_learning: Absent
+  trait_open_mindedness: Absent
+  trait_perspective: Absent
+  trait_bravery: Absent
+  trait_perseverance: Moderate
+  trait_honesty: Absent
+  trait_zest: Absent
+  trait_capacity_for_love: Absent
+  trait_kindness: Absent
+  trait_social_intelligence: Absent
+  trait_teamwork: Strong
+  trait_fairness: Absent
+  trait_leadership: Absent
+  trait_forgiveness: Absent
+  trait_humility: Absent
+  trait_prudence: Absent
+  trait_self_regulation: Absent
+  trait_appreciation_of_beauty: Absent
+  trait_gratitude: Absent
+  trait_hope_optimism: Absent
+  trait_playfulness: Absent
+  trait_spirituality: Absent
+  trait_ambition: Strong
+  trait_empathy: Absent
+  trait_resilience: Strong
+  trait_discipline: Strong
+  trait_generosity: Absent
+  trait_loyalty: Absent
+  trait_competitiveness: Strong
+  trait_adaptability: Strong
+  val_family: 'null'
+  val_career_success: Important
+  val_wealth: 'null'
+  val_health: Important
+  val_personal_freedom: 'null'
+  val_security_stability: 'null'
+  val_adventure: 'null'
+  val_tradition: 'null'
+  val_power_influence: 'null'
+  val_achievement: Important
+  val_creativity_self_expression: 'null'
+  val_community: 'null'
+  val_spirituality_faith: 'null'
+  val_knowledge_truth: 'null'
+  val_social_status: 'null'
+  val_independence: 'null'
+  val_justice_fairness: 'null'
+  val_loyalty: 'null'
+  val_sustainability: 'null'
+  val_recognition: 'null'
+  val_helping_others: 'null'
+  val_personal_growth: 'null'
+  val_fun_enjoyment: 'null'
+  val_integrity_honesty: 'null'
+  val_beauty_aesthetics: 'null'
+  val_order_structure: 'null'
+  val_patriotism: 'null'
+  val_equality: 'null'
+  val_privacy: 'null'
+  pref_work_location: Strongly office
+  pref_team_vs_solo: Strongly team
+  pref_competition_vs_collab: Competitive
+  demo_employment_status: Full-time
+  demo_generation: Millennial
+  demo_citizenship_status: Citizen by birth
+  demo_disability_status: No disability
+  demo_veteran_status: Civilian
+  demo_home_language: Same as primary
+  lifex_geographic_mobility: Moved within region
+  lifex_travel_breadth: Never left country
+  lifex_career_path_shape: Linear climb
+  lifex_immigration_generation: Native multi-generational
+  lifex_cultural_exposure: Monocultural
+  lifex_formative_decade: 2000s
+  lifex_public_recognition: Industry-recognized
+  schwartz_value_self_direction: 'null'
+  schwartz_value_stimulation: 'null'
+  schwartz_value_hedonism: 'null'
+  schwartz_value_achievement: High
+  schwartz_value_power: 'null'
+  schwartz_value_security: 'null'
+  schwartz_value_conformity: 'null'
+  schwartz_value_tradition: 'null'
+  schwartz_value_benevolence: 'null'
+  schwartz_value_universalism: 'null'
+  sdt_need_autonomy: 'null'
+  sdt_need_competence: High
+  sdt_need_relatedness: 'null'
+  need_for_cognition: 'null'
+  code_review_participation_level: No coding activity
+  commit_cadence_style: No coding activity
+  dev_professional_status: Non-developer technologist
+  github_contribution_mode: No coding activity
+  issue_engagement_style: No coding activity
+  open_source_activity_level: No coding activity
+  pr_collaboration_style: No coding activity
+  release_maintenance_orientation: No coding activity

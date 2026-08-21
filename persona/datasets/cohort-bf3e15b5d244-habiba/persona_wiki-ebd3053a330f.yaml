@@ -1,0 +1,298 @@
+persona_id: wiki-ebd3053a330f
+version: '1.0'
+source: wiki
+display_name: Siti Tran
+dimensions:
+  age_bracket: 45-54
+  region: Southeast Asia
+  gender_identity: Man
+  urbanicity: Dense urban
+  socioeconomic_band: Upper-middle
+  primary_language: English
+  english_proficiency: Fluent (C1-C2)
+  multilingualism: Bilingual
+  register: Formal / standard
+  domain: Public Sector
+  subject_specialty: Urban planning
+  domain_characteristics: Practitioner
+  seniority: Mid
+  company_size: Public sector
+  role_function: Executive
+  years_experience: 3-5
+  life_stage: Mid-life
+  major_life_events: None notable
+  cultural_background: South Asian
+  dominant_trait: Balanced
+  values_priority: Community
+  political_lean: Center-left
+  safety_sensitivity: Benign
+  fam_sociology: Aware
+  fam_psychology: Aware
+  fam_cognitive_science: None
+  fam_anthropology: Aware
+  fam_political_science: Proficient
+  fam_international_relations: Aware
+  fam_comparative_literature: None
+  fam_philosophy: Aware
+  fam_ethics: Aware
+  fam_history: Familiar
+  fam_archaeology: None
+  fam_linguistics: Aware
+  fam_art_history: None
+  fam_music_theory: None
+  fam_film_studies: None
+  fam_architecture: Aware
+  fam_urban_planning: Familiar
+  fam_landscape_design: Aware
+  fam_agronomy: Aware
+  fam_horticulture: Aware
+  fam_veterinary_medicine: None
+  fam_nursing: None
+  fam_pharmacology: None
+  fam_public_health: Familiar
+  fam_epidemiology: Aware
+  fam_nutrition: Aware
+  fam_sports_science: None
+  fam_cybersecurity: Aware
+  fam_cryptography: None
+  fam_computer_networking: Aware
+  fam_databases: Aware
+  fam_distributed_systems: None
+  fam_operating_systems: Aware
+  fam_compilers: None
+  fam_cloud_infrastructure: Aware
+  fam_devops: None
+  fam_game_development: None
+  fam_computer_graphics: None
+  fam_computer_vision: None
+  fam_natural_language_processing: None
+  fam_human_computer_interaction: Aware
+  fam_ux_research: Aware
+  fam_graphic_design: Aware
+  fam_industrial_design: None
+  fam_typography: Aware
+  fam_journalism: Familiar
+  fam_public_relations: Familiar
+  fam_brand_marketing: Aware
+  fam_performance_marketing: Aware
+  fam_seo: Aware
+  fam_sales_engineering: None
+  fam_religious_studies: None
+  topic_politics: Passionate
+  topic_spirituality: Neutral
+  lang_english: Fluent
+  lang_mandarin: Native
+  lang_cantonese: None
+  lang_spanish: None
+  lang_hindi: None
+  lang_arabic: None
+  lang_french: None
+  lang_portuguese: None
+  lang_bengali: None
+  lang_russian: None
+  lang_japanese: None
+  lang_german: None
+  lang_korean: None
+  lang_italian: None
+  lang_turkish: None
+  lang_vietnamese: None
+  lang_thai: None
+  lang_indonesian: None
+  lang_malay: None
+  lang_swahili: None
+  lang_dutch: None
+  lang_polish: None
+  lang_ukrainian: None
+  lang_persian: None
+  lang_hebrew: None
+  lang_greek: None
+  lang_czech: None
+  lang_hungarian: None
+  lang_romanian: None
+  lang_swedish: None
+  lang_norwegian: None
+  lang_danish: None
+  lang_finnish: None
+  lang_tagalog: None
+  lang_urdu: None
+  lang_tamil: None
+  lang_telugu: None
+  lang_marathi: None
+  lang_punjabi: None
+  lang_gujarati: None
+  lang_hausa: None
+  lang_yoruba: None
+  lang_igbo: None
+  lang_amharic: None
+  lang_zulu: None
+  lang_afrikaans: None
+  lang_serbian: None
+  att_ai: Neutral
+  att_automation: Neutral
+  att_data_privacy: Neutral
+  att_social_media: Neutral
+  att_remote_work: Neutral
+  att_globalization: Neutral
+  att_free_markets: Neutral
+  att_government_regulation: Neutral
+  att_climate_action: Neutral
+  att_nuclear_energy: Neutral
+  att_renewable_energy: Neutral
+  att_genetic_engineering: Neutral
+  att_vaccines: Neutral
+  att_alternative_medicine: Neutral
+  att_organized_religion: Neutral
+  att_cryptocurrency: Neutral
+  att_the_gig_economy: Neutral
+  att_labor_unions: Neutral
+  att_higher_education: Neutral
+  att_homeownership: Neutral
+  att_taking_on_debt: Neutral
+  att_risk_taking: Neutral
+  att_authority: Neutral
+  att_rapid_change: Neutral
+  att_new_technology: Neutral
+  att_brand_loyalty: Neutral
+  att_advertising: Neutral
+  att_influencers: Neutral
+  att_online_reviews: Neutral
+  att_subscription_services: Neutral
+  att_open_source: Neutral
+  att_surveillance: Neutral
+  att_self_driving_cars: Neutral
+  att_space_exploration: Neutral
+  att_universal_basic_income: Neutral
+  att_minimalism: Neutral
+  att_consumerism: Neutral
+  att_veganism: Neutral
+  att_fast_fashion: Neutral
+  att_gun_ownership: Neutral
+  att_capital_punishment: Neutral
+  att_free_speech: Neutral
+  att_privacy_vs_security: Neutral
+  att_globalized_supply_chains: Neutral
+  ind_technology: None
+  ind_healthcare: None
+  ind_finance: None
+  ind_banking: None
+  ind_insurance: None
+  ind_retail: None
+  ind_e_commerce: None
+  ind_manufacturing: None
+  ind_automotive: None
+  ind_aerospace: None
+  ind_energy: None
+  ind_oil_gas: None
+  ind_utilities: None
+  ind_construction: None
+  ind_real_estate: None
+  ind_hospitality: None
+  ind_travel_tourism: None
+  ind_restaurants: None
+  ind_agriculture: None
+  ind_food_beverage: None
+  ind_pharmaceuticals: None
+  ind_biotech: None
+  ind_telecommunications: None
+  ind_media: None
+  ind_entertainment: None
+  ind_gaming: None
+  ind_publishing: None
+  ind_advertising: None
+  ind_government: Veteran
+  ind_defense: None
+  ind_nonprofit: None
+  ind_logistics: None
+  ind_transportation: None
+  ind_shipping: None
+  ind_mining: None
+  ind_chemicals: None
+  ind_textiles: None
+  ind_apparel: None
+  ind_consumer_electronics: None
+  ind_semiconductors: None
+  ind_legal_services: None
+  ind_consulting: None
+  ind_accounting: None
+  ind_marketing_agencies: None
+  ind_fitness_wellness: None
+  ind_beauty_cosmetics: None
+  ind_sports: None
+  ind_music: None
+  ind_fine_art: None
+  cult_united_states: Unfamiliar
+  cult_canada: Unfamiliar
+  cult_mexico: Unfamiliar
+  cult_brazil: Unfamiliar
+  cult_argentina: Unfamiliar
+  cult_united_kingdom: Unfamiliar
+  cult_france: Unfamiliar
+  cult_germany: Unfamiliar
+  cult_italy: Unfamiliar
+  cult_spain: Unfamiliar
+  cult_netherlands: Unfamiliar
+  cult_sweden: Unfamiliar
+  cult_poland: Unfamiliar
+  cult_russia: Unfamiliar
+  cult_turkey: Unfamiliar
+  cult_egypt: Unfamiliar
+  cult_saudi_arabia: Unfamiliar
+  cult_uae: Unfamiliar
+  cult_israel: Unfamiliar
+  cult_iran: Unfamiliar
+  cult_nigeria: Unfamiliar
+  cult_kenya: Unfamiliar
+  cult_south_africa: Unfamiliar
+  cult_ethiopia: Unfamiliar
+  cult_india: Unfamiliar
+  cult_pakistan: Unfamiliar
+  cult_bangladesh: Unfamiliar
+  cult_china: Unfamiliar
+  cult_japan: Unfamiliar
+  cult_south_korea: Unfamiliar
+  cult_vietnam: Unfamiliar
+  cult_thailand: Unfamiliar
+  cult_indonesia: Unfamiliar
+  cult_philippines: Unfamiliar
+  cult_australia: Unfamiliar
+  cult_new_zealand: Unfamiliar
+  cult_singapore: Unfamiliar
+  cult_malaysia: Native
+  cult_greece: Unfamiliar
+  cult_portugal: Unfamiliar
+  val_career_success: Important
+  val_power_influence: Important
+  val_achievement: Important
+  val_community: Important
+  val_social_status: Important
+  val_recognition: Important
+  val_helping_others: Important
+  demo_employment_status: Full-time
+  demo_generation: Millennial
+  demo_citizenship_status: Citizen by birth
+  demo_ethnicity_broad: East Asian
+  demo_disability_status: No disability
+  demo_veteran_status: Civilian
+  demo_home_language: Bilingual home
+  demo_political_engagement: Activist
+  lifex_geographic_mobility: Never left hometown
+  lifex_travel_breadth: Never left country
+  lifex_career_path_shape: Linear climb
+  lifex_immigration_generation: Native multi-generational
+  lifex_military_history: Never served
+  lifex_entrepreneurship_history: Never considered
+  lifex_cultural_exposure: Monocultural
+  lifex_formative_decade: 1980s
+  lifex_public_recognition: Locally known
+  lifex_service_history: Public office
+  schwartz_value_achievement: High
+  schwartz_value_power: High
+  sdt_need_competence: High
+  code_review_participation_level: Rare / no review
+  commit_cadence_style: Irregular / experimental commits
+  dev_professional_status: Non-developer technologist
+  github_contribution_mode: Rare GitHub user
+  issue_engagement_style: Rare issue usage
+  open_source_activity_level: No coding activity
+  pr_collaboration_style: Rare PR usage
+  release_maintenance_orientation: Not involved in releases

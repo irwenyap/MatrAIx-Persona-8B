@@ -1,0 +1,219 @@
+persona_id: wiki-3d6710efec2c
+version: '1.0'
+source: wiki
+display_name: Rizal Nguyen
+dimensions:
+  age_bracket: 35-44
+  region: Southeast Asia
+  gender_identity: Man
+  urbanicity: Dense urban
+  socioeconomic_band: Upper-middle
+  primary_language: Serbian
+  english_proficiency: None
+  multilingualism: Monolingual
+  register: Formal / standard
+  domain: Arts & Humanities
+  domain_characteristics: Practitioner
+  seniority: Mid
+  company_size: SMB (50-500)
+  role_function: Executive
+  years_experience: 6-10
+  life_stage: Early career
+  major_life_events: Major relocation
+  cultural_background: Mixed / diaspora
+  dominant_trait: High conscientiousness
+  values_priority: Achievement
+  topic_sports: Passionate
+  topic_fitness: Passionate
+  topic_travel: Interested
+  lang_english: None
+  lang_mandarin: None
+  lang_cantonese: None
+  lang_spanish: None
+  lang_hindi: None
+  lang_arabic: None
+  lang_french: None
+  lang_portuguese: None
+  lang_bengali: None
+  lang_russian: None
+  lang_japanese: None
+  lang_german: None
+  lang_korean: None
+  lang_italian: None
+  lang_turkish: None
+  lang_vietnamese: None
+  lang_thai: None
+  lang_indonesian: None
+  lang_malay: None
+  lang_swahili: None
+  lang_dutch: None
+  lang_polish: None
+  lang_ukrainian: None
+  lang_persian: None
+  lang_hebrew: None
+  lang_greek: None
+  lang_czech: None
+  lang_hungarian: None
+  lang_romanian: None
+  lang_swedish: None
+  lang_norwegian: None
+  lang_danish: None
+  lang_finnish: None
+  lang_tagalog: None
+  lang_urdu: None
+  lang_tamil: None
+  lang_telugu: None
+  lang_marathi: None
+  lang_punjabi: None
+  lang_gujarati: None
+  lang_hausa: None
+  lang_yoruba: None
+  lang_igbo: None
+  lang_amharic: None
+  lang_zulu: None
+  lang_afrikaans: None
+  lang_serbian: Native
+  ind_technology: None
+  ind_healthcare: None
+  ind_finance: None
+  ind_banking: None
+  ind_insurance: None
+  ind_retail: None
+  ind_e_commerce: None
+  ind_manufacturing: None
+  ind_automotive: None
+  ind_aerospace: None
+  ind_energy: None
+  ind_oil_gas: None
+  ind_utilities: None
+  ind_construction: None
+  ind_real_estate: None
+  ind_hospitality: None
+  ind_travel_tourism: None
+  ind_restaurants: None
+  ind_agriculture: None
+  ind_food_beverage: None
+  ind_pharmaceuticals: None
+  ind_biotech: None
+  ind_telecommunications: None
+  ind_media: None
+  ind_entertainment: None
+  ind_gaming: None
+  ind_publishing: None
+  ind_advertising: None
+  ind_government: None
+  ind_defense: None
+  ind_nonprofit: None
+  ind_logistics: None
+  ind_transportation: None
+  ind_shipping: None
+  ind_mining: None
+  ind_chemicals: None
+  ind_textiles: None
+  ind_apparel: None
+  ind_consumer_electronics: None
+  ind_semiconductors: None
+  ind_legal_services: None
+  ind_consulting: None
+  ind_accounting: None
+  ind_marketing_agencies: None
+  ind_fitness_wellness: None
+  ind_beauty_cosmetics: None
+  ind_sports: Veteran
+  ind_music: None
+  ind_fine_art: None
+  cult_vietnam: Lived there
+  sport_soccer: Play
+  lstyle_exercise_freq: Daily
+  health_general_health: Excellent
+  health_chronic_condition: None
+  health_mobility: Full
+  health_vision: Normal
+  health_hearing: Normal
+  health_color_vision: Typical
+  health_dexterity: Full
+  health_mental_health: Stable
+  health_stress_level: High
+  health_energy_level: Very high
+  health_sleep_quality: Good
+  health_pain_level: Mild
+  health_medication_use: None
+  health_dietary_restriction: None
+  health_neurodivergence: Neurotypical
+  health_caregiver_status: Not a caregiver
+  health_health_literacy: High
+  health_insurance_status: Comprehensive
+  health_fitness_level: Athlete
+  health_cognitive_load_capacity: High
+  health_contrast_need: 'No'
+  health_text_size_need: 'No'
+  health_assistive_tech: None
+  health_motion_sensitivity: None
+  health_attention_condition: None
+  trait_curiosity: Moderate
+  trait_creativity: Moderate
+  trait_love_of_learning: Moderate
+  trait_open_mindedness: Moderate
+  trait_perspective: Moderate
+  trait_bravery: Moderate
+  trait_perseverance: Strong
+  trait_honesty: Moderate
+  trait_zest: Strong
+  trait_capacity_for_love: Moderate
+  trait_kindness: Moderate
+  trait_social_intelligence: Moderate
+  trait_teamwork: Strong
+  trait_fairness: Moderate
+  trait_leadership: Moderate
+  trait_forgiveness: Moderate
+  trait_humility: Moderate
+  trait_prudence: Moderate
+  trait_self_regulation: Strong
+  trait_appreciation_of_beauty: Moderate
+  trait_gratitude: Moderate
+  trait_hope_optimism: Strong
+  trait_playfulness: Moderate
+  trait_spirituality: Moderate
+  trait_ambition: Strong
+  trait_empathy: Moderate
+  trait_resilience: Strong
+  trait_discipline: Strong
+  trait_generosity: Moderate
+  trait_loyalty: Moderate
+  trait_competitiveness: Strong
+  trait_adaptability: Strong
+  val_career_success: Core value
+  val_achievement: Core value
+  val_recognition: Important
+  val_personal_growth: Important
+  pref_team_vs_solo: Strongly team
+  pref_indoor_vs_outdoor: Strongly outdoor
+  pref_big_group_vs_one_on_one: Loves big groups
+  pref_competition_vs_collab: Highly competitive
+  demo_employment_status: Full-time
+  demo_generation: Millennial
+  demo_citizenship_status: Citizen by birth
+  demo_ethnicity_broad: White / European
+  demo_disability_status: No disability
+  demo_veteran_status: Civilian
+  demo_home_language: Same as primary
+  lifex_geographic_mobility: Moved internationally
+  lifex_travel_breadth: A few countries
+  lifex_career_path_shape: Pivoted once
+  lifex_formative_decade: 2000s
+  lifex_public_recognition: Industry-recognized
+  schwartz_value_self_direction: Average
+  schwartz_value_stimulation: Average
+  schwartz_value_achievement: High
+  schwartz_value_power: Low
+  schwartz_value_security: Low
+  schwartz_value_conformity: Average
+  sdt_need_autonomy: Average
+  sdt_need_competence: High
+  code_review_participation_level: No coding activity
+  commit_cadence_style: No coding activity
+  github_contribution_mode: No coding activity
+  issue_engagement_style: No coding activity
+  open_source_activity_level: No coding activity
+  pr_collaboration_style: No coding activity
+  release_maintenance_orientation: No coding activity

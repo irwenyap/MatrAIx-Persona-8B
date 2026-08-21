@@ -1,0 +1,475 @@
+persona_id: wiki-b29d7c2f8cf5
+version: '1.0'
+source: wiki
+display_name: Anh Rahman
+dimensions:
+  age_bracket: 18-24
+  region: Southeast Asia
+  gender_identity: Woman
+  urbanicity: Dense urban
+  socioeconomic_band: Middle
+  primary_language: English
+  english_proficiency: Fluent (C1-C2)
+  multilingualism: Bilingual
+  register: Formal / standard
+  domain: Arts & Humanities
+  domain_characteristics: Practitioner
+  highest_education: None
+  academic_field: None
+  institution_tier: None
+  research_output: None
+  seniority: Entry
+  years_experience: 0-2
+  linkedin_activity: 'null'
+  life_stage: Early career
+  major_life_events: None notable
+  cultural_background: South Asian
+  dominant_trait: High conscientiousness
+  values_priority: Achievement
+  safety_sensitivity: Benign
+  fam_special_education: None
+  fam_sociology: None
+  fam_psychology: None
+  fam_cognitive_science: None
+  fam_anthropology: None
+  fam_political_science: None
+  fam_international_relations: None
+  fam_comparative_literature: None
+  fam_philosophy: None
+  fam_ethics: None
+  fam_history: None
+  fam_archaeology: None
+  fam_linguistics: None
+  fam_art_history: None
+  fam_music_theory: None
+  fam_film_studies: None
+  fam_architecture: None
+  fam_urban_planning: None
+  fam_landscape_design: None
+  fam_agronomy: None
+  fam_horticulture: None
+  fam_veterinary_medicine: None
+  fam_nursing: None
+  fam_pharmacology: None
+  fam_public_health: None
+  fam_epidemiology: None
+  fam_nutrition: None
+  fam_sports_science: Familiar
+  fam_cybersecurity: None
+  fam_cryptography: None
+  fam_computer_networking: None
+  fam_databases: None
+  fam_distributed_systems: None
+  fam_operating_systems: None
+  fam_compilers: None
+  fam_cloud_infrastructure: None
+  fam_devops: None
+  fam_game_development: None
+  fam_computer_graphics: None
+  fam_computer_vision: None
+  fam_natural_language_processing: None
+  fam_human_computer_interaction: None
+  fam_ux_research: None
+  fam_graphic_design: None
+  fam_industrial_design: None
+  fam_typography: None
+  fam_journalism: None
+  fam_public_relations: None
+  fam_brand_marketing: None
+  fam_performance_marketing: None
+  fam_seo: None
+  fam_sales_engineering: None
+  fam_supply_chain: None
+  fam_logistics: None
+  fam_operations_management: None
+  fam_lean_manufacturing: None
+  fam_quality_assurance: None
+  fam_human_resources: None
+  fam_organizational_psychology: None
+  fam_project_management: None
+  fam_product_management: None
+  fam_venture_capital: None
+  fam_private_equity: None
+  fam_real_estate: None
+  fam_insurance: None
+  fam_actuarial_science: None
+  fam_hospitality_management: None
+  fam_culinary_arts: None
+  fam_sommelier_knowledge: None
+  fam_fashion_design: None
+  fam_textiles: None
+  fam_photography: None
+  fam_cinematography: None
+  fam_music_production: None
+  fam_sound_engineering: None
+  fam_animation: None
+  fam_3d_modeling: None
+  fam_geographic_information_systems: None
+  fam_meteorology: None
+  fam_forestry: None
+  fam_marine_biology: None
+  fam_paleontology: None
+  fam_materials_science: None
+  fam_nanotechnology: None
+  fam_renewable_energy: None
+  fam_nuclear_engineering: None
+  fam_petroleum_engineering: None
+  fam_mining: None
+  fam_aviation: None
+  fam_maritime_navigation: None
+  fam_military_strategy: None
+  fam_diplomacy: None
+  fam_social_work: None
+  fam_counseling: None
+  fam_theology: None
+  fam_religious_studies: None
+  fam_library_science: None
+  topic_sports: Passionate
+  topic_fitness: Passionate
+  topic_spirituality: Neutral
+  lang_english: Fluent
+  lang_mandarin: Fluent
+  lang_cantonese: None
+  lang_spanish: None
+  lang_hindi: None
+  lang_arabic: None
+  lang_french: None
+  lang_portuguese: None
+  lang_bengali: None
+  lang_russian: None
+  lang_japanese: None
+  lang_german: None
+  lang_korean: None
+  lang_italian: None
+  lang_turkish: None
+  lang_vietnamese: None
+  lang_thai: None
+  lang_indonesian: None
+  lang_malay: None
+  lang_swahili: None
+  lang_dutch: None
+  lang_polish: None
+  lang_ukrainian: None
+  lang_persian: None
+  lang_hebrew: None
+  lang_greek: None
+  lang_czech: None
+  lang_hungarian: None
+  lang_romanian: None
+  lang_swedish: None
+  lang_norwegian: None
+  lang_danish: None
+  lang_finnish: None
+  lang_tagalog: None
+  lang_urdu: None
+  lang_tamil: None
+  lang_telugu: None
+  lang_marathi: None
+  lang_punjabi: None
+  lang_gujarati: None
+  lang_hausa: None
+  lang_yoruba: None
+  lang_igbo: None
+  lang_amharic: None
+  lang_zulu: None
+  lang_afrikaans: None
+  lang_serbian: None
+  att_traditional_gender_roles: Neutral
+  ind_technology: None
+  ind_healthcare: None
+  ind_finance: None
+  ind_banking: None
+  ind_insurance: None
+  ind_retail: None
+  ind_e_commerce: None
+  ind_manufacturing: None
+  ind_automotive: None
+  ind_aerospace: None
+  ind_energy: None
+  ind_oil_gas: None
+  ind_utilities: None
+  ind_construction: None
+  ind_real_estate: None
+  ind_hospitality: None
+  ind_travel_tourism: None
+  ind_restaurants: None
+  ind_agriculture: None
+  ind_food_beverage: None
+  ind_pharmaceuticals: None
+  ind_biotech: None
+  ind_telecommunications: None
+  ind_media: None
+  ind_entertainment: None
+  ind_gaming: None
+  ind_publishing: None
+  ind_advertising: None
+  ind_education: None
+  ind_government: None
+  ind_defense: None
+  ind_nonprofit: None
+  ind_logistics: None
+  ind_transportation: None
+  ind_shipping: None
+  ind_mining: None
+  ind_chemicals: None
+  ind_textiles: None
+  ind_apparel: None
+  ind_consumer_electronics: None
+  ind_semiconductors: None
+  ind_legal_services: None
+  ind_consulting: None
+  ind_accounting: None
+  ind_marketing_agencies: None
+  ind_fitness_wellness: None
+  ind_beauty_cosmetics: None
+  ind_sports: Veteran
+  ind_music: None
+  ind_fine_art: None
+  cult_united_states: Unfamiliar
+  cult_canada: Unfamiliar
+  cult_mexico: Unfamiliar
+  cult_brazil: Unfamiliar
+  cult_argentina: Unfamiliar
+  cult_united_kingdom: Unfamiliar
+  cult_france: Unfamiliar
+  cult_germany: Unfamiliar
+  cult_italy: Unfamiliar
+  cult_spain: Unfamiliar
+  cult_netherlands: Unfamiliar
+  cult_sweden: Unfamiliar
+  cult_poland: Unfamiliar
+  cult_russia: Visited
+  cult_turkey: Unfamiliar
+  cult_egypt: Unfamiliar
+  cult_saudi_arabia: Unfamiliar
+  cult_uae: Unfamiliar
+  cult_israel: Unfamiliar
+  cult_iran: Unfamiliar
+  cult_nigeria: Unfamiliar
+  cult_kenya: Unfamiliar
+  cult_south_africa: Unfamiliar
+  cult_ethiopia: Unfamiliar
+  cult_india: Visited
+  cult_pakistan: Unfamiliar
+  cult_bangladesh: Unfamiliar
+  cult_china: Visited
+  cult_japan: Visited
+  cult_south_korea: Unfamiliar
+  cult_vietnam: Unfamiliar
+  cult_thailand: Unfamiliar
+  cult_indonesia: Visited
+  cult_philippines: Unfamiliar
+  cult_australia: Unfamiliar
+  cult_new_zealand: Unfamiliar
+  cult_singapore: Visited
+  cult_malaysia: Native
+  cult_greece: Unfamiliar
+  cult_portugal: Unfamiliar
+  sport_soccer: None
+  sport_basketball: None
+  sport_american_football: None
+  sport_baseball: None
+  sport_tennis: None
+  sport_golf: None
+  sport_cricket: None
+  sport_rugby: None
+  sport_hockey: None
+  sport_volleyball: None
+  sport_swimming: None
+  sport_running: None
+  sport_cycling: None
+  sport_boxing: None
+  sport_mma: None
+  sport_wrestling: None
+  sport_skiing: None
+  sport_snowboarding: None
+  sport_surfing: None
+  sport_skateboarding: None
+  sport_climbing: None
+  sport_gymnastics: None
+  sport_track_field: None
+  sport_badminton: Play
+  sport_table_tennis: None
+  sport_squash: None
+  sport_sailing: None
+  sport_rowing: None
+  sport_martial_arts: None
+  sport_yoga: None
+  sport_pilates: None
+  sport_crossfit: None
+  sport_weightlifting: None
+  sport_esports: None
+  sport_darts: None
+  sport_bowling: None
+  sport_archery: None
+  sport_equestrian: None
+  sport_fencing: None
+  sport_triathlon: None
+  lstyle_exercise_freq: Daily
+  lstyle_travel_freq: Frequent flyer
+  lstyle_work_schedule: Flexible hours
+  lstyle_hobby_intensity: Obsessive
+  health_general_health: Excellent
+  health_chronic_condition: None
+  health_mobility: Full
+  health_vision: Normal
+  health_hearing: Normal
+  health_color_vision: Typical
+  health_dexterity: Full
+  health_mental_health: Thriving
+  health_stress_level: High
+  health_energy_level: Very high
+  health_sleep_quality: 'null'
+  health_pain_level: 'null'
+  health_medication_use: 'null'
+  health_dietary_restriction: 'null'
+  health_neurodivergence: Neurotypical
+  health_caregiver_status: Not a caregiver
+  health_health_literacy: High
+  health_insurance_status: 'null'
+  health_fitness_level: Athlete
+  health_cognitive_load_capacity: High
+  health_contrast_need: 'No'
+  health_text_size_need: 'No'
+  health_assistive_tech: None
+  health_motion_sensitivity: None
+  health_attention_condition: None
+  acad_algebra: None
+  acad_geometry: None
+  acad_calculus: None
+  acad_statistics: None
+  acad_physics: None
+  acad_chemistry: None
+  acad_biology: None
+  acad_earth_science: None
+  acad_computer_science: None
+  acad_economics: None
+  acad_psychology: None
+  acad_sociology: None
+  acad_world_history: None
+  acad_geography: None
+  acad_civics: None
+  acad_literature: None
+  acad_creative_writing: None
+  acad_foreign_languages: None
+  acad_philosophy: None
+  acad_visual_art: None
+  acad_music: None
+  acad_drama: None
+  acad_physical_education: None
+  acad_health_science: None
+  acad_business_studies: None
+  acad_environmental_science: None
+  acad_logic: None
+  acad_astronomy: None
+  acad_anthropology: None
+  trait_curiosity: Moderate
+  trait_creativity: Moderate
+  trait_love_of_learning: Strong
+  trait_open_mindedness: Strong
+  trait_perspective: Moderate
+  trait_bravery: Strong
+  trait_perseverance: Signature
+  trait_honesty: Moderate
+  trait_zest: Strong
+  trait_capacity_for_love: Moderate
+  trait_kindness: Moderate
+  trait_social_intelligence: Moderate
+  trait_teamwork: Signature
+  trait_fairness: Moderate
+  trait_leadership: Moderate
+  trait_forgiveness: Moderate
+  trait_humility: Moderate
+  trait_prudence: Moderate
+  trait_self_regulation: Strong
+  trait_appreciation_of_beauty: Moderate
+  trait_gratitude: Moderate
+  trait_hope_optimism: Strong
+  trait_playfulness: Moderate
+  trait_spirituality: Moderate
+  trait_ambition: Signature
+  trait_empathy: Moderate
+  trait_resilience: Strong
+  trait_discipline: Signature
+  trait_generosity: Moderate
+  trait_loyalty: Moderate
+  trait_competitiveness: Signature
+  trait_adaptability: Signature
+  val_family: Important
+  val_career_success: Core value
+  val_health: Core value
+  val_achievement: Core value
+  val_knowledge_truth: Important
+  val_recognition: Important
+  val_personal_growth: Important
+  val_patriotism: Important
+  pref_work_location: Hybrid
+  pref_team_vs_solo: Strongly team
+  pref_competition_vs_collab: Highly competitive
+  demo_marital_status: Single
+  demo_children_count: None
+  demo_household_income: 'null'
+  demo_employment_status: Full-time
+  demo_housing_status: Living with family
+  demo_generation: Gen Z
+  demo_religion_affiliation: 'null'
+  demo_sexual_orientation: 'null'
+  demo_citizenship_status: Citizen by birth
+  demo_ethnicity_broad: East Asian
+  demo_disability_status: No disability
+  demo_veteran_status: Civilian
+  demo_birth_order: 'null'
+  demo_home_language: Mixed languages
+  demo_political_engagement: 'null'
+  demo_parental_status: Not a parent
+  demo_relationship_length: Not in one
+  demo_driver_status: 'null'
+  lifex_childhood_environment: 'null'
+  lifex_geographic_mobility: Moved nationally
+  lifex_travel_breadth: A few countries
+  lifex_career_path_shape: Linear climb
+  lifex_education_journey: Traditional track
+  lifex_financial_trajectory: 'null'
+  lifex_adversity_level: Minor setbacks
+  lifex_immigration_generation: Native multi-generational
+  lifex_military_history: Never served
+  lifex_entrepreneurship_history: Never considered
+  lifex_relationship_history: Limited
+  lifex_parenting_journey: No children
+  lifex_health_journey: No major events
+  lifex_loss_experience: No major loss
+  lifex_faith_journey: 'null'
+  lifex_cultural_exposure: Some exposure
+  lifex_formative_decade: 2010s
+  lifex_public_recognition: Industry-recognized
+  lifex_service_history: None
+  lifex_turning_point: No single one
+  lifex_languages_lifetime: One
+  lifex_hometown_tie: 'null'
+  schwartz_value_self_direction: High
+  schwartz_value_stimulation: High
+  schwartz_value_hedonism: Average
+  schwartz_value_achievement: Very high
+  schwartz_value_power: Average
+  schwartz_value_security: Average
+  schwartz_value_conformity: Average
+  schwartz_value_tradition: Average
+  schwartz_value_benevolence: Average
+  schwartz_value_universalism: Average
+  sdt_need_autonomy: High
+  sdt_need_competence: Very high
+  sdt_need_relatedness: High
+  need_for_cognition: High
+  code_review_participation_level: No coding activity
+  commit_cadence_style: No coding activity
+  dev_contribution_context: Not applicable
+  dev_ic_manager_orientation: Not applicable
+  dev_primary_work_surface: Not applicable
+  dev_professional_status: Non-developer technologist
+  dev_role_archetype: Other developer
+  dev_toolchain_complexity: Not applicable
+  github_contribution_mode: No coding activity
+  issue_engagement_style: No coding activity
+  open_source_activity_level: No coding activity
+  pr_collaboration_style: No coding activity
+  release_maintenance_orientation: No coding activity

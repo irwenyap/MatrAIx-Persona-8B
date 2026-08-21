@@ -1,0 +1,338 @@
+persona_id: wiki-330238093593
+version: '1.0'
+source: wiki
+display_name: Siti Nguyen
+dimensions:
+  age_bracket: 35-44
+  region: Southeast Asia
+  gender_identity: Man
+  urbanicity: Dense urban
+  socioeconomic_band: Upper-middle
+  primary_language: English
+  english_proficiency: Fluent (C1-C2)
+  multilingualism: Bilingual
+  register: Formal / standard
+  domain: Arts & Humanities
+  domain_characteristics: Practitioner
+  seniority: Mid
+  company_size: Solo / freelance
+  role_function: Teaching
+  years_experience: 11-20
+  life_stage: Early career
+  major_life_events: Migration / immigration
+  cultural_background: Mixed / diaspora
+  dominant_trait: Balanced
+  values_priority: Achievement
+  safety_sensitivity: Benign
+  fam_sociology: None
+  fam_psychology: None
+  fam_cognitive_science: None
+  fam_anthropology: None
+  fam_international_relations: None
+  fam_comparative_literature: None
+  fam_philosophy: None
+  fam_ethics: None
+  fam_history: None
+  fam_archaeology: None
+  fam_linguistics: None
+  fam_art_history: None
+  fam_music_theory: None
+  fam_film_studies: None
+  fam_architecture: None
+  fam_urban_planning: None
+  fam_landscape_design: None
+  fam_agronomy: None
+  fam_horticulture: None
+  fam_veterinary_medicine: None
+  fam_nursing: None
+  fam_pharmacology: None
+  fam_public_health: None
+  fam_epidemiology: None
+  fam_nutrition: None
+  fam_sports_science: None
+  fam_cybersecurity: None
+  fam_cryptography: None
+  fam_computer_networking: None
+  fam_databases: None
+  fam_distributed_systems: None
+  fam_operating_systems: None
+  fam_compilers: None
+  fam_cloud_infrastructure: None
+  fam_devops: None
+  fam_game_development: None
+  fam_computer_graphics: None
+  fam_computer_vision: None
+  fam_natural_language_processing: None
+  fam_human_computer_interaction: None
+  fam_ux_research: None
+  fam_graphic_design: None
+  fam_industrial_design: None
+  fam_typography: None
+  fam_journalism: None
+  fam_public_relations: None
+  fam_brand_marketing: None
+  fam_performance_marketing: None
+  fam_seo: None
+  fam_sales_engineering: None
+  topic_sports: Passionate
+  topic_fitness: Passionate
+  lang_english: Fluent
+  lang_mandarin: None
+  lang_cantonese: None
+  lang_spanish: None
+  lang_hindi: None
+  lang_arabic: None
+  lang_french: None
+  lang_portuguese: None
+  lang_bengali: None
+  lang_russian: None
+  lang_japanese: None
+  lang_german: Native
+  lang_korean: None
+  lang_italian: None
+  lang_turkish: None
+  lang_vietnamese: None
+  lang_thai: None
+  lang_indonesian: None
+  lang_malay: None
+  lang_swahili: None
+  lang_dutch: None
+  lang_polish: None
+  lang_ukrainian: None
+  lang_persian: None
+  lang_hebrew: None
+  lang_greek: None
+  lang_czech: None
+  lang_hungarian: None
+  lang_romanian: None
+  lang_swedish: None
+  lang_norwegian: None
+  lang_danish: None
+  lang_finnish: None
+  lang_tagalog: None
+  lang_urdu: None
+  lang_tamil: None
+  lang_telugu: None
+  lang_marathi: None
+  lang_punjabi: None
+  lang_gujarati: None
+  lang_hausa: None
+  lang_yoruba: None
+  lang_igbo: None
+  lang_amharic: None
+  lang_zulu: None
+  lang_afrikaans: None
+  lang_serbian: None
+  ind_technology: None
+  ind_healthcare: None
+  ind_finance: None
+  ind_banking: None
+  ind_insurance: None
+  ind_retail: None
+  ind_e_commerce: None
+  ind_manufacturing: None
+  ind_automotive: None
+  ind_aerospace: None
+  ind_energy: None
+  ind_oil_gas: None
+  ind_utilities: None
+  ind_construction: None
+  ind_real_estate: None
+  ind_hospitality: None
+  ind_travel_tourism: None
+  ind_restaurants: None
+  ind_agriculture: None
+  ind_food_beverage: None
+  ind_pharmaceuticals: None
+  ind_biotech: None
+  ind_telecommunications: None
+  ind_media: None
+  ind_entertainment: None
+  ind_gaming: None
+  ind_publishing: None
+  ind_advertising: None
+  ind_government: None
+  ind_defense: None
+  ind_nonprofit: None
+  ind_logistics: None
+  ind_transportation: None
+  ind_shipping: None
+  ind_mining: None
+  ind_chemicals: None
+  ind_textiles: None
+  ind_apparel: None
+  ind_consumer_electronics: None
+  ind_semiconductors: None
+  ind_legal_services: None
+  ind_consulting: None
+  ind_accounting: None
+  ind_marketing_agencies: None
+  ind_fitness_wellness: None
+  ind_beauty_cosmetics: None
+  ind_sports: Veteran
+  ind_music: None
+  ind_fine_art: None
+  cult_united_states: Unfamiliar
+  cult_canada: Unfamiliar
+  cult_mexico: Unfamiliar
+  cult_brazil: Unfamiliar
+  cult_argentina: Unfamiliar
+  cult_united_kingdom: Unfamiliar
+  cult_france: Unfamiliar
+  cult_germany: Native
+  cult_italy: Unfamiliar
+  cult_spain: Unfamiliar
+  cult_netherlands: Unfamiliar
+  cult_sweden: Unfamiliar
+  cult_poland: Unfamiliar
+  cult_russia: Unfamiliar
+  cult_turkey: Unfamiliar
+  cult_egypt: Unfamiliar
+  cult_saudi_arabia: Unfamiliar
+  cult_uae: Unfamiliar
+  cult_israel: Unfamiliar
+  cult_iran: Unfamiliar
+  cult_nigeria: Unfamiliar
+  cult_kenya: Unfamiliar
+  cult_south_africa: Unfamiliar
+  cult_ethiopia: Unfamiliar
+  cult_india: Unfamiliar
+  cult_pakistan: Unfamiliar
+  cult_bangladesh: Unfamiliar
+  cult_china: Unfamiliar
+  cult_japan: Unfamiliar
+  cult_south_korea: Unfamiliar
+  cult_vietnam: Unfamiliar
+  cult_thailand: Lived there
+  cult_indonesia: Unfamiliar
+  cult_philippines: Native
+  cult_australia: Unfamiliar
+  cult_new_zealand: Unfamiliar
+  cult_singapore: Unfamiliar
+  cult_malaysia: Lived there
+  cult_greece: Unfamiliar
+  cult_portugal: Unfamiliar
+  sport_soccer: Play
+  lstyle_exercise_freq: Daily
+  lstyle_travel_freq: Frequent flyer
+  health_general_health: Excellent
+  health_chronic_condition: None
+  health_mobility: Full
+  health_vision: Normal
+  health_hearing: Normal
+  health_color_vision: Typical
+  health_dexterity: Full
+  health_mental_health: Stable
+  health_stress_level: High
+  health_energy_level: Very high
+  health_sleep_quality: Good
+  health_pain_level: None
+  health_medication_use: None
+  health_dietary_restriction: None
+  health_neurodivergence: Neurotypical
+  health_caregiver_status: Not a caregiver
+  health_health_literacy: High
+  health_insurance_status: Comprehensive
+  health_fitness_level: Athlete
+  health_cognitive_load_capacity: High
+  health_contrast_need: 'No'
+  health_text_size_need: 'No'
+  health_assistive_tech: None
+  health_motion_sensitivity: None
+  health_attention_condition: None
+  trait_curiosity: Absent
+  trait_creativity: Absent
+  trait_love_of_learning: Absent
+  trait_open_mindedness: Absent
+  trait_perspective: Absent
+  trait_bravery: Absent
+  trait_perseverance: Moderate
+  trait_honesty: Absent
+  trait_zest: Absent
+  trait_capacity_for_love: Moderate
+  trait_kindness: Absent
+  trait_social_intelligence: Absent
+  trait_teamwork: Strong
+  trait_fairness: Absent
+  trait_leadership: Absent
+  trait_forgiveness: Absent
+  trait_humility: Absent
+  trait_prudence: Absent
+  trait_self_regulation: Absent
+  trait_appreciation_of_beauty: Absent
+  trait_gratitude: Absent
+  trait_hope_optimism: Absent
+  trait_playfulness: Absent
+  trait_spirituality: Absent
+  trait_ambition: Strong
+  trait_empathy: Absent
+  trait_resilience: Moderate
+  trait_discipline: Strong
+  trait_generosity: Absent
+  trait_loyalty: Strong
+  trait_competitiveness: Strong
+  trait_adaptability: Strong
+  val_family: Important
+  val_career_success: Core value
+  val_achievement: Core value
+  val_patriotism: Important
+  pref_team_vs_solo: Strongly team
+  pref_competition_vs_collab: Highly competitive
+  demo_marital_status: Married
+  demo_employment_status: Full-time
+  demo_generation: Millennial
+  demo_citizenship_status: Dual national
+  demo_ethnicity_broad: Multiracial
+  demo_disability_status: No disability
+  demo_veteran_status: Civilian
+  demo_parental_status: Not a parent
+  demo_relationship_length: 5-15 years
+  lifex_childhood_environment: Stable & secure
+  lifex_geographic_mobility: Moved internationally
+  lifex_travel_breadth: Well-traveled
+  lifex_career_path_shape: Multiple pivots
+  lifex_education_journey: Traditional track
+  lifex_financial_trajectory: Steady upward
+  lifex_adversity_level: Minor setbacks
+  lifex_immigration_generation: Second-generation
+  lifex_military_history: Never served
+  lifex_entrepreneurship_history: Never considered
+  lifex_relationship_history: Married once
+  lifex_parenting_journey: No children
+  lifex_health_journey: No major events
+  lifex_loss_experience: No major loss
+  lifex_faith_journey: Always secular
+  lifex_cultural_exposure: Multicultural upbringing
+  lifex_formative_decade: 2000s
+  lifex_public_recognition: Industry-recognized
+  lifex_service_history: None
+  lifex_turning_point: No single one
+  lifex_languages_lifetime: Two
+  lifex_hometown_tie: No connection
+  schwartz_value_self_direction: Average
+  schwartz_value_stimulation: Average
+  schwartz_value_hedonism: Average
+  schwartz_value_achievement: High
+  schwartz_value_power: Low
+  schwartz_value_security: Average
+  schwartz_value_conformity: Average
+  schwartz_value_tradition: Average
+  schwartz_value_benevolence: Average
+  schwartz_value_universalism: Average
+  sdt_need_autonomy: Average
+  sdt_need_competence: High
+  sdt_need_relatedness: Average
+  need_for_cognition: Average
+  code_review_participation_level: No coding activity
+  commit_cadence_style: No coding activity
+  dev_contribution_context: Not applicable
+  dev_ic_manager_orientation: Not applicable
+  dev_primary_work_surface: Not applicable
+  dev_professional_status: Non-developer technologist
+  dev_role_archetype: Other developer
+  dev_toolchain_complexity: Not applicable
+  github_contribution_mode: No coding activity
+  issue_engagement_style: No coding activity
+  open_source_activity_level: No coding activity
+  pr_collaboration_style: No coding activity
+  release_maintenance_orientation: No coding activity

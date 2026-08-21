@@ -1,0 +1,246 @@
+persona_id: wiki-ad8d3f014afa
+version: '1.0'
+source: wiki
+display_name: Siti Putra
+dimensions:
+  age_bracket: 18-24
+  region: Southeast Asia
+  gender_identity: Man
+  urbanicity: Dense urban
+  socioeconomic_band: Upper-middle
+  primary_language: Thai
+  english_proficiency: Intermediate (B1-B2)
+  multilingualism: Bilingual
+  register: Formal / standard
+  domain: Arts & Humanities
+  domain_characteristics: Practitioner
+  highest_education: Secondary
+  seniority: Entry
+  company_size: SMB (50-500)
+  role_function: Executive
+  years_experience: 3-5
+  life_stage: Early career
+  major_life_events: None notable
+  cultural_background: Mixed / diaspora
+  dominant_trait: Balanced
+  safety_sensitivity: Benign
+  topic_sports: Passionate
+  topic_fitness: Passionate
+  lang_english: Conversational
+  lang_mandarin: None
+  lang_cantonese: None
+  lang_spanish: None
+  lang_hindi: None
+  lang_arabic: None
+  lang_french: None
+  lang_portuguese: None
+  lang_bengali: None
+  lang_russian: None
+  lang_japanese: None
+  lang_german: None
+  lang_korean: None
+  lang_italian: None
+  lang_turkish: None
+  lang_vietnamese: None
+  lang_thai: Native
+  lang_indonesian: None
+  lang_malay: None
+  lang_swahili: None
+  lang_dutch: None
+  lang_polish: None
+  lang_ukrainian: None
+  lang_persian: None
+  lang_hebrew: None
+  lang_greek: None
+  lang_czech: None
+  lang_hungarian: None
+  lang_romanian: None
+  lang_swedish: None
+  lang_norwegian: None
+  lang_danish: None
+  lang_finnish: None
+  lang_tagalog: None
+  lang_urdu: None
+  lang_tamil: None
+  lang_telugu: None
+  lang_marathi: None
+  lang_punjabi: None
+  lang_gujarati: None
+  lang_hausa: None
+  lang_yoruba: None
+  lang_igbo: None
+  lang_amharic: None
+  lang_zulu: None
+  lang_afrikaans: None
+  lang_serbian: Basic
+  ind_technology: None
+  ind_healthcare: None
+  ind_finance: None
+  ind_banking: None
+  ind_insurance: None
+  ind_retail: None
+  ind_e_commerce: None
+  ind_manufacturing: None
+  ind_automotive: None
+  ind_aerospace: None
+  ind_energy: None
+  ind_oil_gas: None
+  ind_utilities: None
+  ind_construction: None
+  ind_real_estate: None
+  ind_hospitality: None
+  ind_travel_tourism: None
+  ind_restaurants: None
+  ind_agriculture: None
+  ind_food_beverage: None
+  ind_pharmaceuticals: None
+  ind_biotech: None
+  ind_telecommunications: None
+  ind_media: None
+  ind_entertainment: None
+  ind_gaming: None
+  ind_publishing: None
+  ind_advertising: None
+  ind_education: None
+  ind_government: None
+  ind_defense: None
+  ind_nonprofit: None
+  ind_logistics: None
+  ind_transportation: None
+  ind_shipping: None
+  ind_mining: None
+  ind_chemicals: None
+  ind_textiles: None
+  ind_apparel: None
+  ind_consumer_electronics: None
+  ind_semiconductors: None
+  ind_legal_services: None
+  ind_consulting: None
+  ind_accounting: None
+  ind_marketing_agencies: None
+  ind_fitness_wellness: None
+  ind_beauty_cosmetics: None
+  ind_sports: Veteran
+  ind_music: None
+  ind_fine_art: None
+  cult_united_states: Unfamiliar
+  cult_canada: Unfamiliar
+  cult_mexico: Unfamiliar
+  cult_brazil: Unfamiliar
+  cult_argentina: Unfamiliar
+  cult_united_kingdom: Unfamiliar
+  cult_france: Unfamiliar
+  cult_germany: Unfamiliar
+  cult_italy: Unfamiliar
+  cult_spain: Unfamiliar
+  cult_netherlands: Unfamiliar
+  cult_sweden: Unfamiliar
+  cult_poland: Unfamiliar
+  cult_russia: Unfamiliar
+  cult_turkey: Unfamiliar
+  cult_egypt: Unfamiliar
+  cult_saudi_arabia: Unfamiliar
+  cult_uae: Unfamiliar
+  cult_israel: Unfamiliar
+  cult_iran: Unfamiliar
+  cult_nigeria: Visited
+  cult_kenya: Unfamiliar
+  cult_south_africa: Unfamiliar
+  cult_ethiopia: Unfamiliar
+  cult_india: Unfamiliar
+  cult_pakistan: Unfamiliar
+  cult_bangladesh: Unfamiliar
+  cult_china: Unfamiliar
+  cult_japan: Unfamiliar
+  cult_south_korea: Unfamiliar
+  cult_vietnam: Unfamiliar
+  cult_thailand: Native
+  cult_indonesia: Unfamiliar
+  cult_philippines: Unfamiliar
+  cult_australia: Unfamiliar
+  cult_new_zealand: Unfamiliar
+  cult_singapore: Unfamiliar
+  cult_malaysia: Unfamiliar
+  cult_greece: Unfamiliar
+  cult_portugal: Unfamiliar
+  sport_soccer: Play
+  lstyle_exercise_freq: Daily
+  trait_curiosity: Absent
+  trait_creativity: Absent
+  trait_love_of_learning: Absent
+  trait_open_mindedness: Absent
+  trait_perspective: Absent
+  trait_bravery: Absent
+  trait_perseverance: Absent
+  trait_honesty: Absent
+  trait_zest: Absent
+  trait_capacity_for_love: Absent
+  trait_kindness: Absent
+  trait_social_intelligence: Absent
+  trait_teamwork: Absent
+  trait_fairness: Absent
+  trait_leadership: Absent
+  trait_forgiveness: Absent
+  trait_humility: Absent
+  trait_prudence: Absent
+  trait_self_regulation: Absent
+  trait_appreciation_of_beauty: Absent
+  trait_gratitude: Absent
+  trait_hope_optimism: Absent
+  trait_playfulness: Absent
+  trait_spirituality: Absent
+  trait_ambition: Absent
+  trait_empathy: Absent
+  trait_resilience: Absent
+  trait_discipline: Absent
+  trait_generosity: Absent
+  trait_loyalty: Absent
+  trait_competitiveness: Absent
+  trait_adaptability: Absent
+  val_career_success: Important
+  val_achievement: Important
+  val_personal_growth: Important
+  demo_children_count: None
+  demo_employment_status: Full-time
+  demo_generation: Gen Z
+  demo_citizenship_status: Citizen by birth
+  demo_ethnicity_broad: Multiracial
+  demo_disability_status: No disability
+  demo_veteran_status: Civilian
+  demo_home_language: Bilingual home
+  demo_parental_status: Not a parent
+  demo_relationship_length: Not in one
+  lifex_childhood_environment: Modest but steady
+  lifex_geographic_mobility: Moved internationally
+  lifex_travel_breadth: A few countries
+  lifex_career_path_shape: Linear climb
+  lifex_education_journey: Traditional track
+  lifex_financial_trajectory: Steady upward
+  lifex_adversity_level: Minor setbacks
+  lifex_immigration_generation: Second-generation
+  lifex_military_history: Never served
+  lifex_entrepreneurship_history: Never considered
+  lifex_relationship_history: Limited
+  lifex_parenting_journey: No children
+  lifex_health_journey: No major events
+  lifex_loss_experience: No major loss
+  lifex_faith_journey: Always secular
+  lifex_cultural_exposure: Multicultural upbringing
+  lifex_formative_decade: 2010s
+  lifex_public_recognition: Industry-recognized
+  lifex_service_history: None
+  lifex_turning_point: No single one
+  lifex_languages_lifetime: Two
+  lifex_hometown_tie: Visits often
+  schwartz_value_self_direction: Average
+  schwartz_value_stimulation: High
+  schwartz_value_achievement: High
+  sdt_need_autonomy: Average
+  sdt_need_competence: High
+  code_review_participation_level: No coding activity
+  commit_cadence_style: No coding activity
+  github_contribution_mode: No coding activity
+  issue_engagement_style: No coding activity
+  open_source_activity_level: No coding activity
+  pr_collaboration_style: No coding activity
+  release_maintenance_orientation: No coding activity

@@ -1,0 +1,469 @@
+persona_id: wiki-3bd615d3b52c
+version: '1.0'
+source: wiki
+display_name: Mai Lim
+dimensions:
+  age_bracket: 55-64
+  region: Southeast Asia
+  gender_identity: Woman
+  urbanicity: Dense urban
+  socioeconomic_band: Upper-middle
+  primary_language: English
+  english_proficiency: Native
+  multilingualism: Bilingual
+  register: Formal / standard
+  domain: Arts & Humanities
+  subject_specialty: Comparative literature
+  domain_characteristics: Practitioner
+  highest_education: Bachelor's
+  academic_field: STEM
+  institution_tier: Not applicable
+  research_output: None
+  seniority: Senior
+  company_size: Solo / freelance
+  role_function: Teaching
+  years_experience: 20+
+  life_stage: Mid-life
+  major_life_events: None notable
+  cultural_background: South Asian
+  tech_savviness: 'null'
+  dominant_trait: Balanced
+  values_priority: Achievement
+  religiosity: Secular
+  expertise_gap: 'null'
+  safety_sensitivity: Benign
+  economic_motivation: Value-driven
+  fam_machine_learning: 'null'
+  fam_deep_learning: 'null'
+  fam_statistics: 'null'
+  fam_data_science: 'null'
+  fam_cardiology: 'null'
+  fam_neurology: 'null'
+  fam_oncology: 'null'
+  fam_pediatrics: 'null'
+  fam_psychiatry: 'null'
+  fam_radiology: 'null'
+  fam_surgery: 'null'
+  fam_immunology: 'null'
+  fam_constitutional_law: 'null'
+  fam_contract_law: 'null'
+  fam_criminal_law: 'null'
+  fam_tax_law: 'null'
+  fam_intellectual_property: 'null'
+  fam_corporate_finance: 'null'
+  fam_quantitative_trading: 'null'
+  fam_accounting: 'null'
+  fam_auditing: 'null'
+  fam_macroeconomics: 'null'
+  fam_microeconomics: 'null'
+  fam_behavioral_economics: 'null'
+  fam_curriculum_design: 'null'
+  fam_pedagogy: 'null'
+  fam_special_education: None
+  fam_structural_engineering: 'null'
+  fam_mechanical_engineering: 'null'
+  fam_electrical_engineering: 'null'
+  fam_civil_engineering: 'null'
+  fam_chemical_engineering: Familiar
+  fam_aerospace_engineering: 'null'
+  fam_robotics: 'null'
+  fam_control_systems: 'null'
+  fam_molecular_biology: 'null'
+  fam_genetics: 'null'
+  fam_biochemistry: 'null'
+  fam_organic_chemistry: 'null'
+  fam_physical_chemistry: 'null'
+  fam_particle_physics: 'null'
+  fam_astrophysics: 'null'
+  fam_astronomy: 'null'
+  fam_geology: 'null'
+  fam_oceanography: 'null'
+  fam_climate_science: 'null'
+  fam_ecology: 'null'
+  fam_sociology: None
+  fam_psychology: None
+  fam_cognitive_science: None
+  fam_anthropology: None
+  fam_international_relations: None
+  fam_comparative_literature: Familiar
+  fam_philosophy: None
+  fam_ethics: None
+  fam_history: None
+  fam_archaeology: None
+  fam_linguistics: None
+  fam_art_history: None
+  fam_music_theory: None
+  fam_film_studies: None
+  fam_architecture: None
+  fam_urban_planning: None
+  fam_landscape_design: None
+  fam_agronomy: None
+  fam_horticulture: None
+  fam_veterinary_medicine: None
+  fam_nursing: None
+  fam_pharmacology: None
+  fam_public_health: None
+  fam_epidemiology: None
+  fam_nutrition: None
+  fam_sports_science: None
+  fam_cybersecurity: None
+  fam_cryptography: None
+  fam_computer_networking: None
+  fam_databases: None
+  fam_distributed_systems: None
+  fam_operating_systems: None
+  fam_compilers: None
+  fam_cloud_infrastructure: None
+  fam_devops: None
+  fam_game_development: None
+  fam_computer_graphics: None
+  fam_computer_vision: None
+  fam_natural_language_processing: None
+  fam_human_computer_interaction: None
+  fam_ux_research: None
+  fam_graphic_design: None
+  fam_industrial_design: None
+  fam_typography: None
+  fam_journalism: None
+  fam_public_relations: None
+  fam_brand_marketing: None
+  fam_performance_marketing: None
+  fam_seo: None
+  fam_sales_engineering: None
+  skill_writing: Master
+  skill_storytelling: Master
+  topic_technology: Interested
+  topic_science: Interested
+  topic_parenting: Interested
+  topic_literature: Passionate
+  lang_english: Native
+  lang_mandarin: None
+  lang_cantonese: None
+  lang_spanish: None
+  lang_hindi: None
+  lang_arabic: None
+  lang_french: None
+  lang_portuguese: None
+  lang_bengali: None
+  lang_russian: None
+  lang_japanese: None
+  lang_german: None
+  lang_korean: None
+  lang_italian: None
+  lang_turkish: None
+  lang_vietnamese: None
+  lang_thai: None
+  lang_indonesian: None
+  lang_malay: None
+  lang_swahili: None
+  lang_dutch: None
+  lang_polish: None
+  lang_ukrainian: None
+  lang_persian: None
+  lang_hebrew: None
+  lang_greek: None
+  lang_czech: None
+  lang_hungarian: None
+  lang_romanian: None
+  lang_swedish: None
+  lang_norwegian: None
+  lang_danish: None
+  lang_finnish: None
+  lang_tagalog: None
+  lang_urdu: None
+  lang_tamil: None
+  lang_telugu: None
+  lang_marathi: None
+  lang_punjabi: None
+  lang_gujarati: None
+  lang_hausa: None
+  lang_yoruba: None
+  lang_igbo: None
+  lang_amharic: None
+  lang_zulu: None
+  lang_afrikaans: None
+  lang_serbian: None
+  ind_technology: Some exposure
+  ind_healthcare: None
+  ind_finance: None
+  ind_banking: None
+  ind_insurance: None
+  ind_retail: None
+  ind_e_commerce: None
+  ind_manufacturing: None
+  ind_automotive: None
+  ind_aerospace: None
+  ind_energy: None
+  ind_oil_gas: None
+  ind_utilities: None
+  ind_construction: None
+  ind_real_estate: None
+  ind_hospitality: None
+  ind_travel_tourism: None
+  ind_restaurants: None
+  ind_agriculture: None
+  ind_food_beverage: None
+  ind_pharmaceuticals: None
+  ind_biotech: None
+  ind_telecommunications: None
+  ind_media: None
+  ind_entertainment: None
+  ind_gaming: None
+  ind_publishing: Veteran
+  ind_advertising: None
+  ind_education: None
+  ind_government: None
+  ind_defense: None
+  ind_nonprofit: None
+  ind_logistics: None
+  ind_transportation: None
+  ind_shipping: None
+  ind_mining: None
+  ind_chemicals: Some exposure
+  ind_textiles: None
+  ind_apparel: None
+  ind_consumer_electronics: None
+  ind_semiconductors: None
+  ind_legal_services: None
+  ind_consulting: None
+  ind_accounting: None
+  ind_marketing_agencies: None
+  ind_fitness_wellness: None
+  ind_beauty_cosmetics: None
+  ind_sports: None
+  ind_music: None
+  ind_fine_art: None
+  cult_united_states: Unfamiliar
+  cult_canada: Unfamiliar
+  cult_mexico: Unfamiliar
+  cult_brazil: Unfamiliar
+  cult_argentina: Unfamiliar
+  cult_united_kingdom: Unfamiliar
+  cult_france: Visited
+  cult_germany: Unfamiliar
+  cult_italy: Unfamiliar
+  cult_spain: Unfamiliar
+  cult_netherlands: Unfamiliar
+  cult_sweden: Unfamiliar
+  cult_poland: Unfamiliar
+  cult_russia: Unfamiliar
+  cult_turkey: Unfamiliar
+  cult_egypt: Unfamiliar
+  cult_saudi_arabia: Unfamiliar
+  cult_uae: Unfamiliar
+  cult_israel: Unfamiliar
+  cult_iran: Unfamiliar
+  cult_nigeria: Unfamiliar
+  cult_kenya: Unfamiliar
+  cult_south_africa: Unfamiliar
+  cult_ethiopia: Unfamiliar
+  cult_india: Unfamiliar
+  cult_pakistan: Unfamiliar
+  cult_bangladesh: Unfamiliar
+  cult_china: Unfamiliar
+  cult_japan: Unfamiliar
+  cult_south_korea: Unfamiliar
+  cult_vietnam: Unfamiliar
+  cult_thailand: Unfamiliar
+  cult_indonesia: Unfamiliar
+  cult_philippines: Unfamiliar
+  cult_australia: Unfamiliar
+  cult_new_zealand: Unfamiliar
+  cult_singapore: Unfamiliar
+  cult_malaysia: Native
+  cult_greece: Unfamiliar
+  cult_portugal: Unfamiliar
+  bookg_literary_fiction: Love
+  big5_imagination: High
+  big5_artistic_interest: High
+  big5_emotionality: 'null'
+  big5_adventurousness: 'null'
+  big5_intellect: High
+  big5_liberalism: 'null'
+  big5_self_efficacy: High
+  big5_orderliness: 'null'
+  big5_dutifulness: 'null'
+  big5_achievement_striving: High
+  big5_self_discipline: High
+  big5_cautiousness: 'null'
+  big5_friendliness: 'null'
+  big5_gregariousness: 'null'
+  big5_assertiveness: 'null'
+  big5_activity_level: 'null'
+  big5_excitement_seeking: 'null'
+  big5_cheerfulness: 'null'
+  big5_trust: 'null'
+  big5_morality: 'null'
+  big5_altruism: 'null'
+  big5_cooperation: 'null'
+  big5_modesty: 'null'
+  big5_sympathy: 'null'
+  big5_anxiety: 'null'
+  big5_anger: 'null'
+  big5_depression: 'null'
+  big5_self_consciousness: 'null'
+  big5_immoderation: 'null'
+  big5_vulnerability: 'null'
+  lstyle_household_size: 3-4 people
+  cog_numeracy_comfort: High
+  cog_storytelling: High
+  acad_algebra: Neutral
+  acad_geometry: Neutral
+  acad_calculus: Neutral
+  acad_statistics: Neutral
+  acad_physics: Neutral
+  acad_chemistry: Interested
+  acad_biology: Neutral
+  acad_earth_science: Neutral
+  acad_computer_science: Neutral
+  acad_economics: Neutral
+  acad_psychology: Neutral
+  acad_sociology: Neutral
+  acad_world_history: Neutral
+  acad_geography: Neutral
+  acad_civics: Neutral
+  acad_literature: Passionate
+  acad_creative_writing: Passionate
+  acad_foreign_languages: Neutral
+  acad_philosophy: Neutral
+  acad_visual_art: Neutral
+  acad_music: Neutral
+  acad_drama: Neutral
+  acad_physical_education: Neutral
+  acad_health_science: Neutral
+  acad_business_studies: Neutral
+  acad_environmental_science: Neutral
+  acad_logic: Neutral
+  acad_astronomy: Neutral
+  acad_anthropology: Neutral
+  trait_curiosity: Strong
+  trait_creativity: Signature
+  trait_love_of_learning: Strong
+  trait_open_mindedness: Strong
+  trait_perspective: Strong
+  trait_bravery: Moderate
+  trait_perseverance: Strong
+  trait_honesty: Moderate
+  trait_zest: Moderate
+  trait_capacity_for_love: Moderate
+  trait_kindness: Moderate
+  trait_social_intelligence: Moderate
+  trait_teamwork: Moderate
+  trait_fairness: Moderate
+  trait_leadership: Moderate
+  trait_forgiveness: Moderate
+  trait_humility: Moderate
+  trait_prudence: Moderate
+  trait_self_regulation: Strong
+  trait_appreciation_of_beauty: Signature
+  trait_gratitude: Moderate
+  trait_hope_optimism: Moderate
+  trait_playfulness: Moderate
+  trait_spirituality: Moderate
+  trait_ambition: Signature
+  trait_empathy: Signature
+  trait_resilience: Strong
+  trait_discipline: Strong
+  trait_generosity: Moderate
+  trait_loyalty: Moderate
+  trait_competitiveness: Moderate
+  trait_adaptability: Strong
+  val_family: Core value
+  val_career_success: Core value
+  val_wealth: Moderate
+  val_health: Moderate
+  val_personal_freedom: Important
+  val_security_stability: Important
+  val_adventure: Moderate
+  val_tradition: Moderate
+  val_power_influence: Important
+  val_achievement: Core value
+  val_creativity_self_expression: Core value
+  val_community: Important
+  val_spirituality_faith: Moderate
+  val_knowledge_truth: Important
+  val_social_status: Important
+  val_independence: Important
+  val_justice_fairness: Moderate
+  val_loyalty: Important
+  val_sustainability: Moderate
+  val_recognition: Core value
+  val_helping_others: Moderate
+  val_personal_growth: Important
+  val_fun_enjoyment: Moderate
+  val_integrity_honesty: Moderate
+  val_beauty_aesthetics: Important
+  val_order_structure: Important
+  val_patriotism: Moderate
+  val_equality: Moderate
+  val_privacy: Moderate
+  demo_children_count: 1 child
+  demo_employment_status: Self-employed
+  demo_generation: Gen X
+  demo_citizenship_status: Citizen by birth
+  demo_disability_status: No disability
+  demo_veteran_status: Civilian
+  demo_home_language: Same as primary
+  demo_parental_status: Parent of minors
+  demo_relationship_length: Not in one
+  lifex_geographic_mobility: Never left hometown
+  lifex_travel_breadth: Never left country
+  lifex_career_path_shape: Linear climb
+  lifex_education_journey: Advanced degrees
+  lifex_immigration_generation: Native multi-generational
+  lifex_military_history: Never served
+  lifex_entrepreneurship_history: Never considered
+  lifex_relationship_history: Long-term partnership
+  lifex_parenting_journey: Teenagers
+  lifex_cultural_exposure: Multicultural upbringing
+  lifex_formative_decade: 1980s
+  lifex_public_recognition: Industry-recognized
+  lifex_languages_lifetime: Two
+  lifex_hometown_tie: Still there
+  bfi2_domain_extraversion: 'null'
+  bfi2_domain_agreeableness: 'null'
+  bfi2_domain_conscientiousness: High
+  bfi2_domain_negative_emotionality: 'null'
+  bfi2_domain_open_mindedness: High
+  bfi2_facet_sociability: 'null'
+  bfi2_facet_assertiveness: 'null'
+  bfi2_facet_energy_level: 'null'
+  bfi2_facet_compassion: 'null'
+  bfi2_facet_respectfulness: 'null'
+  bfi2_facet_trust: 'null'
+  bfi2_facet_organization: 'null'
+  bfi2_facet_productiveness: High
+  bfi2_facet_responsibility: 'null'
+  bfi2_facet_anxiety: 'null'
+  bfi2_facet_depression: 'null'
+  bfi2_facet_emotional_volatility: 'null'
+  bfi2_facet_intellectual_curiosity: High
+  bfi2_facet_aesthetic_sensitivity: High
+  bfi2_facet_creative_imagination: High
+  schwartz_value_self_direction: High
+  schwartz_value_stimulation: High
+  schwartz_value_hedonism: Average
+  schwartz_value_achievement: Very high
+  schwartz_value_power: Average
+  schwartz_value_security: High
+  schwartz_value_conformity: Average
+  schwartz_value_tradition: Average
+  schwartz_value_benevolence: High
+  schwartz_value_universalism: Average
+  sdt_need_autonomy: High
+  sdt_need_competence: High
+  sdt_need_relatedness: High
+  need_for_cognition: Very high
+  code_review_participation_level: No coding activity
+  commit_cadence_style: No coding activity
+  dev_contribution_context: 'null'
+  dev_ic_manager_orientation: 'null'
+  dev_primary_work_surface: 'null'
+  dev_professional_status: Non-developer technologist
+  dev_role_archetype: Other developer
+  dev_toolchain_complexity: 'null'
+  github_contribution_mode: No coding activity
+  issue_engagement_style: No coding activity
+  open_source_activity_level: No coding activity
+  pr_collaboration_style: No coding activity
+  release_maintenance_orientation: No coding activity
