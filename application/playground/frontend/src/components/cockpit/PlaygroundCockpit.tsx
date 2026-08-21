@@ -21,6 +21,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 
+import { useI18n } from "@/i18n/I18nProvider";
 import { RunHeader } from "./RunHeader";
 import { Trajectory } from "./Trajectory";
 import { InspectorTabs, type InspectorTab } from "./InspectorTabs";
@@ -33,11 +34,7 @@ import { OsAppEvalCockpit } from "./OsAppEvalCockpit";
 import { type PlaygroundTaskType } from "./TaskTypeSwitch";
 import { CockpitSetupShell } from "./setup/CockpitSetupShell";
 import { PersonaSamplingRail } from "./setup/PersonaSamplingRail";
-import {
-  buildPersonaLaunchFields,
-  hasLaunchableCohort,
-  resolveCohortSize,
-} from "./setup/personaLaunchFields";
+import { resolveCohortSize } from "./setup/personaLaunchFields";
 import { CockpitPipelineDiagram } from "./setup/CockpitPipelineDiagram";
 import { TaskSelectionRail, type ChatTransport, type TaskCardModel } from "./setup/TaskSelectionRail";
 import { BatchTrialGrid } from "./setup/BatchTrialGrid";
@@ -46,21 +43,20 @@ import { CockpitLiveStage } from "./setup/CockpitLiveStage";
 import { RunLaunchBar } from "./setup/RunLaunchBar";
 import {
   batchProgressPct as computeBatchProgressPct,
-  BATCH_RUN_COMPLETE_HINT,
   formatBatchProgressLabel,
   resolveRunLaunchPhase,
-  useCockpitBatchJob,
 } from "./setup/useCockpitBatchJob";
 import { readCockpitBatch } from "./setup/cockpitBatchStorage";
-import { useSetupPersonaSampling } from "./setup/useSetupPersonaSampling";
+import { useCockpitLaunch } from "./setup/useCockpitLaunch";
 import { useCockpitRunCancel } from "./setup/useCockpitRunCancel";
 import { useCockpitSetupLock } from "./setup/useCockpitSetupLock";
-import { api, ApiError } from "@/lib/api";
+import { api } from "@/lib/api";
 import { useHarborCockpitRun, type HarborCockpitPhase } from "@/lib/useHarborCockpitRun";
 import { useUrlState } from "@/lib/useUrlState";
 import { usePgTaskIdDeepLink } from "@/lib/usePgTaskIdDeepLink";
 import { useCockpitInstruction } from "@/lib/useCockpitInstruction";
-import { mapChatbotDebriefToJobView, mapChatbotLiveToJobView, isRewardOnlyTrialFailure } from "@/lib/harborCockpitMappers";
+import { mapChatbotDebriefToJobView, mapChatbotLiveToJobView, isRewardOnlyTrialFailure, classifyCockpitRunError } from "@/lib/harborCockpitMappers";
+import { localizeCockpitRunError } from "./cockpitRunErrorPresentation";
 import { type PlaygroundRunPhase } from "@/lib/usePlayground";
 import type {
   ApplicationId,
@@ -73,6 +69,7 @@ import { personaModelPipelineLabel } from "@/lib/personaAgentCatalog";
 import { chatbotEvalTaskCards, sortByAvailability } from "./setup/cockpitTaskCards";
 import { mergeChatbotTaskAvailability } from "@/lib/chatbotTaskAvailability";
 
+type Translate = ReturnType<typeof useI18n>["t"];
 /** Per-app display name + icon (presentational; the data layer is app-agnostic). */
 const APP_NAME: Record<string, string> = {
   meal_planning_nutrition: "Meal Planning",
@@ -109,18 +106,19 @@ function liveStatusLine(
   job: PlaygroundJobView | null,
   phase: HarborCockpitPhase,
   isRunning: boolean,
-  harborPhase?: string | null,
+  harborPhase: string | null | undefined,
+  t: Translate,
 ): string | null {
-  if (phase === "launching") return "Launching batch…";
+  if (phase === "launching") return t("eval.live.launching");
   if (!isRunning) return null;
   const raw = (harborPhase ?? job?.phase ?? "").toLowerCase();
-  if (raw.includes("harbor") || raw.includes("trial")) return "Running trial…";
-  if (raw.includes("persona") || raw.includes("user") || raw.includes("simulat")) return "The simulated user is typing…";
+  if (raw.includes("harbor") || raw.includes("trial")) return t("eval.live.runningTrial");
+  if (raw.includes("persona") || raw.includes("user") || raw.includes("simulat")) return t("eval.live.typing");
   if (raw.includes("chatbot") || raw.includes("application") || raw.includes("agent") || raw.includes("turn"))
-    return "The app is thinking…";
-  if (raw.includes("eval")) return "Scoring how it went…";
+    return t("eval.live.thinking");
+  if (raw.includes("eval")) return t("eval.live.scoring");
   if (job?.phase) return `${job.phase.replace(/^harbor_/, "").replace(/_/g, " ")}…`;
-  return "Running the playground…";
+  return t("eval.live.runningPlayground");
 }
 
 /** True when focus is in a text input / textarea / select / contenteditable. */
@@ -281,6 +279,7 @@ function ChatbotEvalCockpit({
   onTaskTypeChange,
   isActive,
 }: ChatbotEvalCockpitProps) {
+  const { t } = useI18n();
   const { state: urlState } = useUrlState();
   const { run, job, phase, isRunning, error, timedOut, retry, reset, harborPhase, harborJobName, harborTrialName, cancelRun, cancelBusy: harborCancelBusy } =
     useHarborCockpitRun<PlaygroundJobView>({ taskKind: "chatbot" });
@@ -314,66 +313,71 @@ function ChatbotEvalCockpit({
   const setupTaskPath =
     chatbotTasks.find((task) => task.id === selectedTaskId)?.taskPath ?? null;
   const {
-    persona,
-    personaModel,
-    setPersonaModel,
-    personaModelOptions,
-    samplingMode,
-    setSamplingMode,
-    selectedPersonaIds,
-    setSelectedPersonaIds,
-    selectedCount,
-    setSelectedCount,
-    useEntirePool,
-    setUseEntirePool,
-    groupFilters,
-    setGroupFilters,
-    fields,
-    setFields,
-    stratifiedAllocation,
-    setStratifiedAllocation,
-    sampleSize,
-    setSampleSize,
-    perCell,
-    setPerCell,
-    seed,
-    parallelTrials,
-    setParallelTrials,
-    personaPool,
-    setPersonaPool,
-    isBatchRun,
-    hasTaskStrategy,
-    taskPersonaStrategy,
-    useTaskDefaultStrategy,
-    setUseTaskDefaultStrategy,
-  } = useSetupPersonaSampling(options, "chatbot", setupTaskPath, isActive);
+    sampling: {
+      persona,
+      personaModel,
+      setPersonaModel,
+      personaModelOptions,
+      samplingMode,
+      setSamplingMode,
+      selectedPersonaIds,
+      setSelectedPersonaIds,
+      selectedCount,
+      setSelectedCount,
+      useEntirePool,
+      setUseEntirePool,
+      groupFilters,
+      setGroupFilters,
+      fields,
+      setFields,
+      stratifiedAllocation,
+      setStratifiedAllocation,
+      sampleSize,
+      setSampleSize,
+      perCell,
+      setPerCell,
+      seed,
+      parallelTrials,
+      setParallelTrials,
+      personaPool,
+      setPersonaPool,
+      isBatchRun,
+      hasTaskStrategy,
+      taskPersonaStrategy,
+      useTaskDefaultStrategy,
+      setUseTaskDefaultStrategy,
+    },
+    batch: {
+      batchJobName,
+      batchTaskId,
+      batchPersonaIds,
+      batchPersonaPool,
+      clearBatch,
+      cancelBatch,
+      cancelBusy,
+      batchCancelled,
+      retryFailed,
+      retryBusy,
+      retryError,
+      failedTrials,
+      isBatchActive,
+      batchComplete,
+      batchGridCells,
+      completedTrials: batchCompletedTrials,
+      expectedTrialCount,
+      personaById,
+      batchError,
+    },
+    launchError,
+    setLaunchError,
+    clearLaunchError,
+    canLaunchCohort,
+    launchBatch,
+  } = useCockpitLaunch(options, "chatbot", setupTaskPath, isActive);
   const pipelinePersonaModelLabel = useMemo(
     () => personaModelPipelineLabel(personaModel, personaModelOptions),
     [personaModel, personaModelOptions],
   );
-  const [launchError, setLaunchError] = useState<string | null>(null);
-  const {
-    batchJobName,
-    batchTaskId,
-    batchPersonaIds,
-    batchPersonaPool,
-    setBatchJobName,
-    clearBatch,
-    cancelBatch,
-    cancelBusy,
-    batchCancelled,
-    retryFailed,
-    retryBusy,
-    retryError,
-    failedTrials,
-    isBatchActive,
-    batchComplete,
-    batchGridCells,
-    completedTrials: batchCompletedTrials,
-    expectedTrialCount,
-    personaById,
-    batchError,
-  } = useCockpitBatchJob(selectedPersonaIds, parallelTrials, "chatbot", selectedCount, personaPool);
   const [exportSnapshot, setExportSnapshot] = useState<ExportSnapshot | null>(null);
 
   // After navigating away/back, single-trial restore brings back the transcript
@@ -441,12 +445,12 @@ function ChatbotEvalCockpit({
         await api.startChatbotSidecar(appId);
         await sidecarsQuery.refetch();
       } catch (e) {
-        setSidecarActionError(e instanceof Error ? e.message : "Failed to start sidecar");
+        setSidecarActionError(e instanceof Error ? e.message : t("eval.common.startSidecarFailed"));
       } finally {
         setSidecarStartingId(null);
       }
     },
-    [chatbotTasks, sidecarsQuery],
+    [chatbotTasks, sidecarsQuery, t],
   );
 
   // Live persona + controls, mirrored to a ref so the "run finished" effect can
@@ -493,11 +497,11 @@ function ChatbotEvalCockpit({
   const turns = useMemo(() => job?.turns ?? [], [job]);
   const draftTurn = job?.draftTurn ?? null;
   const sutDescription = job?.sutDescription ?? null;
-  const status = liveStatusLine(job, phase, isRunning, harborPhase);
+  const status = liveStatusLine(job, phase, isRunning, harborPhase, t);
   const questionnaire = job?.questionnaire ?? null;
   const metrics = job?.metricScores ?? null;
   const chatTaskPath = selectedTask?.taskPath?.trim() ?? "";
-  const chatTaskLabel = selectedTask?.title ?? APP_NAME[applicationId] ?? "Chatbot task";
+  const chatTaskLabel = selectedTask?.title ?? APP_NAME[applicationId] ?? t("eval.live.chatbotTaskFallback");
   const knownLaunchApplicationId = isKnownChatApplicationId(applicationId) ? applicationId : null;
   // Prefer task-declared context; otherwise fall back by applicationId when known.
   const launchChatApplicationContext =
@@ -564,62 +568,35 @@ function ChatbotEvalCockpit({
   ]);
 
   const handleLaunch = useCallback(async () => {
-    if (
-      !hasLaunchableCohort({ selectedPersonaIds, selectedCount, useEntirePool }) ||
-      isRunning ||
-      !chatTaskPath ||
-      !selectedTask
-    ) {
+    if (!canLaunchCohort || isRunning || !chatTaskPath || !selectedTask) {
       return;
     }
     if (isBatchRun) {
-      setLaunchError(null);
-      try {
-        const personaFields = buildPersonaLaunchFields({
-          personaPool,
-          selectedPersonaIds,
-          selectedCount,
-          useEntirePool,
-          parallelTrials,
-        });
-        const launched = await api.launchHarborJob({
-          taskPath: chatTaskPath,
-          seed,
-          personaModel,
-          ...personaFields,
-          mode: "auto",
+      await launchBatch({
+        taskPath: chatTaskPath,
+        taskId: selectedTask.id,
+        overrides: {
           chatDomain: requestDomain,
           chatApplicationId: knownLaunchApplicationId ?? undefined,
           chatApplicationContext: launchChatApplicationContext,
           chatMaxTurns: maxTurns,
-        });
-        setBatchJobName(launched.jobName, { taskId: selectedTask.id, personaPool });
-      } catch (exc) {
-        const message = exc instanceof ApiError ? exc.message : exc instanceof Error ? exc.message : String(exc);
-        setLaunchError(message);
-      }
+        },
+      });
       return;
     }
     handleRun();
   }, [
-    selectedPersonaIds,
-    selectedCount,
-    useEntirePool,
+    canLaunchCohort,
     isRunning,
     isBatchRun,
-    applicationId,
-    seed,
-    personaModel,
-    parallelTrials,
-    personaPool,
     requestDomain,
     knownLaunchApplicationId,
     launchChatApplicationContext,
     maxTurns,
     chatTaskPath,
     selectedTask,
+    launchBatch,
     handleRun,
-    setBatchJobName,
   ]);
 
   const handleRetry = useCallback(() => {
@@ -630,10 +607,10 @@ function ChatbotEvalCockpit({
   const handleNewRun = useCallback(() => {
     reset();
     clearBatch();
-    setLaunchError(null);
+    clearLaunchError();
     setFocusedTurnIndex(null);
     setExpandedTurns(new Set());
-  }, [reset, clearBatch]);
+  }, [reset, clearBatch, clearLaunchError]);
 
   const { onCancelRun, cancelRunBusy } = useCockpitRunCancel({
     batchJobName,
@@ -764,6 +741,10 @@ function ChatbotEvalCockpit({
     transcript: turns,
     questionnaire: questionnaire ?? undefined,
   });
+  const displayError = localizeCockpitRunError(
+    classifyCockpitRunError(error ?? job?.error ?? null),
+    t,
+  );
   const pipelinePhase = (
     !verifierOnlyFailure && (job?.status === "error" || phase === "error")
       ? "error"
@@ -828,23 +809,24 @@ function ChatbotEvalCockpit({
 
   const runProgressLabel = batchJobName
     ? batchCancelled
-      ? "Batch stopped"
+      ? t("eval.progress.batchStopped")
       : formatBatchProgressLabel(
+          t,
           batchCompletedTrials,
           expectedTrialCount,
         )
     : pipelinePhase === "building"
-      ? "Starting the app…"
+      ? t("eval.progress.starting")
       : pipelinePhase === "running"
         ? maxTurns !== null
-          ? `Turn ${turns.length} of ${maxTurns} · ${elapsedSeconds}s`
-          : `Turn ${turns.length} · ${elapsedSeconds}s`
+          ? t("eval.live.turnOf", { turn: turns.length, total: maxTurns, seconds: elapsedSeconds })
+          : t("eval.live.turn", { turn: turns.length, seconds: elapsedSeconds })
         : pipelinePhase === "done"
-          ? `Run complete · ${turns.length} turn${turns.length === 1 ? "" : "s"}`
+          ? t("eval.live.complete", { count: turns.length })
           : pipelinePhase === "error" || pipelinePhase === "timeout"
             ? error?.startsWith("Run stopped")
-              ? "Run stopped"
-              : error ?? "The run stopped before completing."
+              ? t("eval.progress.runStopped")
+              : displayError ?? t("eval.progress.stopped")
             : undefined;
 
   const cockpitView = (
@@ -908,7 +890,7 @@ function ChatbotEvalCockpit({
           sutDescription={sutDescription}
           phase={pipelinePhase}
           liveStatus={status}
-          error={verifierOnlyFailure ? null : error}
+          error={verifierOnlyFailure ? null : displayError}
           expandedTurns={expandedTurns}
           onToggleTurn={toggleTurnFold}
           focusedTurnIndex={focusedTurnIndex}
@@ -932,7 +914,7 @@ function ChatbotEvalCockpit({
           )}
           <RunLaunchBar
             canRun={
-              hasLaunchableCohort({ selectedPersonaIds, selectedCount, useEntirePool }) &&
+              canLaunchCohort &&
               Boolean(chatTaskPath) &&
               !runBusy
             }
@@ -945,12 +927,19 @@ function ChatbotEvalCockpit({
             onParallelTrialsChange={setParallelTrials}
             isRunning={runBusy}
             onRun={() => void handleLaunch()}
-            error={launchError ?? (verifierOnlyFailure ? null : error) ?? batchError ?? retryError}
+            error={
+              launchError ??
+              (verifierOnlyFailure ? null : displayError) ??
+              (batchCancelled ? t("eval.progress.batchStoppedReset") : batchError) ??
+              retryError
+            }
             runPhase={runLaunchPhase}
             progressPct={runProgressPct}
             progressLabel={runProgressLabel}
             progressSublabel={
-              batchJobName && batchComplete ? BATCH_RUN_COMPLETE_HINT : undefined
+              batchJobName && batchComplete
+                ? t("eval.progress.batchCompleteHint")
+                : undefined
             }
             onNewRun={showLiveCenter ? handleNewRun : undefined}
             onCancelRun={onCancelRun}
@@ -988,12 +977,12 @@ function ChatbotEvalCockpit({
           }
             context={
               <InstructionPanel
-                label="Task context"
+                label={t("eval.common.taskContextLabel")}
                 title={instructionView.title}
                 markdown={instructionView.contextMarkdown}
                 loading={instructionView.loading}
                 error={instructionView.error}
-                emptyMessage="No separate context document is available for this task."
+                emptyMessage={t("eval.common.noSeparateContext")}
                 icon="menu_book"
               />
             }

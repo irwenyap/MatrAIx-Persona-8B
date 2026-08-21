@@ -271,6 +271,13 @@ persona/datasets/*/cohorts/
 persona/datasets/matraix-persona-1m/release/
 persona/datasets/matraix-persona-1m/cohorts/
 persona/datasets/matraix-persona-1m/indexes/
+persona/datasets/philippines-1m/
+
+# Provider-licensed source material fetched under a data-use agreement (WVS
+# questionnaires and codebooks, PSA PUFs). Redistribution is not permitted by
+# those terms, so this must never enter the repository. Working copies live
+# here and in persona/curation/existing_data/raw/, both untracked.
+/data/
 configs/jobs/application-task-job-recipe/*.yaml
 configs/jobs/application-task-job-recipe/*.meta.json
 configs/jobs/application-task-job-recipe/*.launch.json

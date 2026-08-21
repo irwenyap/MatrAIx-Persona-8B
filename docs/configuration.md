@@ -13,7 +13,7 @@ uv run python application/scripts/generate_application_job.py \
   --execution-mode auto \
   --persona-ids 0042   # or --sample-size N for batch
 
-uv run harbor run -c configs/jobs/application-task-job-recipe/<generated>.yaml
+uv run matraix run -c configs/jobs/application-task-job-recipe/<generated>.yaml
 ```
 
 Walkthrough for all four types: [quickstart.md §6–7](quickstart.md#6-one-persona--cli-with-mode-auto-default).
@@ -23,7 +23,7 @@ Hand-point Matraix Playground at a **checked-in** recipe with `-c` only when you
 want a Docker harness smoke (often `force_docker`-style for survey/chat):
 
 ```bash
-uv run harbor run -c configs/jobs/example-job-recipe/appSim-example-survey-local.yaml
+uv run matraix run -c configs/jobs/example-job-recipe/appSim-example-survey-local.yaml
 ```
 
 ## Job recipe anatomy
@@ -216,7 +216,7 @@ Web tasks support four Docker-based execution modes and computer-use (CUA):
 ```bash
 export LLM_API_KEY="${ANTHROPIC_API_KEY}"
 
-uv run harbor run \
+uv run matraix run \
   -a persona-openhands-sdk \
   -m anthropic/claude-sonnet-4-6 \
   --ak persona_path=persona/datasets/matraix-persona-dev-sample/persona_0042.yaml \
@@ -226,13 +226,13 @@ uv run harbor run \
 Or use the checked-in recipe:
 
 ```bash
-uv run harbor run -c configs/jobs/example-job-recipe/appSim-example-web-playwright-local.yaml
+uv run matraix run -c configs/jobs/example-job-recipe/appSim-example-web-playwright-local.yaml
 ```
 
 ### Example: browser-use web task
 
 ```bash
-uv run harbor run -c configs/jobs/example-job-recipe/appSim-example-web-browser-use-local.yaml
+uv run matraix run -c configs/jobs/example-job-recipe/appSim-example-web-browser-use-local.yaml
 ```
 
 See [web-interaction.md](environment/web-interaction.md) for detailed mode comparison, web submission contracts, and how to author new web tasks.
@@ -269,7 +269,7 @@ All job recipes live under `configs/jobs/` and follow these guidelines:
 Run any example recipe from the repository root with:
 
 ```bash
-uv run harbor run -c configs/jobs/example-job-recipe/<recipe>.yaml
+uv run matraix run -c configs/jobs/example-job-recipe/<recipe>.yaml
 ```
 
 The example recipes use the checked-in sample persona `persona/datasets/matraix-persona-dev-sample/persona_0042.yaml`.
@@ -317,7 +317,7 @@ uv run python application/scripts/generate_application_job.py \
   --execution-mode auto \
   --persona-ids 0042 \
   --model-name anthropic/claude-sonnet-4-6
-# Follow printed exports + harbor run -c …
+# Follow the printed `matraix run -c …` command
 ```
 
 ### Web (browser-use) one-liner
@@ -325,7 +325,7 @@ uv run python application/scripts/generate_application_job.py \
 ```bash
 export ANTHROPIC_API_KEY="sk-ant-..."
 
-uv run harbor run \
+uv run matraix run \
   -a persona-browser-use \
   -m anthropic/claude-sonnet-4-6 \
   --ak persona_path=persona/datasets/matraix-persona-dev-sample/persona_0042.yaml \
@@ -338,7 +338,7 @@ uv run harbor run \
 export ANTHROPIC_API_KEY="sk-ant-..."
 export OPENAI_API_KEY="sk-..."  # sidecar / SUT when required
 
-uv run harbor run \
+uv run matraix run \
   -a persona-user-sim \
   -m anthropic/claude-sonnet-4-6 \
   --ak persona_path=persona/datasets/matraix-persona-dev-sample/persona_0042.yaml \
@@ -350,7 +350,7 @@ uv run harbor run \
 ```bash
 export ANTHROPIC_API_KEY="sk-ant-..."
 
-uv run harbor run \
+uv run matraix run \
   -a persona-claude-code \
   -m anthropic/claude-sonnet-4-6 \
   --ak persona_path=persona/datasets/matraix-persona-dev-sample/persona_0042.yaml \
@@ -363,7 +363,7 @@ uv run harbor run \
 export ANTHROPIC_API_KEY="sk-ant-..."
 export USE_COMPUTER_API_KEY="..."
 
-uv run harbor run \
+uv run matraix run \
   -a persona-computer-1 \
   -m anthropic/claude-sonnet-4-6 \
   --ak persona_path=persona/datasets/matraix-persona-dev-sample/persona_0042.yaml \
@@ -373,13 +373,13 @@ uv run harbor run \
 Or use the pre-configured recipe:
 
 ```bash
-uv run harbor run -c configs/jobs/example-job-recipe/appSim-example-computer-use-macos-local.yaml
+uv run matraix run -c configs/jobs/example-job-recipe/appSim-example-computer-use-macos-local.yaml
 ```
 
 ### No API key required (smoke test)
 
 ```bash
-uv run harbor run -c configs/jobs/example-job-recipe/harbor-smoke-local.yaml
+uv run matraix run -c configs/jobs/example-job-recipe/harbor-smoke-local.yaml
 ```
 
 This uses the `oracle` reference agent (not a real LLM) and is useful for verifying setup before using API keys.

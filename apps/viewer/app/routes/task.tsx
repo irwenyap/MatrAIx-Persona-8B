@@ -211,7 +211,7 @@ function getHarborCommand(
   agentName?: string,
   modelName?: string
 ): string {
-  const parts = ["harbor run"];
+  const parts = ["matraix run"];
   if (source) {
     parts.push(`-d ${source}`);
   }

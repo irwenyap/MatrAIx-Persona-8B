@@ -13,7 +13,7 @@ Use one of:
 
 - Playground
 - `POST /api/harbor/jobs`
-- `harbor run -c <job.yaml>`
+- `matraix run -c <job.yaml>`
 
 One launch covers the whole cohort. Do not start a separate job per persona.
 

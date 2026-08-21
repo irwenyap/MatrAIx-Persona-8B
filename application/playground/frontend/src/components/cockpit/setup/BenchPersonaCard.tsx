@@ -1,4 +1,6 @@
 import { FOCUS_RING, Sym } from "../cockpitShared";
+import { useI18n } from "@/i18n/I18nProvider";
+import type { MessageKey } from "@/i18n/types";
 import { personaDisplayId, personaPrimaryName } from "@/lib/personaDisplay";
 import type { PersonaPoolPersonaCard } from "@/lib/types";
 import { PersonaAvatar } from "./PersonaAvatar";
@@ -6,13 +8,13 @@ import type { PersonaSearchHit } from "./personaSearchHits";
 import { CHIP_TEXT_CLASS, personaDimChipTone } from "./taskCardLabels";
 import { ToneChip } from "./ToneChip";
 
-const DIM_LABELS: Record<string, string> = {
-  age_bracket: "Age",
-  region: "Region",
-  domain: "Domain",
-  intent: "Intent",
-  life_stage: "Life stage",
-  source: "Source",
+const DIM_LABEL_KEYS: Record<string, MessageKey> = {
+  age_bracket: "cockpitSetup.persona.field.age",
+  region: "cockpitSetup.persona.field.region",
+  domain: "cockpitSetup.persona.field.domain",
+  intent: "cockpitSetup.persona.field.intent",
+  life_stage: "cockpitSetup.persona.field.lifeStage",
+  source: "cockpitSetup.persona.field.source",
 };
 
 export interface BenchPersonaCardProps {
@@ -33,8 +35,13 @@ export function BenchPersonaCard({
   onOpenDetail,
   hits = [],
 }: BenchPersonaCardProps) {
+  const { t } = useI18n();
   const dims = Object.entries(persona.dimensions ?? {}).slice(0, 4);
-  const displayName = personaPrimaryName(persona.name, persona.personaId, persona.dimensions ?? {});
+  const displayName = personaPrimaryName(
+    persona.name,
+    persona.personaId,
+    persona.dimensions ?? {},
+  );
   const codename = personaDisplayId(persona.personaId);
   const visibleHits = hits.slice(0, 2);
 
@@ -65,18 +72,22 @@ export function BenchPersonaCard({
     >
       <div className="flex items-start gap-3">
         <div className="relative shrink-0">
-          <PersonaAvatar personaId={persona.personaId} dimensions={persona.dimensions} size="md" />
+          <PersonaAvatar
+            personaId={persona.personaId}
+            dimensions={persona.dimensions}
+            size="md"
+          />
           {onToggle ? (
-          <span
+            <span
               className={`absolute -left-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full border shadow-sm ${
-              selected
+                selected
                   ? "border-primary/40 bg-primary/15 text-primary"
                   : "border-outline/50 bg-surface-lowest/90 text-transparent"
-            }`}
-            aria-hidden
-          >
-            <Sym name="check" size={14} />
-          </span>
+              }`}
+              aria-hidden
+            >
+              <Sym name="check" size={14} />
+            </span>
           ) : null}
         </div>
 
@@ -87,7 +98,9 @@ export function BenchPersonaCard({
                 <p className="truncate font-display text-[15px] font-semibold leading-tight text-text-main">
                   {displayName}
                 </p>
-                <p className="mt-1 font-mono text-[11px] tracking-wide text-text-dim">{codename}</p>
+                <p className="mt-1 font-mono text-[11px] tracking-wide text-text-dim">
+                  {codename}
+                </p>
               </div>
             </div>
             <div className="flex shrink-0 items-center gap-1">
@@ -103,7 +116,9 @@ export function BenchPersonaCard({
                     event.stopPropagation();
                     onOpenDetail();
                   }}
-                  aria-label={`View details for ${displayName}`}
+                  aria-label={t("cockpitSetup.persona.viewDetails", {
+                    name: displayName,
+                  })}
                   className={`rounded-md p-1.5 text-text-dim transition hover:bg-surface-high hover:text-primary ${FOCUS_RING}`}
                 >
                   <Sym name="info" size={16} />
@@ -122,13 +137,17 @@ export function BenchPersonaCard({
               title={`${hit.label}: ${hit.value}`}
               className="inline-flex max-w-full items-center gap-1 rounded-full border border-primary/25 bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary"
             >
-              <span className="opacity-70">Match</span>
+              <span className="opacity-70">
+                {t("cockpitSetup.persona.match")}
+              </span>
               <span className="opacity-40">·</span>
               <span className="truncate">{hit.value}</span>
             </span>
           ))}
           {hits.length > visibleHits.length ? (
-            <span className="self-center text-[11px] text-text-dim">+{hits.length - visibleHits.length}</span>
+            <span className="self-center text-[11px] text-text-dim">
+              +{hits.length - visibleHits.length}
+            </span>
           ) : null}
         </div>
       ) : null}
@@ -142,17 +161,28 @@ export function BenchPersonaCard({
         >
           <dl className="space-y-2">
             {dims.map(([key, value], index) => {
-              const label = DIM_LABELS[key] ?? key.replace(/_/g, " ");
+              const label = key in DIM_LABEL_KEYS
+                ? t(DIM_LABEL_KEYS[key])
+                : key.replace(/_/g, " ");
               return (
-                <div key={key} className="grid min-w-0 grid-cols-[4.75rem_1fr] items-baseline gap-x-2">
-                  <dt className="truncate text-[11px] text-text-dim" title={label}>
+                <div
+                  key={key}
+                  className="grid min-w-0 grid-cols-[4.75rem_1fr] items-baseline gap-x-2"
+                >
+                  <dt
+                    className="truncate text-[11px] text-text-dim"
+                    title={label}
+                  >
                     <span
                       className={`mr-1.5 inline-block h-1.5 w-1.5 rounded-full align-middle ${dotClass(personaDimChipTone(key, index))}`}
                       aria-hidden
                     />
                     {label}
                   </dt>
-                  <dd className="min-w-0 truncate text-[13px] leading-snug text-text-main" title={value}>
+                  <dd
+                    className="min-w-0 truncate text-[13px] leading-snug text-text-main"
+                    title={value}
+                  >
                     {value}
                   </dd>
                 </div>

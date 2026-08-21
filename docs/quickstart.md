@@ -29,6 +29,26 @@ persona **`0042`**). **Recommended** for real cohorts: import **Persona 1M** —
 
 ---
 
+## 0. Windows users: set up WSL2 first
+
+Everything below assumes a Linux/macOS shell. On Windows, use
+[WSL2](https://learn.microsoft.com/windows/wsl/install) — it takes ~5 minutes
+and then every command in this guide works exactly as written:
+
+1. Open **PowerShell as Administrator** and run `wsl --install` (installs
+   Ubuntu). Reboot if prompted, then create your Linux username/password.
+2. Install [Docker Desktop](https://docs.docker.com/get-docker/) and enable
+   **Settings → Resources → WSL integration** for your Ubuntu distro.
+3. Do all remaining steps **inside the Ubuntu terminal** (search “Ubuntu” in
+   the Start menu). Clone the repo into the WSL filesystem — e.g. `~/MatrAIx`,
+   **not** `/mnt/c/…` — Windows-mounted paths are dramatically slower and can
+   cause file-watching issues with the Playground dev server.
+
+Native PowerShell/cmd is not supported: task verifiers and dev scripts
+require `bash`.
+
+---
+
 ## 1. Install Docker and confirm it works
 
 1. Install [Docker Desktop](https://docs.docker.com/get-docker/) (or Docker Engine on Linux).
@@ -70,25 +90,42 @@ uv sync
 Check the CLI:
 
 ```bash
-uv run harbor --help
+uv run matraix --help
 ```
 
 ---
 
-## 3. Smoke test (no API key)
+## 3. Smoke tests (two lanes)
 
-Confirms Docker and Matraix Playground with the upstream **hello-world** task (reference
-solution, no LLM call):
+After install, run **both** checks below (no API key). Together they confirm
+the default path for **Survey, Chat, Web, and OS-app** is ready before you
+spend on a real model:
+
+| Check | Confirms you can run | Needs Docker? |
+|-------|----------------------|---------------|
+| Without Docker | Survey and Chat | No |
+| With Docker | Web and OS-app | Yes |
+
+### Without Docker — Survey & Chat
 
 ```bash
-uv run harbor run -c configs/jobs/example-job-recipe/harbor-smoke-local.yaml
+uv run matraix smoke application/tasks/example-survey_product-feedback
 ```
 
-First run builds the Docker image (several minutes).
+**Success:** prints `Smoke: ok` and does not call a model provider.
 
-**Success:** the command finishes without error and writes output under
-`jobs/harbor-smoke-local/`.
+### With Docker — Web & OS-app
 
+```bash
+uv run matraix run -c configs/jobs/example-job-recipe/harbor-smoke-local.yaml
+```
+
+First run builds a small local image (a few minutes).
+
+**Success:** finishes without error and writes under `jobs/harbor-smoke-local/`.
+
+When both pass, continue to §6 to run any of the four types with Mode **auto**
+and a real model.
 ---
 
 ## 4. Set your API key
@@ -140,7 +177,7 @@ person.
 
 **Step 6 vs 7:** Step 6 = **one persona** (`--persona-ids`). Step 7 =
 `generate_application_job.py` **samples N personas** (seed + pool) into a job
-YAML, then you `harbor run -c` that file once.
+YAML, then you `matraix run -c` that file once.
 
 **Terminal vs Playground:** Steps 6–9 use the terminal (good for CI and smoke).
 [Section 10](#10-playground-play-tasks-visually) uses the Playground UI —
@@ -160,7 +197,7 @@ uv run python application/scripts/generate_application_job.py \
   --persona-ids 0042 \
   --model-name anthropic/claude-sonnet-4-6
 # Then run the printed export lines and:
-# uv run harbor run -c configs/jobs/application-task-job-recipe/<generated>-auto-n1.yaml
+# uv run matraix run -c configs/jobs/application-task-job-recipe/<generated>-auto-n1.yaml
 ```
 
 | Type | Auto picks | Runs on | Example `--task` |
@@ -180,12 +217,21 @@ Web agent under auto (same as Playground): `*browser-use*` → `persona-browser-
 uv run python application/scripts/generate_application_job.py \
   --task application/tasks/example-survey_product-feedback \
   --execution-mode auto \
-  --persona-ids 0042
+  --persona-ids 0042 \
+  --model-name openai/gpt-4o-mini
 
-export ANTHROPIC_API_KEY="sk-ant-..."
-export MATRIX_SURVEY_TASK_PATH=application/tasks/example-survey_product-feedback
-uv run harbor run -c configs/jobs/application-task-job-recipe/example-survey-product-feedback-auto-n1.yaml
+# The generator prints a provider-aware Preflight block (which credential, present/missing).
+export OPENAI_API_KEY="sk-..."
+uv run matraix run -c configs/jobs/application-task-job-recipe/example-survey-product-feedback-auto-n1.yaml
+# Optional hard spend gate (Survey refuses further provider calls once spend meets the cap):
+# uv run matraix run -c … --max-cost-usd 1.00
 ```
+
+`matraix run` reads the `MATRIX_*` task exports from the generated job files —
+you only export your model API key. Completed Survey and Chat trials persist
+`n_input_tokens` / `n_output_tokens` / `cost_usd` (when pricing is known) on
+the trial and job result. Web / OS-app agents already report the same fields
+through their Docker / computer-use runtimes.
 
 ### Chat (auto)
 
@@ -196,8 +242,7 @@ uv run python application/scripts/generate_application_job.py \
   --persona-ids 0042
 
 export ANTHROPIC_API_KEY="sk-ant-..."
-# Use the MATRIX_CHATBOT_* export lines the script prints, then:
-uv run harbor run -c configs/jobs/application-task-job-recipe/<generated>-auto-n1.yaml
+uv run matraix run -c configs/jobs/application-task-job-recipe/<generated>-auto-n1.yaml
 ```
 
 ### Web / OS-app (auto still uses Docker or use.computer)
@@ -210,7 +255,7 @@ uv run python application/scripts/generate_application_job.py \
   --persona-ids 0042
 
 export LLM_API_KEY="$ANTHROPIC_API_KEY"
-uv run harbor run -c configs/jobs/application-task-job-recipe/example-web-playwright-quote-choice-auto-n1.yaml
+uv run matraix run -c configs/jobs/application-task-job-recipe/example-web-playwright-quote-choice-auto-n1.yaml
 
 # Linux computer-use (macOS/iOS need USE_COMPUTER_API_KEY)
 uv run python application/scripts/generate_application_job.py \
@@ -241,8 +286,8 @@ survey/chat). They are **not** Mode auto. Prefer the generator above unless you
 intentionally want the CLI harness in Docker:
 
 ```bash
-uv run harbor run -c configs/jobs/example-job-recipe/appSim-example-survey-local.yaml
-uv run harbor run -c configs/jobs/example-job-recipe/appSim-example-web-playwright-local.yaml
+uv run matraix run -c configs/jobs/example-job-recipe/appSim-example-survey-local.yaml
+uv run matraix run -c configs/jobs/example-job-recipe/appSim-example-web-playwright-local.yaml
 ```
 
 To force Docker CLI agents from the generator: `--execution-mode force_docker`.
@@ -334,8 +379,7 @@ Run the generated job (paths are also in the YAML header):
 
 ```bash
 export ANTHROPIC_API_KEY="sk-ant-..."
-export MATRIX_SURVEY_TASK_PATH=application/tasks/example-survey_product-feedback
-uv run harbor run -c configs/jobs/application-task-job-recipe/example-survey-product-feedback-auto-n10.yaml
+uv run matraix run -c configs/jobs/application-task-job-recipe/example-survey-product-feedback-auto-n10.yaml
 ```
 
 **What a job means here:** one **task**, **N trials** — each trial uses a
@@ -354,16 +398,40 @@ After a job finishes:
 
 ```text
 jobs/<job_name>/
-├── result.json           # Summary stats
+├── result.json           # Job summary stats (tokens/cost when recorded)
 ├── job.log
 └── <trial_name>/
-    ├── results.json      # Reward / verifier outcome
+    ├── result.json       # Trial reward / verifier outcome + agent usage
     ├── persona_meta.json # Which persona was used (if persona agent)
     └── artifacts/
         └── app/output/   # The agent's submission JSON
+            # Survey: survey_result.json
 ```
 
-Open the submission JSON to read what that simulated user chose.
+Summarize a finished job from the CLI (no extra LLM call). The same command works
+for Survey, Chat, Web, and OS-app jobs:
+
+```bash
+uv run matraix results jobs/<job_name>
+uv run matraix results <job_name> --format json,csv -o /tmp/matraix-exports/
+# Optional persona cuts when dimensions are present:
+# uv run matraix results <job_name> --group-by life_stage --format json
+```
+
+`matraix results` prints a deterministic ledger (coverage, usage/cost, rewards,
+trial index, artifact paths) plus a thin type-aware outcome lens (question mixes,
+choice mixes, task-outcome mixes). JSON export uses schema `MatraixJobResults.v1`.
+It does **not** call another model and does **not** replace Playground or Harbor
+debug surfaces:
+
+| Surface | Job | Audience |
+|---------|-----|----------|
+| `matraix results` | Deterministic ledger + export | CLI / scripts / CI |
+| Playground **Runs** + **Download PDF** | Persona narrative + rich aggregation | Interactive product |
+| `harbor view` | Trajectory / logs / debugger | Runtime debug |
+
+Open the submission JSON under `artifacts/app/output/` to read what that
+simulated user chose.
 
 Refresh batch reporting:
 
@@ -385,7 +453,9 @@ uv run harbor view jobs --build
 ```
 
 Opens a local web UI listing jobs and trials — transcripts, artifacts, verifier
-logs. Use this to compare personas side by side.
+logs. Use this to compare personas side by side. Prefer `matraix results` when
+you need a scriptable summary; use `harbor view` when you need to step through
+trajectories and logs.
 
 To explore without spending API credits, browse checked-in examples under `jobs/`
 if present, or run the no-key smoke recipe from step 3.
@@ -552,8 +622,11 @@ Full task checklist: [tasks/README.md](../application/tasks/README.md).
 | Goal | Tool | Output |
 |------|------|--------|
 | Explore / debug visually | Playground (Mode **auto**) | `jobs/` |
-| Any of 4 types (terminal, single or batch) | `generate_application_job.py --execution-mode auto` + `harbor run -c` | `jobs/<job_name>/` |
-| Validate Docker/Matraix Playground only | `harbor-smoke-local.yaml` | smoke task image |
+| Any of 4 types (terminal, single or batch) | `generate_application_job.py --execution-mode auto` + `matraix run -c` | `jobs/<job_name>/` |
+| Deterministic job summary / export | `matraix results <job>` | text / JSON / CSV |
+| Persona narrative batch PDF | Playground **Runs** → **Download PDF** | UI PDF |
+| Install check — Survey & Chat (no Docker) | `matraix smoke <survey-task>` | `Smoke: ok` |
+| Install check — Web & OS-app (Docker) | `harbor-smoke-local.yaml` | `jobs/harbor-smoke-local/` |
 | Docker CLI harness (survey/chat) | `--execution-mode force_docker` or `appSim-*-local.yaml` | Docker trials |
 | Browse trajectories | `harbor view` or Playground **Runs** | local viewer |
 | New scenario | copy `example-*` + register for Playground | `application/tasks/<name>/` |

@@ -23,7 +23,11 @@ Commands run:
 
 ### Application task PRs
 
-When this PR adds or materially changes an `application/tasks/…` scenario:
+**We are not accepting new community contributions of `application/tasks/…`
+scenarios for now.** See [application/tasks/README.md](../application/tasks/README.md).
+
+When this PR adds or materially changes an `application/tasks/…` scenario
+(maintainers / invited only):
 
 - [ ] Attached the **Playground UI** batch report PDF (Runs → job → **Download PDF**
       on the persona-task batch report), not the server text `…/report.pdf` export.

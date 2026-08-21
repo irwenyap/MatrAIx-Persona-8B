@@ -6,6 +6,9 @@ import { flushSync } from "react-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { api, ApiError } from "@/lib/api";
+import { useI18n } from "@/i18n/I18nProvider";
+import type { MessageKey } from "@/i18n/types";
+import { SOURCE_MESSAGES } from "@/i18n/source";
 import {
   exportBatchReportPdf,
   humanizePathLeaf,
@@ -15,6 +18,15 @@ import {
   type BatchReportPdfPersonaStrategy,
   type BatchReportPdfSnapshot,
 } from "@/lib/exportBatchReportPdf";
+import {
+  formatCostUsd,
+  formatTokenCount,
+  hasUsage,
+  usageCompactLine,
+  usageFromJobResult,
+  usageFromTrialResult,
+  usageListPrimary,
+} from "@/lib/llmUsage";
 import { personaDisplayId, personaPrimaryName } from "@/lib/personaDisplay";
 import {
   surveyQuestionTypeChipClass,
@@ -47,6 +59,15 @@ import {
   StudioPageHeader,
   StudioToolbarButton,
 } from "./studio/StudioShell";
+import {
+  crossFacetReasonPhrase,
+  facetKeyLeaf,
+  humanizeAnalysisStatus,
+  humanizeAnalysisTitle,
+  humanizeFacetLabel,
+  likertPointLabel,
+  type HarborReportTranslate,
+} from "./harborReportPresentation";
 
 export interface HarborJobDetailProps {
   jobName: string;
@@ -63,6 +84,7 @@ type AggregationPersonaDistribution = NonNullable<
   AggregationContext["personaDistributions"]
 >[number];
 type AggregationCrossFacetView = JobAggregationCrossFacetView;
+type ReportTranslate = HarborReportTranslate;
 type AggregationContextType =
   | "question_response"
   | "decision"
@@ -311,10 +333,26 @@ const CONTEXT_GROUP_BY_TYPE: Record<string, InsightGroup> = {
 /** Reading order across the whole report: what happened → how it went → how personas felt. */
 const INSIGHT_GROUP_ORDER: InsightGroup[] = ["outcome", "process", "feedback"]
 
-const INSIGHT_GROUP_META: Record<InsightGroup, { label: string; blurb: string }> = {
-  outcome: { label: "Outcome", blurb: "What happened" },
-  process: { label: "Process", blurb: "How it went" },
-  feedback: { label: "Feedback", blurb: "How personas felt" },
+function insightGroupLabel(group: InsightGroup, t: ReportTranslate): string {
+  switch (group) {
+    case "outcome":
+      return t("reports.insight.outcome");
+    case "process":
+      return t("reports.insight.process");
+    case "feedback":
+      return t("reports.insight.feedback");
+  }
+}
+
+function insightGroupBlurb(group: InsightGroup, t: ReportTranslate): string {
+  switch (group) {
+    case "outcome":
+      return t("reports.insight.outcomeBlurb");
+    case "process":
+      return t("reports.insight.processBlurb");
+    case "feedback":
+      return t("reports.insight.feedbackBlurb");
+  }
 }
 
 function contextGroup(contextType: string | null | undefined): InsightGroup | null {
@@ -342,16 +380,16 @@ function trialStatus(trial: HarborTrialRow): "done" | "failed" | "running" | "pe
   return "pending";
 }
 
-function trialStatusLabel(status: ReturnType<typeof trialStatus>): string {
+function trialStatusLabel(status: ReturnType<typeof trialStatus>, t?: ReportTranslate): string {
   switch (status) {
     case "done":
-      return "Done";
+      return t ? t("reports.status.done") : "Done";
     case "failed":
-      return "Failed";
+      return t ? t("reports.status.failed") : "Failed";
     case "running":
-      return "Running";
+      return t ? t("reports.status.running") : "Running";
     default:
-      return "Pending";
+      return t ? t("reports.status.pending") : "Pending";
   }
 }
 
@@ -366,6 +404,7 @@ const TRIAL_STATUS_STYLES: Record<
 };
 
 function TrialStatusBadge({ trial }: { trial: HarborTrialRow }) {
+  const { t } = useI18n();
   const status = trialStatus(trial);
   const style = TRIAL_STATUS_STYLES[status];
   return (
@@ -378,7 +417,7 @@ function TrialStatusBadge({ trial }: { trial: HarborTrialRow }) {
         fill={style.fill}
         className={status === "running" ? "shrink-0 animate-rb-spin" : "shrink-0"}
       />
-      {trialStatusLabel(status)}
+      {trialStatusLabel(status, t)}
     </span>
   );
 }
@@ -404,30 +443,30 @@ function metricValue(value: number | null | undefined): string {
   return Number.isInteger(value) ? String(value) : value.toFixed(2);
 }
 
-function reportingStatusLabel(status: string | null | undefined): string {
+function reportingStatusLabel(status: string | null | undefined, t: ReportTranslate): string {
   const normalized = (status ?? "").trim().toLowerCase();
   switch (normalized) {
     case "queued":
-      return "Queued";
+      return t("reports.status.queued");
     case "running":
-      return "Summarizing";
+      return t("reports.status.summarizing");
     case "completed":
-      return "Ready";
+      return t("reports.status.ready");
     case "completed_with_errors":
-      return "Ready with issues";
+      return t("reports.status.readyWithIssues");
     case "partial":
-      return "Partly ready";
+      return t("reports.status.partlyReady");
     case "partial_with_errors":
-      return "Partly ready with issues";
+      return t("reports.status.partlyReadyWithIssues");
     case "failed":
-      return "Failed";
+      return t("reports.status.failed");
     case "ready":
     case "ready_for_llm":
-      return "Waiting to summarize";
+      return t("reports.status.waitingToSummarize");
     case "not_applicable":
-      return "Not applicable";
+      return t("reports.status.notApplicable");
     default:
-      return normalized ? normalized.split("_").join(" ") : "Unknown";
+      return normalized ? normalized.split("_").join(" ") : t("reports.status.unknown");
   }
 }
 
@@ -468,15 +507,6 @@ function fullProseText(value: string | null | undefined, limit = 8000): string {
   return `${normalized.slice(0, limit - 1).trimEnd()}…`
 }
 
-/** Turn opaque facet keys/labels (outcome_reason, Feedback reason) into plain language. */
-/** Last segment of a qualified aggregation key (`task_outcome.primary.outcome_status` → `outcome_status`). */
-function facetKeyLeaf(key: string | null | undefined): string {
-  const raw = (key ?? "").trim()
-  if (!raw) return ""
-  const parts = raw.split(".").filter(Boolean)
-  return parts[parts.length - 1] ?? raw
-}
-
 /** Long self-report prompts should stay sentence case — not CSS uppercase. */
 function isProseFacetTitle(label: string): boolean {
   const text = label.trim()
@@ -494,145 +524,6 @@ function facetTitleClassName(label: string, size: "sm" | "md" = "md"): string {
   return size === "sm"
     ? "text-[11px] font-medium uppercase tracking-wide text-text-dim"
     : "text-[13px] font-medium uppercase tracking-wide text-text-dim"
-}
-
-function humanizeFacetLabel(label: string | null | undefined, key?: string | null): string {
-  const leafKey = facetKeyLeaf(key)
-  // Aggregation keys look like "user_feedback.primary.foo" (no spaces). Prose
-  const labelLooksLikeKey = Boolean(
-    label &&
-      label.includes(".") &&
-      !/\s/.test(label) &&
-      /^[a-zA-Z0-9_.-]+$/.test(label),
-  )
-  // Brainless: any authored multi-word label (self-report prompts, long titles)
-  // is shown as-is — never collapse to platform shortcuts like "Needs met".
-  if (label && !labelLooksLikeKey && /\s/.test(label.trim())) {
-    return label.trim()
-  }
-  const raw = (
-    labelLooksLikeKey ? leafKey || label || "" : label ?? (leafKey || key || "")
-  ).trim()
-  if (!raw) return "Explanation"
-  const normalized = raw.toLowerCase().replace(/[_-]+/g, " ")
-  const keyNorm = leafKey.toLowerCase().replace(/-/g, "_")
-  const byKey: Record<string, string> = {
-    outcome_status: "Task outcome",
-    outcome_reason: "Why this result",
-    feedback_reason: "Why they rated it this way",
-    clarification_questions_useful: "Clarifying questions useful",
-    asked_useful_clarification_questions: "Clarifying questions useful",
-    felt_understood: "Felt understood",
-    conversation_path: "How the chat went",
-    process_notes: "What happened in the chat",
-    resolution_basis: "How we judged the result",
-    next_step_owner: "Who acts next",
-    task_goal_label: "User goal",
-    trust_level: "Trust",
-    effort_rating: "Effort",
-    clarity_of_next_step: "Next step clear",
-    user_turn_count: "User turns",
-    assistant_turn_count: "Assistant turns",
-    message_count: "Messages",
-    clarification_question_count: "Clarifying questions",
-    policy_compliance: "Policy check",
-    groundedness_primary: "Groundedness",
-    coordination_mode: "Who needs to act",
-    guidance_quality: "Guidance quality",
-    state_change_achieved: "State changed",
-    user_action_required: "User action needed",
-    goal_completion_bucket: "Goal completion",
-    goal_completion_ratio: "Goal completion",
-    primary_failure_reason: "Main failure reason",
-    verifier_mode: "How it was checked",
-  }
-  if (keyNorm && byKey[keyNorm]) return byKey[keyNorm]
-  if (normalized === "outcome status") return "Task outcome"
-  if (normalized === "outcome reason") return "Why this result"
-  if (normalized === "feedback reason") return "Why they rated it this way"
-  if (normalized === "conversation path") return "How the chat went"
-  if (normalized === "process notes") return "What happened in the chat"
-  if (normalized === "resolution basis") return "How we judged the result"
-  if (normalized === "next step owner") return "Who acts next"
-  if (normalized === "personal preference satisfaction") return "Preferences matched"
-  if (normalized === "clarification questions useful") return "Clarifying questions useful"
-  if (normalized.endsWith(" reason")) {
-    return `Why: ${raw.replace(/\s*reason$/i, "").trim() || "explanation"}`
-  }
-  // Never surface dotted aggregation keys in the UI.
-  if (labelLooksLikeKey || (/^[a-zA-Z0-9_.-]+$/.test(raw) && raw.includes("."))) {
-    const leaf = facetKeyLeaf(raw)
-    const leafNorm = leaf.toLowerCase().replace(/-/g, "_")
-    if (byKey[leafNorm]) return byKey[leafNorm]
-    return leaf
-      .replace(/[_-]+/g, " ")
-      .replace(/\b\w/g, (ch) => ch.toUpperCase())
-  }
-  return raw
-}
-
-/**
- * Plain-language noun phrase for the text dimension being grouped in a
- * cross-facet view, used to fill the "{reason}, grouped by {answer}" subtitle
- * so each grouping self-describes what it summarizes.
- */
-function crossFacetReasonPhrase(textFacetKey: string | null | undefined): string {
-  const leaf = facetKeyLeaf(textFacetKey).toLowerCase().replace(/-/g, "_")
-  const byKey: Record<string, string> = {
-    outcome_reason: "Reasons for the result",
-    feedback_reason: "Reasons for the rating",
-    process_notes: "What happened in the chat",
-    conversation_path: "How the chat went",
-    resolution_basis: "How the result was judged",
-  }
-  if (byKey[leaf]) return byKey[leaf]
-  const label = humanizeFacetLabel(null, textFacetKey)
-  return label && label !== "Explanation" ? label : "Persona explanations"
-}
-
-/** Soften reporting.json titles that still say "Feedback reason by …". */
-function humanizeAnalysisTitle(title: string | null | undefined): string {
-  const raw = (title ?? "").trim()
-  if (!raw) return "Analysis"
-  let next = raw
-    .replace(/^Outcome reason by\b/i, "Why this result, by")
-    .replace(/^Feedback reason by\b/i, "Why they rated it this way, by")
-    .replace(/^Outcome reason\b/i, "Why this result")
-    .replace(/^Feedback reason\b/i, "Why they rated it this way")
-    .replace(/^Process notes by\b/i, "How the chat went, by")
-    .replace(/\breason by\b/gi, ", by")
-    .replace(/\bexplanations by\b/gi, ", by")
-  // Humanize the trailing group-by phrase: "…, by clarification usefulness"
-  next = next.replace(/,\s*by\s+(.+)$/i, (_, group: string) => {
-    const groupNorm = group.trim().toLowerCase().replace(/[_-]+/g, " ")
-    const groupMap: Record<string, string> = {
-      "clarification usefulness": "whether clarifying questions helped",
-      "clarification questions useful": "whether clarifying questions helped",
-      "need satisfaction": "whether needs were met",
-      "outcome status": "task outcome",
-      status: "task outcome",
-      "conversation path": "how the chat went",
-      "resolution basis": "how the result was judged",
-    }
-    const plain =
-      groupMap[groupNorm] ??
-      humanizeFacetLabel(group, group.trim().toLowerCase().replace(/\s+/g, "_"))
-    return `, by ${plain.charAt(0).toLowerCase()}${plain.slice(1)}`
-  })
-  return next
-}
-
-function humanizeAnalysisStatus(status?: string | null): string | undefined {
-  const normalized = (status ?? "").trim().toLowerCase()
-  if (!normalized) return undefined
-  if (normalized === "ready_for_llm" || normalized === "ready") return "Waiting to summarize"
-  if (normalized === "queued") return "Queued"
-  if (normalized === "running") return "Summarizing"
-  if (normalized === "pending") return "Pending"
-  if (normalized === "completed" || normalized === "done") return "Ready"
-  if (normalized === "completed_with_errors") return "Ready with issues"
-  if (normalized === "failed" || normalized === "llm_failed") return "Failed"
-  return status!.replace(/_/g, " ")
 }
 
 function primaryFacetForContext(context: AggregationContext): AggregationField | null {
@@ -677,8 +568,85 @@ function contextTypeMeta(contextType: AggregationContextType | null | undefined)
   }
 }
 
-function contextTypeDescription(context: AggregationContext): string | null {
-  return contextTypeMeta(context.contextType)?.description ?? null
+function contextTypeBadge(
+  contextType: AggregationContextType | null | undefined,
+  t?: ReportTranslate,
+): string | null {
+  if (!t) return contextTypeMeta(contextType)?.badge ?? null
+  switch (contextType) {
+    case "question_response":
+      return t("reports.context.question")
+    case "trial_summary":
+      return t("reports.context.trialSummary")
+    case "decision":
+      return t("reports.context.decision")
+    case "task_outcome":
+      return t("reports.context.taskOutcome")
+    case "decision_process":
+      return t("reports.context.decisionProcess")
+    case "conversation_summary":
+      return t("reports.context.conversationSummary")
+    case "experience":
+      return t("reports.context.experience")
+    case "user_feedback":
+    case "feedback":
+      return t("reports.context.userFeedback")
+    case "policy_and_trust":
+      return t("reports.context.policyAndTrust")
+    case "coordination":
+      return t("reports.context.coordination")
+    case "web_interaction":
+      return t("reports.context.webInteraction")
+    case "web_artifact":
+      return t("reports.context.webArtifact")
+    case "goal_component":
+      return t("reports.context.goalComponent")
+    case "persona_alignment":
+      return t("reports.context.personaAlignment")
+    case "persona_constraint":
+      return t("reports.context.personaConstraint")
+    default:
+      return contextTypeMeta(contextType)?.badge ?? null
+  }
+}
+
+function contextTypeDescription(context: AggregationContext, t?: ReportTranslate): string | null {
+  if (!t) return contextTypeMeta(context.contextType)?.description ?? null
+  switch (context.contextType) {
+    case "question_response":
+      return t("reports.context.questionDescription")
+    case "trial_summary":
+      return t("reports.context.trialSummaryDescription")
+    case "decision":
+      return t("reports.context.decisionDescription")
+    case "task_outcome":
+      return t("reports.context.taskOutcomeDescription")
+    case "decision_process":
+      return t("reports.context.decisionProcessDescription")
+    case "conversation_summary":
+      return t("reports.context.conversationSummaryDescription")
+    case "experience":
+      return t("reports.context.experienceDescription")
+    case "user_feedback":
+    case "feedback":
+      return t("reports.context.userFeedbackDescription")
+    case "policy_and_trust":
+      return t("reports.context.policyAndTrustDescription")
+    case "coordination":
+      return t("reports.context.coordinationDescription")
+    case "web_interaction":
+      return t("reports.context.webInteractionDescription")
+    case "web_artifact":
+      return t("reports.context.webArtifactDescription")
+    case "goal_component":
+      return t("reports.context.goalComponentDescription")
+    case "persona_alignment":
+      return t("reports.context.personaAlignmentDescription")
+    case "persona_constraint":
+      return t("reports.context.personaConstraintDescription")
+    default:
+      return contextTypeMeta(context.contextType)?.description ?? null
+  }
 }
 
 function isHeuristicAggregationSummary(text: string): boolean {
@@ -712,82 +680,86 @@ function contextDivergenceScore(context: AggregationContext): number {
 }
 
 /** Contract enum → plain reporting language (never show snake_case to readers). */
-const BUCKET_LABELS: Record<string, string> = {
+const BUCKET_LABEL_KEYS: Record<string, MessageKey> = {
   // booleans / satisfaction
-  true: "Yes",
-  false: "No",
-  yes: "Yes",
-  no: "No",
-  partially: "Partially",
-  partial: "Partially",
+  "true": "reports.bucket.yes",
+  "false": "reports.bucket.no",
+  yes: "reports.bucket.yes",
+  no: "reports.bucket.no",
+  partially: "reports.bucket.partially",
+  partial: "reports.bucket.partially",
   // outcome_status (chat + web/os-app)
-  resolved: "Resolved",
-  partially_resolved: "Partially resolved",
-  unresolved: "Not resolved",
-  escalated: "Escalated",
-  abandoned: "Abandoned",
-  blocked: "Blocked",
-  passed: "Passed",
-  failed: "Failed",
-  infeasible_correct: "Correctly marked impossible",
-  infeasible_incorrect: "Missed that it was impossible",
-  error: "Errored",
+  resolved: "reports.bucket.resolved",
+  partially_resolved: "reports.bucket.partiallyResolved",
+  unresolved: "reports.bucket.unresolved",
+  escalated: "reports.bucket.escalated",
+  abandoned: "reports.bucket.abandoned",
+  blocked: "reports.bucket.blocked",
+  passed: "reports.bucket.passed",
+  failed: "reports.bucket.failed",
+  infeasible_correct: "reports.bucket.infeasibleCorrect",
+  infeasible_incorrect: "reports.bucket.infeasibleIncorrect",
+  error: "reports.bucket.error",
   // conversation_path
-  direct_resolution: "Solved directly",
-  clarify_then_resolve: "Asked questions, then solved",
-  clarify_then_partial: "Asked questions, then partly solved",
-  handoff_or_followup: "Handed off or needs follow-up",
-  stalled: "Got stuck",
-  other: "Other",
+  direct_resolution: "reports.bucket.directResolution",
+  clarify_then_resolve: "reports.bucket.clarifyThenResolve",
+  clarify_then_partial: "reports.bucket.clarifyThenPartial",
+  handoff_or_followup: "reports.bucket.handoffOrFollowup",
+  stalled: "reports.bucket.stalled",
+  other: "reports.bucket.other",
   // resolution_basis
-  tool_state: "From tool or system state",
-  conversation_commitment: "From what was agreed in chat",
-  user_feedback: "From user feedback",
-  policy_guardrail: "From a policy check",
+  tool_state: "reports.bucket.toolState",
+  conversation_commitment: "reports.bucket.conversationCommitment",
+  user_feedback: "reports.bucket.userFeedback",
+  policy_guardrail: "reports.bucket.policyGuardrail",
   // next_step_owner
-  none: "No one — done",
-  agent: "Assistant",
-  user: "User",
-  external: "Someone outside the chat",
-  shared: "Both sides",
+  none: "reports.bucket.none",
+  agent: "reports.bucket.agent",
+  user: "reports.bucket.user",
+  external: "reports.bucket.external",
+  shared: "reports.bucket.shared",
   // policy / groundedness / coordination
-  pass: "Pass",
-  warn: "Warning",
-  fail: "Fail",
-  not_evaluated: "Not checked",
-  verified: "Verified",
-  mixed: "Mixed",
-  unsupported: "Unsupported",
-  agent_only: "Assistant only",
-  user_followup_required: "User still needs to act",
-  shared_world: "Shared control",
-  handoff: "Handed off",
-  clear: "Clear",
-  confusing: "Confusing",
-  not_applicable: "Not applicable",
+  pass: "reports.bucket.pass",
+  warn: "reports.bucket.warn",
+  fail: "reports.bucket.fail",
+  not_evaluated: "reports.bucket.notEvaluated",
+  verified: "reports.bucket.verified",
+  mixed: "reports.bucket.mixed",
+  unsupported: "reports.bucket.unsupported",
+  agent_only: "reports.bucket.agentOnly",
+  user_followup_required: "reports.bucket.userFollowupRequired",
+  shared_world: "reports.bucket.sharedWorld",
+  handoff: "reports.bucket.handoff",
+  clear: "reports.bucket.clear",
+  confusing: "reports.bucket.confusing",
+  not_applicable: "reports.bucket.notApplicable",
   // goal / failure buckets
-  near_complete: "Almost complete",
-  complete: "Complete",
-  not_attempted: "Not attempted",
-  navigation: "Navigation",
-  grounding: "Couldn't ground on the UI",
-  tool_use: "Tool use",
-  misread_instruction: "Misread the instruction",
-  missing_knowledge: "Missing knowledge",
-  validation_mismatch: "Validation mismatch",
-  environment: "Environment issue",
-  unsafe_action: "Unsafe action",
-  state_exact: "Exact state check",
-  state_tolerant: "Flexible state check",
-  artifact_exact: "Exact artifact check",
-  artifact_semantic: "Meaning-based artifact check",
-  hybrid: "Mixed checks",
+  near_complete: "reports.bucket.nearComplete",
+  complete: "reports.bucket.complete",
+  not_attempted: "reports.bucket.notAttempted",
+  navigation: "reports.bucket.navigation",
+  grounding: "reports.bucket.grounding",
+  tool_use: "reports.bucket.toolUse",
+  misread_instruction: "reports.bucket.misreadInstruction",
+  missing_knowledge: "reports.bucket.missingKnowledge",
+  validation_mismatch: "reports.bucket.validationMismatch",
+  environment: "reports.bucket.environment",
+  unsafe_action: "reports.bucket.unsafeAction",
+  state_exact: "reports.bucket.stateExact",
+  state_tolerant: "reports.bucket.stateTolerant",
+  artifact_exact: "reports.bucket.artifactExact",
+  artifact_semantic: "reports.bucket.artifactSemantic",
+  hybrid: "reports.bucket.hybrid",
 }
 
-function formatBucketLabel(value: string): string {
+function formatBucketLabel(value: string, t?: ReportTranslate): string {
   const normalized = value.trim().toLowerCase().replace(/[\s-]+/g, "_")
   if (!normalized) return value
-  if (BUCKET_LABELS[normalized]) return BUCKET_LABELS[normalized]
+  if (normalized in BUCKET_LABEL_KEYS) {
+    return t
+      ? t(BUCKET_LABEL_KEYS[normalized])
+      : SOURCE_MESSAGES[BUCKET_LABEL_KEYS[normalized]]
+  }
   // Already human sentence-ish (contains spaces or punctuation) — keep as-is.
   if (/[\s,:]/.test(value.trim()) && !/_/.test(value)) return value.trim()
   return value
@@ -795,7 +767,7 @@ function formatBucketLabel(value: string): string {
     .replace(/\b\w/g, (char) => char.toUpperCase())
 }
 
-function formatCategoricalDistribution(field: AggregationField | null): string {
+function formatCategoricalDistribution(field: AggregationField | null, t?: ReportTranslate): string {
   const counts = field?.categorical?.counts ?? []
   if (counts.length === 0) return "—"
   const total = Math.max(
@@ -806,10 +778,10 @@ function formatCategoricalDistribution(field: AggregationField | null): string {
   // Compact share form for small enums (Yes/No, yes/partially/no).
   if (counts.length <= 3) {
     return counts
-      .map((entry) => `${formatBucketLabel(entry.value)} ${entry.count}/${total}`)
+      .map((entry) => `${formatBucketLabel(entry.value, t)} ${entry.count}/${total}`)
       .join(" · ")
   }
-  return counts.map((entry) => `${formatBucketLabel(entry.value)} (${entry.count})`).join(" · ")
+  return counts.map((entry) => `${formatBucketLabel(entry.value, t)} (${entry.count})`).join(" · ")
 }
 
 type InsightTone = "success" | "warn" | "danger" | "primary"
@@ -932,8 +904,8 @@ type InsightChipProps = {
   group?: InsightGroup
 }
 
-function facetToInsightChip(field: AggregationField): InsightChipProps | null {
-  const label = humanizeFacetLabel(field.label, field.key)
+function facetToInsightChip(field: AggregationField, t: ReportTranslate): InsightChipProps | null {
+  const label = humanizeFacetLabel(field.label, field.key, t)
   if (field.kind === "numerical") {
     const avg = field.numerical?.avg ?? null
     const scale = inferRatingScale(field)
@@ -957,13 +929,13 @@ function facetToInsightChip(field: AggregationField): InsightChipProps | null {
       1,
     )
     const segments: InsightChipSegment[] = counts.map((entry) => ({
-      label: formatBucketLabel(entry.value),
+      label: formatBucketLabel(entry.value, t),
       count: entry.count,
       tone: bucketTone(entry.value),
     }))
     return {
       label,
-      value: formatCategoricalDistribution(field),
+      value: formatCategoricalDistribution(field, t),
       variant: facetUsesSemanticTone(field) ? "semantic" : "neutral",
       tone,
       segments,
@@ -998,10 +970,11 @@ function buildHeadlineInsightChips(
   contexts: AggregationContext[],
   coverage: HarborJobAggregation["coverage"],
   category: ReportingCategory,
+  t: ReportTranslate,
   options?: { excludeFacetKeys?: ReadonlySet<string> },
 ): InsightChipProps[] {
   if (category === "survey") {
-    return buildSurveyCoverageStats(contexts, coverage).map((stat) => ({
+    return buildSurveyCoverageStats(contexts, coverage, t).map((stat) => ({
       label: stat.label,
       value: stat.value,
       variant: "neutral",
@@ -1024,7 +997,7 @@ function buildHeadlineInsightChips(
       // Keep room for authored self-report enums; don't let outcome/process fill a hard cap.
       if (group !== "feedback" && nonFeedbackCount >= 6) continue
       seen.add(facet.key)
-      const chip = facetToInsightChip(facet)
+      const chip = facetToInsightChip(facet, t)
       if (chip) chips.push({ ...chip, group })
     }
   }
@@ -1035,6 +1008,7 @@ function buildHeadlineInsightChips(
 function buildSurveyCoverageStats(
   contexts: AggregationContext[],
   coverage: HarborJobAggregation["coverage"],
+  t?: ReportTranslate,
 ): Array<{ label: string; value: string; hint?: string }> {
   const stats: Array<{ label: string; value: string; hint?: string }> = []
   const questionContexts = contexts.filter((context) => context.contextType === "question_response")
@@ -1043,9 +1017,9 @@ function buildSurveyCoverageStats(
 
   if (coverage.completedTrials !== coverage.trialCount) {
     stats.push({
-      label: "Completed",
+      label: t ? t("reports.report.completed") : "Completed",
       value: `${coverage.completedTrials}/${coverage.trialCount}`,
-      hint: "Still running or failed",
+      hint: t ? t("reports.report.stillRunningOrFailed") : "Still running or failed",
     })
   }
 
@@ -1058,21 +1032,26 @@ function buildSurveyCoverageStats(
     // Only surface when personas skipped questions — full completion is implied by Questions.
     if (expected != null && Math.abs(avg - expected) > 0.05) {
       stats.push({
-        label: "Answered",
+        label: t ? t("reports.report.answered") : "Answered",
         value: `${metricValue(avg)} / ${expected}`,
-        hint: "Avg questions answered per persona",
+        hint: t
+          ? t("reports.report.avgQuestionsAnswered")
+          : "Avg questions answered per persona",
       })
     }
   }
 
-  const agreement = buildSurveyAgreementStat(questionContexts)
+  const agreement = buildSurveyAgreementStat(questionContexts, t)
   if (agreement) stats.push(agreement)
 
   return stats
 }
 
 /** Count instrument questions by type — same chip language as single-trial debrief. */
-function buildSurveyQuestionTypeCounts(contexts: AggregationContext[]): SurveyQuestionTypeCount[] {
+function buildSurveyQuestionTypeCounts(
+  contexts: AggregationContext[],
+  t?: ReportTranslate,
+): SurveyQuestionTypeCount[] {
   const totals = new Map<string, number>()
   for (const context of contexts) {
     if (context.contextType !== "question_response") continue
@@ -1083,7 +1062,7 @@ function buildSurveyQuestionTypeCounts(contexts: AggregationContext[]): SurveyQu
   return [...totals.entries()]
     .map(([type, count]) => ({
       type,
-      label: surveyQuestionTypeLabel(type),
+      label: surveyQuestionTypeLabel(type, t),
       count,
     }))
     .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label))
@@ -1135,6 +1114,7 @@ function surveyQuestionConsensus(context: AggregationContext): "unanimous" | "cl
 
 function buildSurveyAgreementStat(
   questionContexts: AggregationContext[],
+  t?: ReportTranslate,
 ): { label: string; value: string; hint?: string } | null {
   let unanimous = 0
   let clear = 0
@@ -1150,26 +1130,42 @@ function buildSurveyAgreementStat(
 
   if (unanimous === scored) {
     return {
-      label: "Agreement",
-      value: "Unanimous",
-      hint: `All ${scored} question${scored === 1 ? "" : "s"}`,
+      label: t ? t("reports.report.agreement") : "Agreement",
+      value: t ? t("reports.report.unanimous") : "Unanimous",
+      hint: t
+        ? t("reports.report.allQuestions", { count: scored })
+        : `All ${scored} question${scored === 1 ? "" : "s"}`,
     }
   }
   if (split === scored) {
     return {
-      label: "Agreement",
-      value: "Split",
-      hint: `All ${scored} question${scored === 1 ? "" : "s"} diverge`,
+      label: t ? t("reports.report.agreement") : "Agreement",
+      value: t ? t("reports.report.split") : "Split",
+      hint: t
+        ? t("reports.report.allQuestionsDiverge", { count: scored })
+        : `All ${scored} question${scored === 1 ? "" : "s"} diverge`,
     }
   }
   const aligned = unanimous + clear
   return {
-    label: "Agreement",
+    label: t ? t("reports.report.agreement") : "Agreement",
     value: `${aligned}/${scored}`,
     hint: [
-      unanimous > 0 ? `${unanimous} unanimous` : null,
-      clear > 0 ? `${clear} clear` : null,
-      split > 0 ? `${split} split` : null,
+      unanimous > 0
+        ? t
+          ? t("reports.report.unanimousCount", { count: unanimous })
+          : `${unanimous} unanimous`
+        : null,
+      clear > 0
+        ? t
+          ? t("reports.report.clearCount", { count: clear })
+          : `${clear} clear`
+        : null,
+      split > 0
+        ? t
+          ? t("reports.report.splitCount", { count: split })
+          : `${split} split`
+        : null,
     ]
       .filter(Boolean)
       .join(" · "),
@@ -1178,16 +1174,17 @@ function buildSurveyAgreementStat(
 
 /** One categorical facet → labeled distribution bars (share %). */
 function FacetCategoricalDistribution({ facet }: { facet: AggregationField }) {
+  const { t } = useI18n()
   const counts = facet.categorical?.counts ?? []
   const total = counts.reduce((sum, entry) => sum + entry.count, 0)
-  const label = humanizeFacetLabel(facet.label, facet.key)
+  const label = humanizeFacetLabel(facet.label, facet.key, t)
   return (
     <div className="rounded-lg bg-surface/45 px-3 py-2.5">
       <div className="mb-2 text-[13px] font-medium text-text-main" title={facet.label}>
         {label}
       </div>
       <CountBars
-        items={counts.map((entry) => ({ label: formatBucketLabel(entry.value), count: entry.count }))}
+        items={counts.map((entry) => ({ label: formatBucketLabel(entry.value, t), count: entry.count }))}
         total={total}
         compact
         showShare
@@ -1267,8 +1264,8 @@ function CommonContextPanel({
   context: AggregationContext
   trialCount: number
 }) {
-  const meta = contextTypeMeta(context.contextType)
-  const title = meta?.badge ?? context.label
+  const { t } = useI18n()
+  const title = contextTypeBadge(context.contextType, t) ?? context.label
   const summaries = autoReasonSummaries(context)
   // When an auto LLM summary exists for a reason facet, it replaces the raw-quote
   // cross-facet view; otherwise (LLM off) the example quotes remain as fallback.
@@ -1286,7 +1283,7 @@ function CommonContextPanel({
 
   return (
     <div className="space-y-3 rounded-xl glass-tile p-3">
-      <ContextSectionHeader title={title} description={meta?.description} />
+      <ContextSectionHeader title={title} description={contextTypeDescription(context, t)} />
 
       {categoricalFacets.length > 0 ? (
         <div className="grid gap-2 sm:grid-cols-2">
@@ -1326,8 +1323,9 @@ function NumericalDistributionCard({
   facet: AggregationField
   trialCount: number
 }) {
+  const { t } = useI18n()
   const num = facet.numerical
-  const label = humanizeFacetLabel(facet.label, facet.key)
+  const label = humanizeFacetLabel(facet.label, facet.key, t)
   const avg = num?.avg ?? null
   const min = num?.min ?? null
   const max = num?.max ?? null
@@ -1356,7 +1354,7 @@ function NumericalDistributionCard({
           {label}
         </span>
         <span className="font-mono text-[13px] text-text-dim">
-          avg {metricValue(avg)}
+          {t("reports.report.avg")} {metricValue(avg)}
           {hasDeclaredScale && hi != null ? ` / ${hi}` : ""}
         </span>
       </div>
@@ -1392,11 +1390,11 @@ function NumericalDistributionCard({
       )}
 
       <div className="mt-2 flex flex-wrap gap-x-3 gap-y-0.5 text-[12px] text-text-dim">
-        {min != null ? <span>min {metricValue(min)}</span> : null}
-        {max != null ? <span>max {metricValue(max)}</span> : null}
-        {avg != null ? <span>avg {metricValue(avg)}</span> : null}
+        {min != null ? <span>{t("reports.report.min")} {metricValue(min)}</span> : null}
+        {max != null ? <span>{t("reports.report.max")} {metricValue(max)}</span> : null}
+        {avg != null ? <span>{t("reports.report.avg")} {metricValue(avg)}</span> : null}
         {std != null ? <span>± {metricValue(std)}</span> : null}
-        <span>{num?.count ?? trialCount} personas</span>
+        <span>{t("reports.report.personasCount", { count: num?.count ?? trialCount })}</span>
       </div>
     </div>
   )
@@ -1518,11 +1516,11 @@ function crossFacetViewsForContext(context: AggregationContext): AggregationCros
   return raw.filter((view) => !isNoisyCrossFacetView(view))
 }
 
-function summaryBucketsForContext(context: AggregationContext): CountBarItem[] {
+function summaryBucketsForContext(context: AggregationContext, t?: ReportTranslate): CountBarItem[] {
   const summary = context.summaries?.find((item) => item.buckets.length > 0)
   if (summary) {
     return summary.buckets.map((bucket) => ({
-      label: formatBucketLabel(bucket.bucket),
+      label: formatBucketLabel(bucket.bucket, t),
       count: bucket.count,
       detail: bucket.summary ?? null,
     }))
@@ -1530,7 +1528,7 @@ function summaryBucketsForContext(context: AggregationContext): CountBarItem[] {
   const categorical = context.facets.find((facet) => facet.kind === "categorical")
   if (categorical?.categorical?.counts?.length) {
     return categorical.categorical.counts.map((entry) => ({
-      label: formatBucketLabel(entry.value),
+      label: formatBucketLabel(entry.value, t),
       count: entry.count,
     }))
   }
@@ -1543,7 +1541,7 @@ function summaryBucketsForContext(context: AggregationContext): CountBarItem[] {
   }))
 }
 
-function contextLeadText(context: AggregationContext): string {
+function contextLeadText(context: AggregationContext, t?: ReportTranslate): string {
   const summary = context.summaries?.find((item) => item.overall?.summary)?.overall?.summary
   // Collapsed cards keep a short tease; expand for the full quote.
   if (summary && !isHeuristicAggregationSummary(summary)) return previewText(summary, 220)
@@ -1560,13 +1558,20 @@ function contextLeadText(context: AggregationContext): string {
   const primary = primaryFacetForContext(context)
   if (primary?.kind === "categorical" && isUnanimousField(primary)) {
     const value = primary.categorical?.counts?.[0]?.value ?? "—"
-    return `All ${primary.presentCount} personas: ${formatBucketLabel(value)}`
+    return t
+      ? t("reports.report.allPersonasValue", {
+          count: primary.presentCount,
+          value: formatBucketLabel(value, t),
+        })
+      : `All ${primary.presentCount} personas: ${formatBucketLabel(value, t)}`
   }
   if (primary?.kind === "numerical") {
-    return `${humanizeFacetLabel(primary.label, primary.key)}: ${formatNumericalSummary(primary)}`
+    return t
+      ? `${humanizeFacetLabel(primary.label, primary.key, t)}: ${formatNumericalSummary(primary)}`
+      : `${primary.label}: ${formatNumericalSummary(primary)}`
   }
 
-  const buckets = summaryBucketsForContext(context)
+  const buckets = summaryBucketsForContext(context, t)
   if (buckets.length > 0) {
     return `${buckets[0].label} (${buckets[0].count})`
   }
@@ -1576,6 +1581,7 @@ function contextLeadText(context: AggregationContext): string {
 
 function reportingSummary(
   reporting: HarborJobAggregation["reporting"] | null | undefined,
+  t: ReportTranslate,
 ): { value: string; hint: string } | null {
   if (!reporting || reporting.status === "not_applicable") return null
 
@@ -1584,12 +1590,12 @@ function reportingSummary(
   const ready = reporting.readyUnits ?? 0
   const failed = reporting.failedUnits ?? 0
   const model = reporting.model ? ` · ${reporting.model}` : ""
-  const status = reportingStatusLabel(reporting.status)
+  const status = reportingStatusLabel(reporting.status, t)
 
     if ((reporting.status === "ready" || reporting.status === "partial") && completed === 0) {
     return {
       value: status,
-      hint: `${ready || total} to summarize${model}`,
+      hint: t("reports.status.toSummarize", { count: ready || total, model }),
     }
   }
 
@@ -1608,13 +1614,13 @@ function reportingSummary(
   ) {
     return {
       value: status,
-      hint: `${completed}/${total}${failed > 0 ? ` · ${failed} failed` : ""}${model}`,
+      hint: t("reports.status.completedWithFailures", { completed, total, failed, model }),
     }
   }
 
   return {
     value: status,
-    hint: `${total} units${model}`,
+    hint: t ? t("reports.status.unitCount", { count: total, model }) : `${total} units${model}`,
   }
 }
 
@@ -1744,7 +1750,10 @@ type CohortAnalysisGroup = {
   crossFacetViews: AggregationCrossFacetView[]
 }
 
-function collectCohortAnalysisGroups(contexts: AggregationContext[]): CohortAnalysisGroup[] {
+function collectCohortAnalysisGroups(
+  contexts: AggregationContext[],
+  t?: ReportTranslate,
+): CohortAnalysisGroup[] {
   const groups: CohortAnalysisGroup[] = []
   for (const context of contexts) {
     // Auto reason-summaries live in Common analysis, not the reporting.json Custom section.
@@ -1754,7 +1763,7 @@ function collectCohortAnalysisGroups(contexts: AggregationContext[]): CohortAnal
     if (summaries.length + judges.length + crossFacetViews.length === 0) continue
     groups.push({
       contextKey: context.key,
-      contextLabel: contextTypeMeta(context.contextType)?.badge ?? context.label,
+      contextLabel: contextTypeBadge(context.contextType, t) ?? context.label,
       contextType: context.contextType ?? null,
       summaries,
       judges,
@@ -1815,13 +1824,14 @@ type PersonaDistributionGroup = {
 /** Default persona lens: optional standalone facets + signal × segment cards. */
 function collectPersonaDistributionGroups(
   contexts: AggregationContext[],
+  t?: ReportTranslate,
 ): PersonaDistributionGroup[] {
   const groups: PersonaDistributionGroup[] = []
   for (const context of contexts) {
     const distributions = context.personaDistributions ?? []
     const standaloneFacets = (context.personaStandaloneFacets ?? []).slice(0, 2)
     if (distributions.length === 0 && standaloneFacets.length === 0) continue
-    const labeled = explorerContextLabel(context)
+    const labeled = explorerContextLabel(context, t)
     groups.push({
       contextKey: context.key,
       contextLabel: labeled.meta
@@ -1892,16 +1902,17 @@ function PersonaDistributionCard({
   /** Questionnaire options — map opaque ids to readable column labels. */
   choiceOptions?: Array<{ id: string; label: string }>
 }) {
+  const { t } = useI18n()
   const numeric = distribution.kind === "numerical"
   const columns = personaDistributionColumns(distribution)
   const columnMeta = useMemo(
-    () => buildDistributionColumnMeta(columns, { numeric, choiceOptions }),
-    [columns, numeric, choiceOptions],
+    () => buildDistributionColumnMeta(columns, { numeric, choiceOptions }, t),
+    [columns, numeric, choiceOptions, t],
   )
   const signalBase = stripSplitBySuffix(
-    humanizeFacetLabel(distribution.facetLabel, distribution.facetKey),
+    humanizeFacetLabel(distribution.facetLabel, distribution.facetKey, t),
   )
-  const segmentLabel = distribution.groupByLabel || "Persona segment"
+  const segmentLabel = distribution.groupByLabel || t("reports.report.personaSegment")
   const showSegmentSuffix = Boolean(distribution.groupByPersonaDimension?.trim())
   const countFor = (
     bucket: AggregationPersonaDistribution["buckets"][number],
@@ -1918,22 +1929,24 @@ function PersonaDistributionCard({
           {showSegmentSuffix ? (
             <span className="font-normal text-text-dim">
               {" "}
-              — by {segmentLabel} of persona
+              {t("reports.report.bySegmentOfPersona", { segment: segmentLabel })}
             </span>
           ) : null}
         </div>
-        <span className="shrink-0 font-mono text-[11px] text-text-dim">n={distribution.total}</span>
+        <span className="shrink-0 font-mono text-[11px] text-text-dim">
+          {t("reports.report.countShort", { count: distribution.total })}
+        </span>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full border-collapse text-[12px]">
           <thead>
             <tr className="text-left text-text-dim">
               <th className="py-1 pr-3 font-medium">{segmentLabel}</th>
-              <th className="py-1 pr-3 text-right font-medium">n</th>
+              <th className="py-1 pr-3 text-right font-medium">{t("reports.report.n")}</th>
               {columns.map((value) => {
                 const meta = columnMeta.get(value) ?? {
-                  fullLabel: formatBucketLabel(value),
-                  title: formatBucketLabel(value),
+                  fullLabel: formatBucketLabel(value, t),
+                  title: formatBucketLabel(value, t),
                   compact: false,
                 }
                 return (
@@ -1965,7 +1978,7 @@ function PersonaDistributionCard({
             {distribution.buckets.map((bucket) => (
               <tr key={bucket.bucket} className="border-t border-outline/25">
                 <td className="py-1.5 pr-3 font-medium text-text-main">
-                  {formatBucketLabel(bucket.bucket)}
+                  {formatBucketLabel(bucket.bucket, t)}
                 </td>
                 <td className="py-1.5 pr-3 text-right font-mono text-text-variant">
                   {bucket.count}
@@ -1976,7 +1989,7 @@ function PersonaDistributionCard({
                   const pct = Math.round(share * 100)
                   const intensity = count > 0 ? 0.1 + 0.55 * share : 0
                   const meta = columnMeta.get(value)
-                  const answerLabel = meta?.title ?? formatBucketLabel(value)
+                  const answerLabel = meta?.title ?? formatBucketLabel(value, t)
                   return (
                     <td key={value} className="p-0.5 text-center align-middle">
                       <span
@@ -1989,7 +2002,13 @@ function PersonaDistributionCard({
                         }}
                         title={
                           count > 0
-                            ? `${formatBucketLabel(bucket.bucket)} · ${answerLabel}: ${count} of ${bucket.count} (${pct}%)`
+                            ? t("reports.report.distributionCell", {
+                                bucket: formatBucketLabel(bucket.bucket, t),
+                                answer: answerLabel,
+                                count,
+                                total: bucket.count,
+                                percent: pct,
+                              })
                             : "0"
                         }
                       >
@@ -2004,8 +2023,9 @@ function PersonaDistributionCard({
         </table>
       </div>
       <p className="text-[11px] text-text-dim">
-        Cell = trials in that segment with that {numeric ? "value" : "answer"}; shade = share within
-        the segment.
+        {t("reports.report.distributionExplanation", {
+          kind: numeric ? t("reports.report.value") : t("reports.report.answer"),
+        })}
       </p>
     </div>
   )
@@ -2018,6 +2038,7 @@ function PersonaDistributionList({
   groups: PersonaDistributionGroup[]
   trialCount: number
 }) {
+  const { t } = useI18n()
   if (groups.length === 0) return null
   return (
     <>
@@ -2026,7 +2047,7 @@ function PersonaDistributionList({
           <ContextSectionHeader title={group.contextLabel} />
           {group.standaloneFacets.length > 0 ? (
             <>
-              <p className="text-[12px] text-text-dim">Overall for this cohort</p>
+              <p className="text-[12px] text-text-dim">{t("reports.report.overallForCohort")}</p>
               <div className="grid gap-2 sm:grid-cols-2">
                 {group.standaloneFacets.map((facet) =>
                   facet.kind === "numerical" && facet.numerical?.avg != null ? (
@@ -2049,8 +2070,8 @@ function PersonaDistributionList({
             <>
               <p className="text-[12px] text-text-dim">
                 {group.standaloneFacets.length > 0
-                  ? "How that differs across customer segments"
-                  : "How each result differs across customer segments"}
+                  ? t("reports.report.segmentDifferences")
+                  : t("reports.report.resultSegmentDifferences")}
               </p>
               <div className="grid gap-3 md:grid-cols-2">
                 {group.distributions.map((distribution) => (
@@ -2099,6 +2120,7 @@ function buildDistributionColumnMeta(
     numeric: boolean
     choiceOptions?: Array<{ id: string; label: string }>
   },
+  t?: ReportTranslate,
 ): Map<string, DistributionColumnMeta> {
   const byId = new Map(
     (choiceOptions ?? []).map((option, index) => [
@@ -2111,7 +2133,7 @@ function buildDistributionColumnMeta(
     if (numeric) {
       meta.set(value, {
         fullLabel: value,
-        title: `Score ${value}`,
+        title: t ? t("reports.report.scoreValue", { value }) : `Score ${value}`,
         compact: false,
       })
       return
@@ -2120,12 +2142,14 @@ function buildDistributionColumnMeta(
     if (choice) {
       meta.set(value, {
         fullLabel: choice.label,
-        title: `Option ${choice.index}: ${choice.label}`,
+        title: t
+          ? t("reports.report.optionValue", { index: choice.index, label: choice.label })
+          : `Option ${choice.index}: ${choice.label}`,
         compact: choice.label.length > LONG_COLUMN_LABEL_CHARS,
       })
       return
     }
-    const pretty = formatBucketLabel(value)
+    const pretty = formatBucketLabel(value, t)
     meta.set(value, {
       fullLabel: pretty,
       title: pretty,
@@ -2136,7 +2160,10 @@ function buildDistributionColumnMeta(
 }
 
 /** Prefer the real question prompt over the generic "Question" type badge. */
-function explorerContextLabel(context: AggregationContext): {
+function explorerContextLabel(
+  context: AggregationContext,
+  t?: ReportTranslate,
+): {
   label: string
   meta?: string
 } {
@@ -2146,25 +2173,30 @@ function explorerContextLabel(context: AggregationContext): {
     if (prompt) {
       return {
         label: prompt,
-        meta: shortId ? `Question ${shortId}` : undefined,
+        meta: shortId
+          ? t
+            ? t("reports.context.questionId", { id: shortId })
+            : `Question ${shortId}`
+          : undefined,
       }
     }
     if (shortId) return { label: shortId }
   }
   return {
-    label: contextTypeMeta(context.contextType)?.badge ?? context.label,
+    label: contextTypeBadge(context.contextType, t) ?? context.label,
   }
 }
 
 /** Flatten every eligible facet × dimension pairing across contexts. */
 function collectPersonaExplorerEntries(
   contexts: AggregationContext[],
+  t?: ReportTranslate,
 ): PersonaExplorerEntry[] {
   const entries: PersonaExplorerEntry[] = []
   for (const context of contexts) {
     const options = context.personaDistributionOptions ?? []
     if (options.length === 0) continue
-    const labeled = explorerContextLabel(context)
+    const labeled = explorerContextLabel(context, t)
     const choiceOptions = context.choiceOptions?.map((option) => ({
       id: option.id,
       label: option.label?.trim() || option.id,
@@ -2194,6 +2226,7 @@ function PersonaDistributionExplorer({
   entries: PersonaExplorerEntry[]
   hideResultField?: boolean
 }) {
+  const { t } = useI18n()
   // Level 1 of the cascade: context (Decision, User feedback, …).
   const contextOptions = useMemo((): CockpitSelectOption[] => {
     const seen = new Map<string, CockpitSelectOption>()
@@ -2236,13 +2269,14 @@ function PersonaDistributionExplorer({
             humanizeFacetLabel(
               entry.distribution.facetLabel,
               entry.distribution.facetKey,
+              t,
             ),
           ),
         })
       }
     }
     return [...seen.values()]
-  }, [entries, activeContext])
+  }, [entries, activeContext, t])
 
   const [facetValue, setFacetValue] = useState<string>(facetOptions[0]?.value ?? "")
   const preferredFacet =
@@ -2295,18 +2329,18 @@ function PersonaDistributionExplorer({
   return (
     <div className="space-y-3 rounded-xl glass-tile p-3">
       <div className="space-y-1">
-        <ContextSectionHeader title="Explore by segment" />
+        <ContextSectionHeader title={t("reports.report.exploreBySegment")} />
         <p className="text-[12px] text-text-dim">
           {hideResultField
-            ? "Pick a question, then break personas into segments to cross-tab answers."
+            ? t("reports.report.pickQuestion")
             : showResultFieldPicker
-              ? "Pick a context, then which result field to plot, then how to break personas into segments."
-              : "Pick a context, then break personas into segments to cross-tab the result."}
+              ? t("reports.report.pickContextResult")
+              : t("reports.report.pickContext")}
         </p>
       </div>
       <div className="grid gap-3">
         <CockpitSelect
-          label={hideResultField ? "Question" : "Context"}
+          label={hideResultField ? t("reports.report.question") : t("reports.report.context")}
           value={activeContext}
           options={contextOptions}
           onChange={setContextValue}
@@ -2321,25 +2355,24 @@ function PersonaDistributionExplorer({
           >
             {showResultFieldPicker ? (
               <CockpitSelect
-                label="Result field"
+                label={t("reports.report.resultField")}
                 value={activeFacet}
                 options={facetOptions}
                 onChange={setFacetValue}
-                hint="Which measured outcome to put on the columns (e.g. rating, decision)."
+                hint={t("reports.report.resultFieldHint")}
               />
             ) : null}
             {showDimPicker ? (
               <CockpitSelect
-                label="Break down by"
+                label={t("reports.report.breakDownBy")}
                 value={activeDim}
                 options={dimOptions}
                 onChange={setDimValue}
-                hint="Persona attribute used for rows (segments)."
+                hint={t("reports.report.breakDownByHint")}
               />
             ) : (
               <p className="rounded-lg border border-outline/35 bg-surface/40 px-3 py-2 text-[12px] text-text-dim">
-                Rows fixed to{" "}
-                <span className="font-medium text-text-variant">{dimOptions[0]?.label}</span>.
+                {t("reports.report.rowsFixedTo", { label: dimOptions[0]?.label ?? "" })}
               </p>
             )}
           </div>
@@ -2352,7 +2385,7 @@ function PersonaDistributionExplorer({
         />
       ) : (
         <p className="rounded-lg border border-outline/35 bg-surface/50 p-3 text-[12px] text-text-dim">
-          No segment breakdown available for this pairing.
+          {t("reports.report.noSegmentBreakdown")}
         </p>
       )}
     </div>
@@ -2367,11 +2400,12 @@ function BasicEvaluationPanel({
   aggregation: HarborJobAggregation
   category: ReportingCategory
 }) {
+  const { t } = useI18n()
   const contexts = aggregation.contexts ?? []
   if (category === "survey") return null
   if (contexts.length === 0 && aggregation.fields.length === 0) return null
 
-  const chips = buildHeadlineInsightChips(contexts, aggregation.coverage, category)
+  const chips = buildHeadlineInsightChips(contexts, aggregation.coverage, category, t)
   if (chips.length === 0) return null
 
   const groupedChips = INSIGHT_GROUP_ORDER.map((group) => ({
@@ -2385,10 +2419,10 @@ function BasicEvaluationPanel({
       <div>
         <div className="flex items-center gap-2 text-[13px] font-medium uppercase tracking-wide text-primary">
           <Sym name="insights" size={14} />
-          At a glance
+          {t("reports.report.atAGlance")}
         </div>
         <p className="mt-0.5 text-[13px] leading-relaxed text-text-variant">
-          Headline result in each area. Open the detailed report for full charts and analysis.
+          {t("reports.report.atAGlanceDescription")}
         </p>
       </div>
 
@@ -2397,9 +2431,9 @@ function BasicEvaluationPanel({
           {groupedChips.map(({ group, chips: groupChips }) => (
             <div key={group} className="space-y-1">
               <div className="flex items-baseline gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-primary/80">
-                {INSIGHT_GROUP_META[group].label}
+                {insightGroupLabel(group, t)}
                 <span className="font-normal normal-case tracking-normal text-text-dim">
-                  {INSIGHT_GROUP_META[group].blurb}
+                  {insightGroupBlurb(group, t)}
                 </span>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -2443,6 +2477,7 @@ function DetailedEvaluationPanel({
   captureMode?: boolean
   surveyHeadlineContexts?: AggregationContext[]
 }) {
+  const { t } = useI18n()
   const isSurvey = category === "survey"
   const contexts = aggregation.contexts ?? []
   const trialCount = aggregation.coverage.trialCount
@@ -2466,12 +2501,12 @@ function DetailedEvaluationPanel({
       contextHasCommonContent(context, crossFacetViewsForContext(context)),
   )
 
-  const analysisGroups = collectCohortAnalysisGroups(contexts)
+  const analysisGroups = collectCohortAnalysisGroups(contexts, t)
   // Every LLM summary / signal scan renders in Custom analysis (task lens), even
   // when grouped by a persona dimension. Persona insights = distributions only.
   const taskGroups = analysisGroupsForLens(analysisGroups, "task")
-  const personaDistGroups = collectPersonaDistributionGroups(contexts)
-  const personaExplorerEntries = collectPersonaExplorerEntries(contexts)
+  const personaDistGroups = collectPersonaDistributionGroups(contexts, t)
+  const personaExplorerEntries = collectPersonaExplorerEntries(contexts, t)
 
   const surveyGeneralContexts = (surveyHeadlineContexts ?? []).filter(
     (context) => context.contextType !== "trial_summary",
@@ -2490,20 +2525,22 @@ function DetailedEvaluationPanel({
       hasGeneral
         ? {
             id: "general" as const,
-            label: isSurvey ? "Per-question report" : "General task analysis",
+            label: isSurvey
+              ? t("reports.report.perQuestion")
+              : t("reports.report.general"),
           }
         : null,
       personaDistGroups.length > 0 ||
       personaExplorerEntries.length > 0
         ? {
             id: "persona" as const,
-            label: "Persona insights",
+            label: t("reports.report.personaInsights"),
           }
         : null,
       hasCustomTask
         ? {
             id: "task" as const,
-            label: "Custom task analysis",
+            label: t("reports.report.customTask"),
           }
         : null,
     ].filter(Boolean) as { id: "general" | "task" | "persona"; label: string }[]
@@ -2516,7 +2553,7 @@ function DetailedEvaluationPanel({
 
   return (
     <StudioGlassPanel className="overflow-hidden bg-surface/95">
-      <SectionHeader title="Detailed" />
+      <SectionHeader title={t("reports.report.detailedSection")} />
       <div className="space-y-5 p-4">
         {captureMode || tabs.length <= 1 ? null : (
           <div className="flex gap-1.5 rounded-xl bg-surface/40 p-1" role="tablist">
@@ -2620,6 +2657,7 @@ function DetailedEvaluationPanel({
 }
 
 function CompactContextGroup({ contexts }: { contexts: AggregationContext[] }) {
+  const { t } = useI18n()
   const [open, setOpen] = useState(false)
   if (contexts.length === 0) return null
 
@@ -2631,13 +2669,13 @@ function CompactContextGroup({ contexts }: { contexts: AggregationContext[] }) {
         className={`flex w-full items-center justify-between gap-3 px-4 py-3 text-left hover:bg-surface/25 ${FOCUS_RING}`}
       >
         <div>
-          <div className="text-[15px] font-medium text-text-main">Execution checks</div>
+          <div className="text-[15px] font-medium text-text-main">{t("reports.report.executionChecks")}</div>
           <p className="mt-1 text-[13px] text-text-dim">
-            {contexts.length} contexts · all personas agreed
+            {t("reports.report.allPersonasAgreed", { count: contexts.length })}
           </p>
         </div>
         <span className="inline-flex items-center gap-1 text-[12px] uppercase tracking-wide text-text-dim">
-          {open ? "Hide" : "Show"}
+          {open ? t("reports.report.hide") : t("reports.report.show")}
           <Sym name={open ? "expand_less" : "expand_more"} size={14} />
         </span>
       </button>
@@ -2645,16 +2683,18 @@ function CompactContextGroup({ contexts }: { contexts: AggregationContext[] }) {
         {(open ? contexts : contexts.slice(0, 4)).map((context) => {
           const primary = primaryFacetForContext(context)
           const rawValue = primary?.categorical?.counts?.[0]?.value ?? "—"
-          const value = rawValue === "—" ? rawValue : formatBucketLabel(rawValue)
+          const value = rawValue === "—" ? rawValue : formatBucketLabel(rawValue, t)
           return (
             <div key={context.key} className="flex items-center gap-3 px-4 py-2.5">
               <Sym name="check_circle" size={16} className="shrink-0 text-secondary" fill={1} />
               <div className="min-w-0 flex-1">
                 <div className="text-[14px] font-medium text-text-main">
-                  {contextTypeMeta(context.contextType)?.badge ?? context.label}
+                  {contextTypeBadge(context.contextType, t) ?? context.label}
                 </div>
-                {contextTypeDescription(context) ? (
-                  <div className="truncate text-[12px] text-text-dim">{contextTypeDescription(context)}</div>
+                {contextTypeDescription(context, t) ? (
+                  <div className="truncate text-[12px] text-text-dim">
+                    {contextTypeDescription(context, t)}
+                  </div>
                 ) : null}
               </div>
               <div className="shrink-0 text-right">
@@ -2667,7 +2707,7 @@ function CompactContextGroup({ contexts }: { contexts: AggregationContext[] }) {
       </div>
       {!open && contexts.length > 4 ? (
         <div className="border-t border-outline/35 px-4 py-2 text-[13px] text-text-dim">
-          +{contexts.length - 4} more unanimous checks
+          {t("reports.report.moreChecks", { count: contexts.length - 4 })}
         </div>
       ) : null}
     </section>
@@ -2750,28 +2790,32 @@ function buildPersonaRoster(trials: HarborJobDetail["trials"] | undefined): Batc
 
 function buildCoverageSnapshot(
   aggregation: HarborJobAggregation | null | undefined,
+  t: ReportTranslate,
 ): BatchReportPdfSnapshot[] {
   if (!aggregation) return [];
   const coverage = aggregation.coverage;
   const snap: BatchReportPdfSnapshot[] = [
     {
-      label: "Trials",
+      label: t("reports.report.trials"),
       value: String(coverage.completedTrials),
       hint: coverage.trialCount !== coverage.completedTrials ? `/ ${coverage.trialCount}` : undefined,
     },
   ];
   if (coverage.pendingTrials > 0) {
-    snap.push({ label: "Pending", value: String(coverage.pendingTrials) });
+    snap.push({ label: t("reports.report.pending"), value: String(coverage.pendingTrials) });
   }
   if (coverage.completedWithoutArtifactTrials > 0) {
     snap.push({
-      label: "No artifact",
+      label: t("reports.report.noArtifact"),
       value: String(coverage.completedWithoutArtifactTrials),
     });
   }
   const reportingStatus = aggregation.reporting?.status;
   if (reportingStatus && reportingStatus !== "not_applicable") {
-    snap.push({ label: "Reporting", value: reportingStatus });
+    snap.push({
+      label: t("reports.report.reporting"),
+      value: reportingStatusLabel(reportingStatus, t),
+    });
   }
   return snap.slice(0, 4);
 }
@@ -2829,7 +2873,8 @@ async function enrichBatchReportPdfMeta(meta: BatchReportPdfMeta): Promise<Batch
 function buildBatchReportPdfMeta(
   jobName: string,
   job: HarborJobDetail | undefined,
-  aggregation?: HarborJobAggregation | null,
+  aggregation: HarborJobAggregation | null | undefined,
+  t: ReportTranslate,
 ): BatchReportPdfMeta {
   const launch = job?.launch ?? null;
   const result = (job?.result ?? null) as Record<string, unknown> | null;
@@ -2865,6 +2910,7 @@ function buildBatchReportPdfMeta(
     (job?.applicationType ?? job?.metaType ?? "").trim() ||
     (taskPath && /\/survey[_-]/i.test(taskPath) ? "survey" : null);
   const personas = buildPersonaRoster(job?.trials);
+  const usage = usageFromJobResult(result);
 
   return {
     jobName,
@@ -2887,7 +2933,8 @@ function buildBatchReportPdfMeta(
     personaPool: readPersonaPool(config),
     personaStrategy: normalizePersonaStrategy(job?.personaStrategy),
     personas,
-    snapshot: buildCoverageSnapshot(job?.aggregation),
+    snapshot: buildCoverageSnapshot(job?.aggregation, t),
+    usage,
   };
 }
 
@@ -2943,6 +2990,7 @@ function BatchReportMetaFact({
 }
 
 function BatchReportMetaByline({ meta }: { meta: BatchReportPdfMeta }) {
+  const { t } = useI18n();
   const model = meta.agentModel ? shortModelLabel(meta.agentModel) : null;
   const duration = formatRunDuration(meta.startedAt, meta.finishedAt);
   const runStart = formatTimestamp(meta.startedAt, true);
@@ -2955,13 +3003,13 @@ function BatchReportMetaByline({ meta }: { meta: BatchReportPdfMeta }) {
   } else if (runStart || runEnd) {
     runValue = duration ? `${runStart ?? runEnd} · ${duration}` : (runStart ?? runEnd);
   } else if (duration) {
-    runValue = `Duration ${duration}`;
+    runValue = t("reports.task.duration", { duration });
   }
 
   const facts: Array<{ label: string; value: string; title?: string }> = [];
   if (meta.taskTitle || meta.taskPath) {
     facts.push({
-      label: "Task",
+      label: t("reports.task.title"),
       value: meta.taskTitle || humanizePathLeaf(meta.taskPath) || meta.taskPath || "",
       title: meta.taskPath ?? undefined,
     });
@@ -2970,38 +3018,71 @@ function BatchReportMetaByline({ meta }: { meta: BatchReportPdfMeta }) {
   // default persona strategy is shown separately above.
   if (meta.personaPool) {
     facts.push({
-      label: "Dataset",
+      label: t("reports.task.dataset"),
       value: meta.personaPool,
-      title: "Source dataset and cohort actually used for this job",
+      title: t("reports.task.sourceDatasetTitle"),
     });
   }
   if (personasRun > 0) {
     facts.push({
-      label: "Personas run",
+      label: t("reports.task.personasRun"),
       value: String(personasRun),
-      title: "Distinct personas actually executed in this job",
+      title: t("reports.task.personasRunTitle"),
     });
   }
   if (model) {
     facts.push({
-      label: "Agent model",
+      label: t("reports.task.agentModel"),
       value: model,
       title: meta.agentModel ?? undefined,
     });
   }
   if (meta.parallelism != null) {
     facts.push({
-      label: "Parallelism",
+      label: t("reports.task.parallelism"),
       value: String(meta.parallelism),
-      title: `${meta.parallelism} concurrent trials`,
+      title: t("reports.task.concurrentTrials", { count: meta.parallelism }),
     });
   }
   if (runValue) {
     facts.push({
-      label: "Run",
+      label: t("reports.task.run"),
       value: runValue,
       title: meta.runWindow ?? undefined,
     });
+  }
+  if (hasUsage(meta.usage)) {
+    if (meta.usage?.costUsd != null) {
+      facts.push({
+        label: t("reports.usage.cost"),
+        value: formatCostUsd(meta.usage.costUsd),
+        title: t("reports.usage.costTitle"),
+      });
+    }
+    const tokenBits: string[] = [];
+    if (meta.usage?.nInputTokens != null) {
+      tokenBits.push(t("reports.usage.tokenIn", { count: formatTokenCount(meta.usage.nInputTokens) }));
+    }
+    if (meta.usage?.nOutputTokens != null) {
+      tokenBits.push(t("reports.usage.tokenOut", { count: formatTokenCount(meta.usage.nOutputTokens) }));
+    }
+    if (meta.usage?.nCacheTokens != null && meta.usage.nCacheTokens > 0) {
+      tokenBits.push(t("reports.usage.tokenCache", { count: formatTokenCount(meta.usage.nCacheTokens) }));
+    }
+    if (tokenBits.length) {
+      facts.push({
+        label: t("reports.usage.tokens"),
+        value: tokenBits.join(" · "),
+        title: t("reports.usage.tokensTitle"),
+      });
+    }
+    if (meta.usage?.costUsd != null && personasRun > 0) {
+      facts.push({
+        label: t("reports.usage.avgPerTrial"),
+        value: formatCostUsd(meta.usage.costUsd / personasRun),
+        title: t("reports.usage.avgPerTrialTitle", { count: personasRun }),
+      });
+    }
   }
   // "Report" generated time is shown globally in the panel header, not here.
 
@@ -3032,10 +3113,10 @@ function humanizeStrategyKey(raw: string): string {
   return raw.replace(/[_-]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-function humanizeAllocationLabel(raw: string | null | undefined): string {
-  if (raw === "perCell") return "Per-cell";
-  if (raw === "proportional") return "Proportional";
-  if (raw === "equalTotal") return "Equal-total";
+function humanizeAllocationLabel(raw: string | null | undefined, t: ReportTranslate): string {
+  if (raw === "perCell") return t("personaSetup.allocation.perCell");
+  if (raw === "proportional") return t("personaSetup.allocation.proportional");
+  if (raw === "equalTotal") return t("personaSetup.allocation.equalTotal");
   return raw ? humanizeStrategyKey(raw) : "";
 }
 
@@ -3068,11 +3149,27 @@ function BatchReportPersonaCardHeader({ icon, label, tag }: { icon: string; labe
   );
 }
 
+function taskDocumentLabel(id: TaskDocTabId, t: ReportTranslate): string {
+  switch (id) {
+    case "instruction":
+      return t("reports.task.documentInstruction");
+    case "context":
+      return t("reports.task.documentContext");
+    case "questionnaire":
+      return t("reports.task.documentQuestionnaire");
+    case "output-schema":
+      return t("reports.task.documentOutputSchema");
+    case "self-report":
+      return t("reports.task.documentSelfReport");
+  }
+}
+
 /** The task's background documents (instruction / context / questionnaire), the
  *  same ones surfaced in the task gallery. Rendered on-screen above the persona
  *  strategy so reviewers get the scenario before the sampling design. Marked
  *  data-pdf-ignore because the PDF already emits its own native Task section. */
 function BatchReportTaskBrief({ meta }: { meta: BatchReportPdfMeta }) {
+  const { t } = useI18n();
   const taskPath = (meta.taskPath ?? "").trim();
 
   const detailQuery = useQuery({
@@ -3109,11 +3206,11 @@ function BatchReportTaskBrief({ meta }: { meta: BatchReportPdfMeta }) {
 
   const chips: Array<{ label: string; value: string }> = [];
   const applicationType = (meta.applicationType || detail?.metaType || "").trim();
-  if (applicationType) chips.push({ label: "Type", value: applicationType });
+  if (applicationType) chips.push({ label: t("reports.task.type"), value: applicationType });
   const domain = (detail?.domain || meta.taskDomain || "").trim();
-  if (domain) chips.push({ label: "Domain", value: domain });
+  if (domain) chips.push({ label: t("reports.task.domain"), value: domain });
   const difficulty = (detail?.difficulty || meta.taskDifficulty || "").trim();
-  if (difficulty) chips.push({ label: "Difficulty", value: difficulty });
+  if (difficulty) chips.push({ label: t("reports.task.difficulty"), value: difficulty });
 
   const tags =
     (Array.isArray(detail?.tags) && detail.tags.length
@@ -3125,7 +3222,7 @@ function BatchReportTaskBrief({ meta }: { meta: BatchReportPdfMeta }) {
     summaryText.length > 0
       ? summaryText
       : sections.length > 0
-        ? sections.map((section) => section.label).join(" · ")
+        ? sections.map((section) => taskDocumentLabel(section.id, t)).join(" · ")
         : "";
 
   const loading = Boolean(taskPath) && detailQuery.isLoading;
@@ -3148,8 +3245,8 @@ function BatchReportTaskBrief({ meta }: { meta: BatchReportPdfMeta }) {
         <span className="flex min-w-0 items-center gap-2">
           <BatchReportPersonaCardHeader
             icon="description"
-            label="Task brief"
-            tag="Instruction & context"
+            label={t("reports.task.brief")}
+            tag={t("reports.task.instructionContext")}
           />
           {!open && summary ? (
             <span className="truncate text-[12px] normal-case tracking-normal text-text-dim">
@@ -3188,20 +3285,20 @@ function BatchReportTaskBrief({ meta }: { meta: BatchReportPdfMeta }) {
           ) : null}
 
           {loading ? (
-            <p className="text-[13px] text-text-dim">Loading task documents…</p>
+            <p className="text-[13px] text-text-dim">{t("reports.task.loadingDocuments")}</p>
           ) : null}
           {failed ? (
             <p className="text-[13px] text-danger">
               {detailQuery.error instanceof ApiError
                 ? detailQuery.error.message
-                : "Could not load task documents."}
+                : t("reports.task.loadDocumentsFailed")}
             </p>
           ) : null}
 
           {sections.length > 1 ? (
             <div
               role="tablist"
-              aria-label="Task documents"
+              aria-label={t("reports.task.documents")}
               className="flex flex-wrap items-center gap-x-1 gap-y-1 border-b border-outline/40"
             >
               {sections.map((section) => {
@@ -3220,7 +3317,7 @@ function BatchReportTaskBrief({ meta }: { meta: BatchReportPdfMeta }) {
                     }`}
                   >
                     <Sym name={section.icon} fill={selected ? 1 : 0} size={14} />
-                    {section.label}
+                    {taskDocumentLabel(section.id, t)}
                   </button>
                 );
               })}
@@ -3242,7 +3339,7 @@ function BatchReportTaskBrief({ meta }: { meta: BatchReportPdfMeta }) {
             </div>
           ) : !loading && !failed && taskPath ? (
             <p className="text-[13px] text-text-dim">
-              No task documents are available for this task.
+              {t("reports.task.noDocuments")}
             </p>
           ) : null}
         </div>
@@ -3256,6 +3353,7 @@ function BatchReportTaskBrief({ meta }: { meta: BatchReportPdfMeta }) {
  *  run may override the default. Marked data-pdf-ignore so the PDF keeps its own
  *  native section (no duplication). */
 function BatchReportPersonaStrategy({ meta }: { meta: BatchReportPdfMeta }) {
+  const { t } = useI18n();
   const strategy = meta.personaStrategy;
   const filters = Object.entries(strategy?.dimensionFilters ?? {}).filter(
     ([, values]) => Array.isArray(values) && values.length > 0,
@@ -3264,13 +3362,16 @@ function BatchReportPersonaStrategy({ meta }: { meta: BatchReportPdfMeta }) {
 
   const strategyFacts: Array<{ label: string; value: string; title?: string }> = [];
   if (strategy?.mode) {
-    strategyFacts.push({ label: "Mode", value: humanizeStrategyKey(String(strategy.mode)) });
+    strategyFacts.push({
+      label: t("reports.strategy.mode"),
+      value: humanizeStrategyKey(String(strategy.mode)),
+    });
   }
   if (strategy?.allocation) {
     strategyFacts.push({
-      label: "Allocation",
-      value: humanizeAllocationLabel(strategy.allocation),
-      title: "Stratified allocation used by the default strategy",
+      label: t("reports.strategy.allocation"),
+      value: humanizeAllocationLabel(strategy.allocation, t),
+      title: t("reports.strategy.allocationTitle"),
     });
   }
   if (
@@ -3278,19 +3379,22 @@ function BatchReportPersonaStrategy({ meta }: { meta: BatchReportPdfMeta }) {
     strategy?.perCell != null
   ) {
     strategyFacts.push({
-      label: "Per cell",
+      label: t("reports.strategy.perCell"),
       value: String(strategy.perCell),
-      title: "Personas per stratify combination requested by the default strategy",
+      title: t("reports.strategy.perCellTitle"),
     });
   } else if (strategy?.sampleSize != null) {
     strategyFacts.push({
-      label: "Sample size",
+      label: t("reports.strategy.sampleSize"),
       value: String(strategy.sampleSize),
-      title: "Personas requested by the default strategy",
+      title: t("reports.strategy.sampleSizeTitle"),
     });
   }
   if (stratify.length > 0) {
-    strategyFacts.push({ label: "Stratify", value: stratify.map(humanizeStrategyKey).join(", ") });
+    strategyFacts.push({
+      label: t("reports.strategy.stratify"),
+      value: stratify.map(humanizeStrategyKey).join(", "),
+    });
   }
   const hasStrategy = strategyFacts.length > 0 || filters.length > 0;
 
@@ -3306,10 +3410,13 @@ function BatchReportPersonaStrategyBody({
   strategyFacts: Array<{ label: string; value: string; title?: string }>;
   filters: Array<[string, unknown[]]>;
 }) {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const summary = [
-    strategyFacts.find((fact) => fact.label === "Mode")?.value,
-    filters.length > 0 ? `${filters.length} audience filter${filters.length === 1 ? "" : "s"}` : null,
+    strategyFacts.find((fact) => fact.label === t("reports.strategy.mode"))?.value,
+    filters.length > 0
+      ? t("reports.strategy.audienceFiltersCount", { count: filters.length })
+      : null,
   ]
     .filter(Boolean)
     .join(" · ");
@@ -3323,7 +3430,11 @@ function BatchReportPersonaStrategyBody({
         className={`flex w-full items-center justify-between gap-3 text-left ${FOCUS_RING}`}
       >
         <span className="flex min-w-0 items-center gap-2">
-          <BatchReportPersonaCardHeader icon="tune" label="Persona strategy" tag="Task default" />
+          <BatchReportPersonaCardHeader
+            icon="tune"
+            label={t("reports.strategy.title")}
+            tag={t("reports.strategy.tag")}
+          />
           {!open && summary ? (
             <span className="truncate text-[12px] normal-case tracking-normal text-text-dim">
               {summary}
@@ -3338,7 +3449,7 @@ function BatchReportPersonaStrategyBody({
           {filters.length > 0 ? (
             <div className="mt-2.5 space-y-1.5">
               <div className="text-[11px] font-medium uppercase tracking-wide text-text-dim">
-                Audience filters
+                {t("reports.strategy.audienceFilters")}
               </div>
               {filters.map(([dim, values]) => (
                 <div key={dim} className="flex flex-wrap items-center gap-1.5">
@@ -3372,6 +3483,7 @@ function AggregationDashboard({
   applicationType?: string | null;
   pdfMeta: BatchReportPdfMeta;
 }) {
+  const { t } = useI18n();
   const rootRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
   const [captureMode, setCaptureMode] = useState(false);
@@ -3392,7 +3504,7 @@ function AggregationDashboard({
   const textual = aggregation.fields.filter((field) => field.kind === "textual");
   const coverage = aggregation.coverage;
   const reporting = aggregation.reporting ?? null;
-  const reportingChip = reportingSummary(reporting);
+  const reportingChip = reportingSummary(reporting, t);
   const hasDetails = contexts.length > 0 || numerical.length > 0 || categorical.length > 0 || textual.length > 0;
   const isSurvey = category === "survey";
   const questionCount = allContexts.filter((context) => context.contextType === "question_response").length;
@@ -3401,23 +3513,30 @@ function AggregationDashboard({
     : contexts.length > 0
       ? contexts.length
       : numerical.length + categorical.length + textual.length;
-  const detailLabel = isSurvey ? "questions" : contexts.length > 0 ? "contexts" : "fields";
+  const detailLabel = isSurvey
+    ? t("reports.report.questions")
+    : contexts.length > 0
+      ? t("reports.report.contexts")
+      : t("reports.report.fields");
   const trialHint =
     coverage.pendingTrials > 0
-      ? `${coverage.completedTrials} of ${coverage.trialCount} complete`
+      ? t("reports.status.completedOf", {
+          done: coverage.completedTrials,
+          total: coverage.trialCount,
+        })
       : coverage.completedTrials === coverage.trialCount
-        ? "All completed"
-        : `${coverage.completedTrials} completed`;
+        ? t("reports.status.allCompleted")
+        : t("reports.status.completedCount", { count: coverage.completedTrials });
   const showArtifactsChip =
     coverage.completedWithoutArtifactTrials > 0 || coverage.artifactReadyTrials !== coverage.trialCount;
   const showPendingChip = coverage.pendingTrials > 0;
   const surveyStats = useMemo(
-    () => (isSurvey ? buildSurveyCoverageStats(contexts, coverage) : []),
-    [contexts, coverage, isSurvey],
+    () => (isSurvey ? buildSurveyCoverageStats(contexts, coverage, t) : []),
+    [contexts, coverage, isSurvey, t],
   );
   const surveyTypeCounts = useMemo(
-    () => (isSurvey ? buildSurveyQuestionTypeCounts(contexts) : []),
-    [contexts, isSurvey],
+    () => (isSurvey ? buildSurveyQuestionTypeCounts(contexts, t) : []),
+    [contexts, isSurvey, t],
   );
   // The "Areas" count is the number of evaluation contexts; those contexts are
   // organized under up to three narrative lenses (outcome / process / feedback).
@@ -3429,10 +3548,10 @@ function AggregationDashboard({
       const group = contextGroup(context.contextType);
       if (group) present.add(group);
     }
-    return INSIGHT_GROUP_ORDER.filter((group) => present.has(group)).map(
-      (group) => INSIGHT_GROUP_META[group].label,
+    return INSIGHT_GROUP_ORDER.filter((group) => present.has(group)).map((group) =>
+      insightGroupLabel(group, t),
     );
-  }, [contexts, isSurvey]);
+  }, [contexts, isSurvey, t]);
   const showReportingBadge =
     reporting != null && (reporting.status ?? "").trim().toLowerCase() !== "not_applicable";
 
@@ -3464,7 +3583,7 @@ function AggregationDashboard({
       await new Promise((resolve) => window.setTimeout(resolve, 150));
       const captureRoot = rootRef.current;
       if (!captureRoot) {
-        throw new Error("Batch report is not ready to capture.");
+        throw new Error(t("reports.report.notReady"));
       }
       const enriched = await enrichBatchReportPdfMeta({
         ...pdfMeta,
@@ -3472,11 +3591,11 @@ function AggregationDashboard({
         snapshot:
           pdfMeta.snapshot && pdfMeta.snapshot.length > 0
             ? pdfMeta.snapshot
-            : buildCoverageSnapshot(aggregation),
+            : buildCoverageSnapshot(aggregation, t),
       });
-      await exportBatchReportPdf(captureRoot, enriched);
+      await exportBatchReportPdf(captureRoot, enriched, t);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Could not download PDF report.";
+      const message = err instanceof Error ? err.message : t("reports.report.downloadFailed");
       setCaptureError(message);
     } finally {
       setCaptureMode(false);
@@ -3491,14 +3610,16 @@ function AggregationDashboard({
           <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-0.5 text-[14px] font-medium text-text-main">
             <span className="flex items-center gap-2">
               <Sym name="analytics" size={16} className="shrink-0 text-primary" />
-              Persona-task batch report
+              {t("reports.report.title")}
             </span>
             {formatTimestamp(pdfMeta.generatedAt, true) ? (
               <span
                 className="text-[12px] font-normal text-text-dim"
                 title={pdfMeta.generatedAt ?? undefined}
               >
-                · Report {formatTimestamp(pdfMeta.generatedAt, true)}
+                · {t("reports.report.reportAt", {
+                  date: formatTimestamp(pdfMeta.generatedAt, true) ?? "",
+                })}
               </span>
             ) : null}
           </div>
@@ -3513,7 +3634,7 @@ function AggregationDashboard({
               className={`glass-tile glass-tile--hover inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[12px] font-medium text-text-variant transition hover:text-text-main disabled:opacity-55 ${FOCUS_RING}`}
             >
               <Sym name="download" size={14} />
-              {downloadBusy ? "Preparing PDF…" : "Download PDF"}
+              {downloadBusy ? t("reports.report.preparing") : t("reports.report.download")}
             </button>
             {showReportingBadge ? (
               <span
@@ -3526,7 +3647,7 @@ function AggregationDashboard({
                   size={12}
                   className={reporting.status === "queued" || reporting.status === "running" ? "animate-rb-spin" : ""}
                 />
-                Detailed analysis · {reportingStatusLabel(reporting.status)}
+                {t("reports.report.detailedAnalysis")} · {reportingStatusLabel(reporting.status, t)}
               </span>
             ) : null}
           </div>
@@ -3546,21 +3667,21 @@ function AggregationDashboard({
 
         <div className="mt-2.5 flex flex-wrap gap-2">
           <CoverageTile
-            label={isSurvey ? "Personas" : "Trials"}
+            label={isSurvey ? t("reports.report.personas") : t("reports.report.trials")}
             value={coverage.trialCount}
             hint={trialHint}
           />
           <CoverageTile
-            label={isSurvey ? "Questions" : "Areas"}
+            label={isSurvey ? t("reports.report.questions") : t("reports.report.areas")}
             value={isSurvey ? questionCount || contexts.length : contexts.length}
             hint={
               isSurvey
-                ? "In this survey"
+                ? t("reports.report.inSurvey")
                 : contexts.length > 0
                   ? areaLenses.length > 0
-                    ? `Across ${areaLenses.join(" · ")}`
-                    : "Evaluation areas"
-                  : "Individual answers"
+                    ? t("reports.report.across", { areas: areaLenses.join(" · ") })
+                    : t("reports.report.evaluationAreas")
+                  : t("reports.report.individualAnswers")
             }
           />
           {isSurvey && surveyTypeCounts.length > 0 ? (
@@ -3573,14 +3694,28 @@ function AggregationDashboard({
             : null}
           {showArtifactsChip ? (
             <CoverageTile
-              label="Artifacts"
+              label={t("reports.report.artifacts")}
               value={coverage.artifactReadyTrials}
-              hint={coverage.completedWithoutArtifactTrials > 0 ? `${coverage.completedWithoutArtifactTrials} missing` : "Ready"}
+              hint={
+                coverage.completedWithoutArtifactTrials > 0
+                  ? t("reports.report.missing", { count: coverage.completedWithoutArtifactTrials })
+                  : t("reports.report.ready")
+              }
             />
           ) : null}
-          {showPendingChip ? <CoverageTile label="Pending" value={coverage.pendingTrials} hint="Still running" /> : null}
+          {showPendingChip ? (
+            <CoverageTile
+              label={t("reports.report.pending")}
+              value={coverage.pendingTrials}
+              hint={t("reports.report.stillRunning")}
+            />
+          ) : null}
           {!isSurvey && reportingChip ? (
-            <CoverageTile label="Detailed analysis" value={reportingChip.value} hint={reportingChip.hint} />
+            <CoverageTile
+              label={t("reports.report.detailedAnalysis")}
+              value={reportingChip.value}
+              hint={reportingChip.hint}
+            />
           ) : null}
         </div>
         {reporting?.error ? (
@@ -3601,10 +3736,10 @@ function AggregationDashboard({
               className={`flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-[15px] font-semibold text-white shadow-sm transition-colors hover:bg-primary/90 ${FOCUS_RING}`}
             >
               <Sym name={open ? "expand_less" : "expand_more"} size={20} className="shrink-0" />
-              {open ? "Hide detailed report" : "Show detailed report"}
+              {open ? t("reports.report.hideDetailed") : t("reports.report.showDetailed")}
               {isSurvey && !open ? (
                 <span className="ml-1 text-[13px] font-normal text-white/80">
-                  {`· ${detailCount} ${detailLabel}`}
+                  {t("reports.report.detailCount", { count: detailCount, label: detailLabel })}
                 </span>
               ) : null}
             </button>
@@ -3660,6 +3795,7 @@ function resolveSurveyQuestionType(
 function surveyAnswerItems(
   context: AggregationContext,
   primary: AggregationField | null,
+  t?: ReportTranslate,
 ): Array<CountBarItem & { id?: string }> {
   if (!primary || primary.kind !== "categorical") return []
   const counts = primary.categorical?.counts ?? []
@@ -3669,7 +3805,7 @@ function surveyAnswerItems(
     const known = new Set(options.map((option) => option.id))
     const rows = options.map((option) => ({
       id: option.id,
-      label: option.label?.trim() || formatBucketLabel(option.id),
+      label: option.label?.trim() || formatBucketLabel(option.id, t),
       count: byId.get(option.id) ?? 0,
     }))
     // Keep unexpected values that aren't in the questionnaire inventory.
@@ -3677,7 +3813,7 @@ function surveyAnswerItems(
       if (!known.has(entry.value)) {
         rows.push({
           id: entry.value,
-          label: formatBucketLabel(entry.value),
+          label: formatBucketLabel(entry.value, t),
           count: entry.count,
         })
       }
@@ -3686,7 +3822,7 @@ function surveyAnswerItems(
   }
   return counts.map((entry) => ({
     id: entry.value,
-    label: formatBucketLabel(entry.value),
+    label: formatBucketLabel(entry.value, t),
     count: entry.count,
   }))
 }
@@ -3700,6 +3836,7 @@ function ChoiceCompositionChart({
   respondentCount: number
   multi?: boolean
 }) {
+  const { t } = useI18n()
   const ranked = [...items].sort((a, b) => b.count - a.count || a.label.localeCompare(b.label))
   const denom = Math.max(respondentCount, 1)
   const peak = Math.max(...ranked.map((item) => item.count), 1)
@@ -3708,10 +3845,10 @@ function ChoiceCompositionChart({
   const chosen = ranked.filter((item) => item.count > 0).length
   const consensus =
     chosen <= 1 && (leader?.count ?? 0) > 0
-      ? "Unanimous"
+      ? t("reports.report.unanimous")
       : leaderShare >= 60
-        ? "Clear leader"
-        : "Split opinions"
+        ? t("reports.report.clearLeader")
+        : t("reports.report.splitOpinions")
 
   return (
     <div className="space-y-3">
@@ -3719,19 +3856,19 @@ function ChoiceCompositionChart({
         <div className="min-w-0 text-[14px] text-text-main">
           {leader && leader.count > 0 ? (
             <>
-              Top pick <span className="font-medium">{leader.label}</span>
+              {t("reports.report.topPick")} <span className="font-medium">{leader.label}</span>
               <span className="font-mono text-text-dim">
                 {" "}
                 · {leader.count}/{denom} · {leaderShare}%
               </span>
             </>
           ) : (
-            "No choices yet"
+            t("reports.report.noChoices")
           )}
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {multi ? (
-            <span className="text-[12px] text-text-dim">Multi-select · shares can exceed 100%</span>
+            <span className="text-[12px] text-text-dim">{t("reports.report.multiSelect")}</span>
           ) : null}
           <span className="rounded-md glass-tile px-2 py-1 text-[13px] text-text-variant">
             {consensus}
@@ -3842,16 +3979,21 @@ function freeTextSignalTags(judges: AggregationJudge[]): FreeTextTheme[] {
     .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label))
 }
 
-function freeTextThemeSummary(present: number, themes: FreeTextTheme[], uniqueHint: number): string | null {
+function freeTextThemeSummary(
+  present: number,
+  themes: FreeTextTheme[],
+  uniqueHint: number,
+  t: ReportTranslate,
+): string | null {
   if (present <= 0) return null
   const topicThemes = themes.filter((theme) => !isQuoteLikeTheme(theme))
   if (topicThemes.length === 0) {
     return uniqueHint > 0
-      ? `${present} written answer${present === 1 ? "" : "s"} · ${uniqueHint} distinct main topic${uniqueHint === 1 ? "" : "s"}`
-      : `${present} written answer${present === 1 ? "" : "s"}`
+      ? t("reports.theme.writtenWithTopics", { present, unique: uniqueHint })
+      : t("reports.theme.writtenOnly", { present })
   }
   if (topicThemes.length === 1) {
-    return `All ${present} answers converge on one main topic: "${topicThemes[0].label}".`
+    return t("reports.theme.allConverge", { present, label: topicThemes[0].label })
   }
 
   const primary = topicThemes[0]
@@ -3860,21 +4002,44 @@ function freeTextThemeSummary(present: number, themes: FreeTextTheme[], uniqueHi
   const smallerAnswers = smaller.reduce((sum, theme) => sum + theme.count, 0)
 
   if (primary.count + secondary.count >= Math.max(2, Math.round(present * 0.65))) {
-    let summary = `Across ${present} answers, the dominant main topics are "${primary.label}" (${primary.count}) and "${secondary.label}" (${secondary.count}).`
     if (smallerAnswers > 0) {
-      summary = `${summary.slice(0, -1)}, with ${smallerAnswers} more in ${smaller.length} smaller topic${smaller.length === 1 ? "" : "s"}.`
+      return t("reports.theme.dominantTwoWithSmaller", {
+        present,
+        primary: primary.label,
+        primaryCount: primary.count,
+        secondary: secondary.label,
+        secondaryCount: secondary.count,
+        smallerAnswers,
+        smallerTopics: smaller.length,
+      })
     }
-    return summary
+    return t("reports.theme.dominantTwo", {
+      present,
+      primary: primary.label,
+      primaryCount: primary.count,
+      secondary: secondary.label,
+      secondaryCount: secondary.count,
+    })
   }
 
-  let summary = `Across ${present} answers, responses form ${topicThemes.length} main topics. The largest is "${primary.label}" (${primary.count}), followed by "${secondary.label}" (${secondary.count}).`
+  let summary = t("reports.theme.manyTopics", {
+    present,
+    topicCount: topicThemes.length,
+    primary: primary.label,
+    primaryCount: primary.count,
+    secondary: secondary.label,
+    secondaryCount: secondary.count,
+  })
   if (smallerAnswers > 0) {
-    summary += ` The remaining ${smallerAnswers} answers fall into ${smaller.length} smaller topic${smaller.length === 1 ? "" : "s"}.`
+    summary += t("reports.theme.manyTopicsRemaining", {
+      smallerAnswers,
+      smallerTopics: smaller.length,
+    })
   }
   return summary
 }
 
-function freeTextCoverage(primary: AggregationField | null): {
+function freeTextCoverage(primary: AggregationField | null, t: ReportTranslate): {
   present: number
   unique: number
   summary: string | null
@@ -3888,7 +4053,7 @@ function freeTextCoverage(primary: AggregationField | null): {
   const summary =
     rawSummary && !isHeuristicAggregationSummary(rawSummary)
       ? rawSummary
-      : freeTextThemeSummary(present, themes, unique)
+      : freeTextThemeSummary(present, themes, unique, t)
   return { present, unique, summary, themes }
 }
 
@@ -3918,10 +4083,13 @@ function FreeTextThemeTags({ themes, label }: { themes: FreeTextTheme[]; label: 
  * the question shows real content instead of just a count summary.
  */
 function FreeTextAnswerList({ themes }: { themes: FreeTextTheme[] }) {
+  const { t } = useI18n()
   if (themes.length === 0) return null
   return (
     <div className="space-y-1.5">
-      <div className="text-[12px] font-medium uppercase tracking-wide text-text-dim">Written answers</div>
+      <div className="text-[12px] font-medium uppercase tracking-wide text-text-dim">
+        {t("reports.report.writtenAnswers")}
+      </div>
       <div className="space-y-1.5">
         {themes.map((theme) => (
           <div
@@ -3967,14 +4135,6 @@ function FreeTextThemeExamples({ themes }: { themes: FreeTextTheme[] }) {
   )
 }
 
-const DEFAULT_LIKERT_LABELS_5: Record<string, string> = {
-  "1": "Strongly disagree",
-  "2": "Disagree",
-  "3": "Neutral",
-  "4": "Agree",
-  "5": "Strongly agree",
-}
-
 function likertScaleBounds(
   context: AggregationContext,
   primary: AggregationField,
@@ -4003,30 +4163,17 @@ function likertScaleBounds(
   return { min: 1, max: inferred ?? 5 }
 }
 
-function likertPointLabel(
-  value: number,
-  context: AggregationContext,
-  scale: { min: number; max: number },
-): string | null {
-  const key = String(Math.round(value))
-  const custom = context.scaleLabels?.[key]?.trim()
-  if (custom) return custom
-  if (scale.min === 1 && scale.max === 5) return DEFAULT_LIKERT_LABELS_5[key] ?? null
-  if (value === scale.min) return "Low"
-  if (value === scale.max) return "High"
-  return null
-}
-
 function likertScalePoints(
   context: AggregationContext,
   primary: AggregationField,
   scale: { min: number; max: number },
+  t?: ReportTranslate,
 ): Array<{ value: number; label: string; count: number }> {
   const counts = primary.numerical?.counts ?? []
   const byValue = new Map(counts.map((entry) => [String(entry.value), entry.count]))
   const points: Array<{ value: number; label: string; count: number }> = []
   for (let value = scale.min; value <= scale.max; value += 1) {
-    const labelText = likertPointLabel(value, context, scale)
+    const labelText = t ? likertPointLabel(value, context.scaleLabels, scale, t) : null
     points.push({
       value,
       label: labelText ? `${value} · ${labelText}` : String(value),
@@ -4057,6 +4204,7 @@ function LikertSpectrumChart({
   avg: number | null | undefined
   scale: { min: number; max: number }
 }) {
+  const { t } = useI18n()
   const safeTotal = Math.max(total, 1)
   const peak = Math.max(...points.map((point) => point.count), 1)
   const span = Math.max(scale.max - scale.min, 1)
@@ -4072,7 +4220,7 @@ function LikertSpectrumChart({
             style={{ left: `calc(12px + (100% - 24px) * ${Math.max(0, Math.min(100, avgPct)) / 100})` }}
           >
             <span className="absolute -top-1 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-text-main px-1.5 py-0.5 font-mono text-[12px] text-surface">
-              avg {metricValue(avg)}
+              {t("reports.report.avg")} {metricValue(avg)}
             </span>
           </div>
         ) : null}
@@ -4122,33 +4270,36 @@ function LikertQuestionBody({
   context: AggregationContext
   primary: AggregationField
 }) {
+  const { t } = useI18n()
   const scale = likertScaleBounds(context, primary)
   const avg = primary.numerical?.avg
-  const avgLabel = avg != null ? likertPointLabel(Math.round(avg), context, scale) : null
-  const points = likertScalePoints(context, primary, scale)
+  const avgLabel = avg != null ? likertPointLabel(Math.round(avg), context.scaleLabels, scale, t) : null
+  const points = likertScalePoints(context, primary, scale, t)
   const total = Math.max(
     primary.presentCount ?? 0,
     points.reduce((sum, point) => sum + point.count, 0),
     1,
   )
-  const lowLabel = likertPointLabel(scale.min, context, scale)
-  const highLabel = likertPointLabel(scale.max, context, scale)
+  const lowLabel = likertPointLabel(scale.min, context.scaleLabels, scale, t)
+  const highLabel = likertPointLabel(scale.max, context.scaleLabels, scale, t)
   const filled = points.filter((point) => point.count > 0).length
   const consensus =
     filled <= 1 && total > 0
-      ? "Unanimous"
+      ? t("reports.report.unanimous")
       : avg != null && avg >= scale.max - 0.35
-        ? "Strongly favorable"
+        ? t("reports.report.stronglyFavorable")
         : avg != null && avg <= scale.min + 0.35
-          ? "Strongly unfavorable"
-          : "Mixed"
+          ? t("reports.report.stronglyUnfavorable")
+          : t("reports.report.mixed")
 
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-2">
         <div className="flex flex-wrap items-end gap-x-4 gap-y-1">
           <div>
-            <div className="text-[12px] uppercase tracking-wide text-text-dim">Average</div>
+            <div className="text-[12px] uppercase tracking-wide text-text-dim">
+              {t("reports.report.average")}
+            </div>
             <div className="flex items-baseline gap-1.5">
               <span className="font-mono text-[22px] text-text-main">{metricValue(avg)}</span>
               <span className="font-mono text-[15px] text-text-dim">/{scale.max}</span>
@@ -4177,6 +4328,7 @@ function LikertQuestionBody({
 }
 
 function SurveyQuestionCard({ context }: { context: AggregationContext }) {
+  const { t } = useI18n()
   const [reasonsOpen, setReasonsOpen] = useState(false)
   const [quotesOpen, setQuotesOpen] = useState(false)
   const [scoresOpen, setScoresOpen] = useState(false)
@@ -4197,14 +4349,14 @@ function SurveyQuestionCard({ context }: { context: AggregationContext }) {
     [primaryFacet?.key, explanationFacet?.key, ...scoreFacets.map((facet) => facet.key)].filter(Boolean),
   )
   const leftoverFacets = orderedFacets(context.facets).filter((facet) => !claimedKeys.has(facet.key))
-  const answerItems = surveyAnswerItems(context, primaryFacet)
+  const answerItems = surveyAnswerItems(context, primaryFacet, t)
   const answerTotal = Math.max(
     primaryFacet?.presentCount ?? 0,
     answerItems.reduce((sum, item) => sum + item.count, 0),
     1,
   )
   const judges = context.judges ?? []
-  const freeText = isFreeText ? freeTextCoverage(primaryFacet) : null
+  const freeText = isFreeText ? freeTextCoverage(primaryFacet, t) : null
   const freeTextSignalThemes = isFreeText ? freeTextSignalTags(judges) : []
   const freeTextDisplayThemes = (
     freeTextSignalThemes.length > 0 ? freeTextSignalThemes : (freeText?.themes ?? [])
@@ -4223,8 +4375,9 @@ function SurveyQuestionCard({ context }: { context: AggregationContext }) {
       : null
   const hasReasons = reasonSamples.length > 0 || Boolean(reasonSummary)
   const reasonTitle = humanizeFacetLabel(
-    explanationFacet?.label ?? "Reasons",
+    explanationFacet?.label ?? t("reports.report.reasons"),
     explanationFacet?.key ?? "explanation",
+    t,
   )
   const quoteCount = reasonSamples.length
   const summaries = context.summaries ?? []
@@ -4241,13 +4394,13 @@ function SurveyQuestionCard({ context }: { context: AggregationContext }) {
   )
   const typeChip =
     questionType === "likert"
-      ? "Likert"
+      ? t("reports.report.likert")
       : questionType === "single_choice"
-        ? "Single choice"
+        ? t("reports.report.singleChoice")
         : questionType === "multi_choice"
-          ? "Multi choice"
+          ? t("reports.report.multiChoice")
           : questionType === "free_text"
-            ? "Free text"
+            ? t("reports.report.freeText")
             : null
 
   return (
@@ -4259,8 +4412,10 @@ function SurveyQuestionCard({ context }: { context: AggregationContext }) {
             {typeChip ? <InlineBadge>{typeChip}</InlineBadge> : null}
             {primaryFacet?.presentCount != null ? (
               <span className="font-mono text-[13px] text-text-dim">
-                {primaryFacet.presentCount} answered
-                {primaryFacet.missingCount > 0 ? ` · ${primaryFacet.missingCount} missing` : ""}
+                {t("reports.report.answeredCount", { count: primaryFacet.presentCount })}
+                {primaryFacet.missingCount > 0
+                  ? ` · ${t("reports.report.missingCount", { count: primaryFacet.missingCount })}`
+                  : ""}
               </span>
             ) : null}
           </div>
@@ -4277,11 +4432,15 @@ function SurveyQuestionCard({ context }: { context: AggregationContext }) {
                 return (
                   <>
                     <p className="text-[15px] leading-relaxed text-text-main">
-                      {reportingSummary || freeText.summary || "No written answers yet."}
+                      {reportingSummary || freeText.summary || t("reports.report.noWrittenAnswers")}
                     </p>
                     <FreeTextThemeTags
                       themes={freeTextDisplayThemes}
-                      label={freeTextSignalThemes.length > 0 ? "Themes" : "Main topics"}
+                      label={
+                        freeTextSignalThemes.length > 0
+                          ? t("reports.feedback.themes")
+                          : t("reports.feedback.mainTopics")
+                      }
                     />
                     {freeTextRawAnswers.length > 0 ? (
                       <FreeTextAnswerList themes={freeTextRawAnswers} />
@@ -4299,7 +4458,7 @@ function SurveyQuestionCard({ context }: { context: AggregationContext }) {
               multi={questionType === "multi_choice"}
             />
           ) : (
-            <p className="text-[14px] text-text-variant">No response mix available.</p>
+            <p className="text-[14px] text-text-variant">{t("reports.report.noResponseMix")}</p>
           )}
         </div>
 
@@ -4312,7 +4471,7 @@ function SurveyQuestionCard({ context }: { context: AggregationContext }) {
                   {facet.kind === "numerical"
                     ? formatNumericalSummary(facet)
                     : facet.kind === "categorical"
-                      ? formatCategoricalDistribution(facet)
+                      ? formatCategoricalDistribution(facet, t)
                       : previewText(facet.textual?.summary ?? facet.textual?.samples?.[0] ?? "—", 48)}
                 </span>
               </span>
@@ -4331,10 +4490,11 @@ function SurveyQuestionCard({ context }: { context: AggregationContext }) {
             className={`flex w-full cursor-pointer items-center justify-between gap-3 px-4 py-2.5 text-left transition-colors duration-200 hover:bg-surface/40 ${FOCUS_RING}`}
           >
             <div className="min-w-0">
-              <div className="text-[14px] font-medium text-text-main">Examples by main topic</div>
+              <div className="text-[14px] font-medium text-text-main">
+                {t("reports.feedback.examplesByTopic")}
+              </div>
               <div className="mt-0.5 text-[13px] text-text-dim">
-                {freeTextDisplayThemes.length} topic{freeTextDisplayThemes.length === 1 ? "" : "s"}
-                {" · "}1–2 quotes each
+                {t("reports.feedback.topicQuotes", { count: freeTextDisplayThemes.length })}
               </div>
             </div>
             <Sym name={quotesOpen ? "expand_less" : "expand_more"} size={18} className="shrink-0 text-text-dim" />
@@ -4358,7 +4518,7 @@ function SurveyQuestionCard({ context }: { context: AggregationContext }) {
           >
             <div className="min-w-0">
               <div className="text-[14px] font-medium text-text-main">
-                {scoreFacets.length === 1 ? scoreFacets[0].label : "Scores"}
+                {scoreFacets.length === 1 ? scoreFacets[0].label : t("reports.report.scores")}
               </div>
               <div className="mt-0.5 text-[13px] text-text-dim">
                 {scoreFacets
@@ -4405,8 +4565,8 @@ function SurveyQuestionCard({ context }: { context: AggregationContext }) {
                   <div className="text-[14px] font-medium text-text-main">{reasonTitle}</div>
                   <div className="mt-0.5 text-[13px] text-text-dim">
                     {quoteCount > 0
-                      ? `${quoteCount} persona quote${quoteCount === 1 ? "" : "s"} explaining their answer`
-                      : "Persona explanations for the answer above"}
+                      ? t("reports.feedback.personaQuotes", { count: quoteCount })
+                      : t("reports.feedback.personaExplanations")}
                   </div>
                 </div>
                 <Sym
@@ -4437,7 +4597,7 @@ function SurveyQuestionCard({ context }: { context: AggregationContext }) {
               }`}
             >
               <div className="text-[13px] font-medium uppercase tracking-wide text-text-dim">
-                Grouped analysis
+                {t("reports.analysis.groupedAnalysis")}
               </div>
               {summaries.map((summary) => (
                 <SummaryDisclosure key={summary.id} summary={summary} />
@@ -4478,9 +4638,11 @@ function SurveyQuestionCard({ context }: { context: AggregationContext }) {
                 className={`flex w-full cursor-pointer items-center justify-between gap-3 px-4 py-2.5 text-left transition-colors duration-200 hover:bg-surface/40 ${FOCUS_RING}`}
               >
                 <div className="min-w-0">
-                  <div className="text-[14px] font-medium text-text-main">More signals</div>
+                  <div className="text-[14px] font-medium text-text-main">
+                    {t("reports.analysis.moreSignals")}
+                  </div>
                   <div className="mt-0.5 text-[13px] text-text-dim">
-                    {leftoverFacets.length} additional field{leftoverFacets.length === 1 ? "" : "s"}
+                    {t("reports.analysis.additionalFields", { count: leftoverFacets.length })}
                   </div>
                 </div>
                 <Sym name={moreOpen ? "expand_less" : "expand_more"} size={18} className="shrink-0 text-text-dim" />
@@ -4525,7 +4687,7 @@ function defaultFeedbackCategories(field: AggregationField): string[] {
   return field.categories?.map((item) => String(item)) ?? []
 }
 
-function feedbackChoiceItems(field: AggregationField): Array<CountBarItem & { id?: string }> {
+function feedbackChoiceItems(field: AggregationField, t?: ReportTranslate): Array<CountBarItem & { id?: string }> {
   if (field.kind !== "categorical") return []
   const counts = field.categorical?.counts ?? []
   const byId = new Map(counts.map((entry) => [entry.value, entry.count]))
@@ -4533,21 +4695,21 @@ function feedbackChoiceItems(field: AggregationField): Array<CountBarItem & { id
   if (inventory.length === 0) {
     return counts.map((entry) => ({
       id: entry.value,
-      label: formatBucketLabel(entry.value),
+      label: formatBucketLabel(entry.value, t),
       count: entry.count,
     }))
   }
   const known = new Set(inventory)
   const rows = inventory.map((id) => ({
     id,
-    label: formatBucketLabel(id),
+    label: formatBucketLabel(id, t),
     count: byId.get(id) ?? byId.get(id.toLowerCase()) ?? 0,
   }))
   for (const entry of counts) {
     if (!known.has(entry.value) && !known.has(entry.value.toLowerCase())) {
       rows.push({
         id: entry.value,
-        label: formatBucketLabel(entry.value),
+        label: formatBucketLabel(entry.value, t),
         count: entry.count,
       })
     }
@@ -4577,6 +4739,7 @@ function feedbackRatingContext(field: AggregationField): AggregationContext {
 }
 
 function UserFeedbackBatchCard({ context }: { context: AggregationContext }) {
+  const { t } = useI18n()
   const ratingFacets = context.facets.filter((facet) => facet.kind === "numerical")
   const choiceFacets = context.facets.filter((facet) => facet.kind === "categorical")
   const textFacets = context.facets.filter((facet) => facet.kind === "textual")
@@ -4596,7 +4759,7 @@ function UserFeedbackBatchCard({ context }: { context: AggregationContext }) {
         : null
   const ratingLead =
     primaryRating?.kind === "numerical"
-      ? `${primaryRating.label}: avg ${formatNumericalSummary(primaryRating)}${
+      ? `${primaryRating.label}: ${t("reports.report.avg")} ${formatNumericalSummary(primaryRating)}${
           typeof primaryRating.scaleMax === "number"
             ? `/${primaryRating.scaleMax}`
             : inferRatingScale(primaryRating)
@@ -4605,7 +4768,7 @@ function UserFeedbackBatchCard({ context }: { context: AggregationContext }) {
         }`
       : null
   const leadText = explanationLead || ratingLead
-  const typeDescription = contextTypeDescription(context)
+  const typeDescription = contextTypeDescription(context, t)
   const respondentCount = Math.max(
     ...context.facets.map((facet) => facet.presentCount ?? 0),
     context.facets[0]?.presentCount ?? 0,
@@ -4618,8 +4781,10 @@ function UserFeedbackBatchCard({ context }: { context: AggregationContext }) {
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <FieldTitle field={context.label} />
-            <InlineBadge>Persona self-report</InlineBadge>
-            <span className="font-mono text-[13px] text-text-dim">{respondentCount} personas</span>
+            <InlineBadge>{t("reports.feedback.selfReport")}</InlineBadge>
+            <span className="font-mono text-[13px] text-text-dim">
+              {t("reports.report.personasCount", { count: respondentCount })}
+            </span>
           </div>
           {typeDescription ? (
             <p className="mt-1 text-[14px] leading-relaxed text-text-dim">{typeDescription}</p>
@@ -4631,8 +4796,8 @@ function UserFeedbackBatchCard({ context }: { context: AggregationContext }) {
 
         {primaryRating ? (
           <div className="rounded-xl glass-tile p-3">
-            <div className={`mb-2 ${facetTitleClassName(humanizeFacetLabel(primaryRating.label, primaryRating.key))}`}>
-              {humanizeFacetLabel(primaryRating.label, primaryRating.key)}
+            <div className={`mb-2 ${facetTitleClassName(humanizeFacetLabel(primaryRating.label, primaryRating.key, t))}`}>
+              {humanizeFacetLabel(primaryRating.label, primaryRating.key, t)}
             </div>
             <LikertQuestionBody context={feedbackRatingContext(primaryRating)} primary={primaryRating} />
           </div>
@@ -4641,7 +4806,7 @@ function UserFeedbackBatchCard({ context }: { context: AggregationContext }) {
         {choiceFacets.length > 0 ? (
           <div className="space-y-3">
             {choiceFacets.map((facet) => {
-              const items = feedbackChoiceItems(facet)
+              const items = feedbackChoiceItems(facet, t)
               const total = Math.max(
                 facet.presentCount,
                 items.reduce((sum, item) => sum + item.count, 0),
@@ -4649,8 +4814,8 @@ function UserFeedbackBatchCard({ context }: { context: AggregationContext }) {
               )
               return (
                 <div key={facet.key} className="rounded-xl glass-tile p-3">
-                  <div className={`mb-2 ${facetTitleClassName(humanizeFacetLabel(facet.label, facet.key))}`}>
-                    {humanizeFacetLabel(facet.label, facet.key)}
+                  <div className={`mb-2 ${facetTitleClassName(humanizeFacetLabel(facet.label, facet.key, t))}`}>
+                    {humanizeFacetLabel(facet.label, facet.key, t)}
                   </div>
                   <ChoiceCompositionChart items={items} respondentCount={total} />
                 </div>
@@ -4663,8 +4828,8 @@ function UserFeedbackBatchCard({ context }: { context: AggregationContext }) {
           <div className="grid gap-3 lg:grid-cols-2">
             {otherRatings.map((facet) => (
               <div key={facet.key} className="rounded-xl glass-tile p-3">
-                <div className={`mb-2 ${facetTitleClassName(humanizeFacetLabel(facet.label, facet.key))}`}>
-                  {humanizeFacetLabel(facet.label, facet.key)}
+                <div className={`mb-2 ${facetTitleClassName(humanizeFacetLabel(facet.label, facet.key, t))}`}>
+                  {humanizeFacetLabel(facet.label, facet.key, t)}
                 </div>
                 <LikertQuestionBody context={feedbackRatingContext(facet)} primary={facet} />
               </div>
@@ -4673,14 +4838,14 @@ function UserFeedbackBatchCard({ context }: { context: AggregationContext }) {
         ) : null}
 
         {textFacets.map((facet) => {
-          const coverage = freeTextCoverage(facet)
+          const coverage = freeTextCoverage(facet, t)
           const signalThemes = freeTextSignalTags(
             judges.filter((judge) => judge.targetFacetKey === facet.facetKey || judge.targetFacetKey === facet.key),
           )
           const themes = (signalThemes.length > 0 ? signalThemes : coverage.themes).filter(
             (theme) => !isQuoteLikeTheme(theme),
           )
-          const facetTitle = humanizeFacetLabel(facet.label, facet.key)
+          const facetTitle = humanizeFacetLabel(facet.label, facet.key, t)
           const showSummary =
             coverage.summary &&
             !isHeuristicAggregationSummary(coverage.summary) &&
@@ -4695,17 +4860,21 @@ function UserFeedbackBatchCard({ context }: { context: AggregationContext }) {
                 <div className={facetTitleClassName(facetTitle)}>{facetTitle}</div>
                 {facet.role === "explanation" ? (
                   <p className="mt-0.5 text-[12px] leading-relaxed text-text-dim">
-                    The persona&apos;s own words explaining the ratings above, from their post-chat self-report.
+                    {t("reports.feedback.personaOwnWords")}
                   </p>
                 ) : null}
               </div>
               {showSummary ? (
                 <p className="text-[14px] leading-relaxed text-text-main">{coverage.summary}</p>
               ) : null}
-              {themes.length > 0 ? <FreeTextThemeTags themes={themes} label="Main topics" /> : null}
+              {themes.length > 0 ? (
+                <FreeTextThemeTags themes={themes} label={t("reports.feedback.mainTopics")} />
+              ) : null}
               {(facet.textual?.samples?.length ?? 0) > 0 ? (
                 <DisclosurePanel
-                  title={`Persona quotes (${facet.textual?.samples?.length ?? 0})`}
+                  title={t("reports.feedback.personaQuotesTitle", {
+                    count: facet.textual?.samples?.length ?? 0,
+                  })}
                   defaultOpen
                 >
                   <SampleList samples={facet.textual?.samples ?? []} defaultExpanded />
@@ -4720,12 +4889,13 @@ function UserFeedbackBatchCard({ context }: { context: AggregationContext }) {
 }
 
 function ContextCard({ context }: { context: AggregationContext }) {
+  const { t } = useI18n()
   const [open, setOpen] = useState(false)
   const panelId = useId()
   const primaryFacet = primaryFacetForContext(context)
-  const distributionItems = summaryBucketsForContext(context)
-  const leadText = contextLeadText(context)
-  const typeDescription = contextTypeDescription(context)
+  const distributionItems = summaryBucketsForContext(context, t)
+  const leadText = contextLeadText(context, t)
+  const typeDescription = contextTypeDescription(context, t)
   const unanimousPrimary =
     primaryFacet?.kind === "categorical" && primaryFacet != null && isUnanimousField(primaryFacet)
   const showDistribution =
@@ -4749,7 +4919,7 @@ function ContextCard({ context }: { context: AggregationContext }) {
               {unanimousPrimary && primaryValue ? (
                 <span className="inline-flex items-center gap-1 rounded-md bg-secondary/10 px-2 py-0.5 text-[13px] font-medium text-secondary">
                   <Sym name="check_circle" size={12} fill={1} />
-                  {formatBucketLabel(primaryValue)}
+                  {formatBucketLabel(primaryValue, t)}
                 </span>
               ) : null}
             </div>
@@ -4765,7 +4935,7 @@ function ContextCard({ context }: { context: AggregationContext }) {
               open ? "glass-tile glass-tile--active text-primary" : "glass-tile text-text-dim"
             }`}
           >
-            {open ? "Collapse" : "Expand"}
+            {open ? t("reports.analysis.collapse") : t("reports.analysis.expand")}
             <Sym name={open ? "expand_less" : "expand_more"} size={14} />
           </span>
         </div>
@@ -4776,7 +4946,7 @@ function ContextCard({ context }: { context: AggregationContext }) {
               <div className="rounded-xl glass-tile p-2.5">
                 <div className="mb-1.5 flex items-center justify-between gap-2">
                   <div className="text-[13px] font-medium uppercase tracking-wide text-text-dim">
-                    {humanizeFacetLabel(primaryFacet.label, primaryFacet.key)}
+                    {humanizeFacetLabel(primaryFacet.label, primaryFacet.key, t)}
                   </div>
                   {humanizeFacetRole(primaryFacet.role) ? (
                     <InlineBadge>{humanizeFacetRole(primaryFacet.role)}</InlineBadge>
@@ -4789,7 +4959,7 @@ function ContextCard({ context }: { context: AggregationContext }) {
             {showDistribution ? (
               <div className="rounded-xl glass-tile p-2.5">
                 <div className="mb-1.5 text-[13px] font-medium uppercase tracking-wide text-text-dim">
-                  Answer mix
+                  {t("reports.facet.answerMix")}
                 </div>
                 <CountBars
                   items={distributionItems.slice(0, 3)}
@@ -4803,7 +4973,7 @@ function ContextCard({ context }: { context: AggregationContext }) {
             {primaryFacet?.kind === "categorical" && !showPrimaryPreview && !showDistribution ? (
               <div className="rounded-xl glass-tile p-2.5">
                 <div className="mb-1.5 text-[13px] font-medium uppercase tracking-wide text-text-dim">
-                  Distribution
+                  {t("reports.facet.distribution")}
                 </div>
                 <FacetVisual field={primaryFacet} compact />
               </div>
@@ -4817,8 +4987,8 @@ function ContextCard({ context }: { context: AggregationContext }) {
           {context.facets.length > 0 ? (
             <div className="space-y-3">
               <SubsectionTitle
-                title="Details"
-                subtitle="Response counts and persona quotes for this area."
+                title={t("reports.facet.details")}
+                subtitle={t("reports.facet.detailsSubtitle")}
               />
               <div className="grid gap-3 lg:grid-cols-2">
                 {orderedFacets(context.facets).map((facet) => (
@@ -4852,9 +5022,10 @@ function humanizeFacetRole(role: string | null | undefined): string | null {
 }
 
 function FacetCard({ field }: { field: AggregationField }) {
+  const { t } = useI18n()
   const textSummary = field.textual?.summary ?? null
   const textSamples = field.textual?.samples ?? []
-  const title = humanizeFacetLabel(field.label, field.key)
+  const title = humanizeFacetLabel(field.label, field.key, t)
   const roleLabel = humanizeFacetRole(field.role)
 
   return (
@@ -4865,8 +5036,10 @@ function FacetCard({ field }: { field: AggregationField }) {
           <div className="mt-1 flex flex-wrap items-center gap-2 text-[12px] uppercase tracking-wide text-text-dim">
             <span>{humanizeFacetKind(field.kind)}</span>
             {roleLabel ? <InlineBadge>{roleLabel}</InlineBadge> : null}
-            <span>{field.presentCount} present</span>
-            {field.missingCount > 0 ? <span>{field.missingCount} missing</span> : null}
+            <span>{t("reports.report.presentCount", { count: field.presentCount })}</span>
+            {field.missingCount > 0 ? (
+              <span>{t("reports.report.missingCount", { count: field.missingCount })}</span>
+            ) : null}
           </div>
         </div>
       </div>
@@ -4879,7 +5052,11 @@ function FacetCard({ field }: { field: AggregationField }) {
             <p className="text-[14px] leading-relaxed text-text-main">{textSummary}</p>
           ) : null}
           {textSamples.length > 0 ? (
-            <DisclosurePanel title="Evidence samples" subtitle={`${textSamples.length} captured`} badge="quotes">
+            <DisclosurePanel
+              title={t("reports.analysis.evidenceSamplesTitle")}
+              subtitle={t("reports.analysis.capturedCount", { count: textSamples.length })}
+              badge={t("reports.analysis.quotes")}
+            >
               <SampleList samples={textSamples} />
             </DisclosurePanel>
           ) : null}
@@ -4890,31 +5067,37 @@ function FacetCard({ field }: { field: AggregationField }) {
 }
 
 function SummaryDisclosure({ summary }: { summary: AggregationSummary }) {
+  const { t } = useI18n()
   const total = summary.buckets.reduce((sum, bucket) => sum + bucket.count, 0)
   const groupLower = summary.groupByFacetKey
     ? (() => {
-        const label = humanizeFacetLabel(null, summary.groupByFacetKey)
+        const label = humanizeFacetLabel(null, summary.groupByFacetKey, t)
         return `${label.charAt(0).toLowerCase()}${label.slice(1)}`
       })()
     : null
   // Auto reason-summaries self-describe from their facets; reporting.json ones keep their title.
   const title = summary.auto
     ? groupLower
-      ? `${crossFacetReasonPhrase(summary.targetFacetKey)}, by ${groupLower}`
-      : crossFacetReasonPhrase(summary.targetFacetKey)
-    : humanizeAnalysisTitle(summary.title)
+      ? t("reports.analysis.titleBy", {
+          title: crossFacetReasonPhrase(summary.targetFacetKey, t),
+          group: groupLower,
+        })
+      : crossFacetReasonPhrase(summary.targetFacetKey, t)
+    : humanizeAnalysisTitle(summary.title, t)
   const isPersonaGrouped = summary.groupByMode === "persona_attribute"
   const personaGroupLabel = (summary.groupByLabel || summary.groupByPersonaDimension || "")
     .toString()
     .toLowerCase()
   const subtitle = summary.auto
-    ? "AI summary of persona explanations per group"
+    ? t("reports.analysis.aiSummary")
     : isPersonaGrouped
-      ? `Customer-insight view — grouped by persona ${personaGroupLabel || "segment"}`
-      : "Persona explanations grouped by answer"
+      ? t("reports.analysis.customerInsight", {
+          group: personaGroupLabel || t("reports.analysis.segment"),
+        })
+      : t("reports.analysis.personaByAnswer")
 
   return (
-    <DisclosurePanel title={title} subtitle={subtitle} badge={humanizeAnalysisStatus(summary.status)}>
+    <DisclosurePanel title={title} subtitle={subtitle} badge={humanizeAnalysisStatus(summary.status, t)}>
       {summary.error ? <p className="text-[14px] leading-relaxed text-danger">{summary.error}</p> : null}
       {summary.overall?.summary ? (
         <p className="text-[14px] leading-relaxed text-text-main">{fullProseText(summary.overall.summary)}</p>
@@ -4923,7 +5106,7 @@ function SummaryDisclosure({ summary }: { summary: AggregationSummary }) {
         <div className="mt-3 space-y-3">
           <CountBars
             items={summary.buckets.map((bucket) => ({
-              label: formatBucketLabel(bucket.bucket),
+              label: formatBucketLabel(bucket.bucket, t),
               count: bucket.count,
             }))}
             total={total}
@@ -4933,7 +5116,7 @@ function SummaryDisclosure({ summary }: { summary: AggregationSummary }) {
             {summary.buckets.map((bucket) => (
               <div key={`${summary.id}-${bucket.bucket}`} className="rounded-lg glass-tile p-3">
                 <div className="flex items-center justify-between gap-3 text-[14px]">
-                  <span className="font-medium text-text-main">{formatBucketLabel(bucket.bucket)}</span>
+                  <span className="font-medium text-text-main">{formatBucketLabel(bucket.bucket, t)}</span>
                   <span className="font-mono text-text-variant">{bucket.count}</span>
                 </div>
                 {bucket.summary ? (
@@ -5011,27 +5194,33 @@ function SignalPrevalence({ judge }: { judge: AggregationJudge }) {
  * against a feedback/outcome facet is redundant with the prevalence view and
  * fragments into tiny, misleading groups, so we don't render it there. */
 function SignalGroupBreakdown({ judge }: { judge: AggregationJudge }) {
+  const { t } = useI18n()
   if (String(judge.groupByMode ?? "") !== "persona_attribute") return null
   const signals = judge.signals ?? []
   const buckets = (judge.buckets ?? []).filter((bucket) => (bucket.signalStats ?? []).length > 0)
   if (signals.length === 0 || buckets.length < 2) return null
-  const groupLabel = humanizeFacetLabel(judge.groupByLabel ?? null, judge.groupByFacetKey)
+  const groupLabel = humanizeFacetLabel(judge.groupByLabel ?? null, judge.groupByFacetKey, t)
   const presentFor = (bucket: AggregationJudge["buckets"][number], key: string) =>
     (bucket.signalStats ?? []).find((stat) => stat.key === key) ?? null
 
   return (
     <DisclosurePanel
-      title={`Breakdown by ${groupLabel}`}
-      subtitle="Share of each group whose responses show this theme"
+      title={t("reports.analysis.breakdownBy", { group: groupLabel })}
+      subtitle={t("reports.analysis.groupThemeShare")}
     >
       <div className="overflow-x-auto">
         <table className="w-full border-collapse text-[12px]">
           <thead>
             <tr>
-              <th className="p-1.5 text-left font-medium text-text-dim">Signal</th>
+              <th className="p-1.5 text-left font-medium text-text-dim">
+                {t("reports.analysis.signal")}
+              </th>
               {buckets.map((bucket) => (
                 <th key={bucket.bucket} className="whitespace-nowrap p-1.5 text-right font-medium text-text-dim">
-                  {formatBucketLabel(bucket.bucket)} <span className="font-normal text-text-dim/70">n={bucket.count}</span>
+                  {formatBucketLabel(bucket.bucket, t)}{" "}
+                  <span className="font-normal text-text-dim/70">
+                    {t("reports.report.countShort", { count: bucket.count })}
+                  </span>
                 </th>
               ))}
             </tr>
@@ -5060,19 +5249,22 @@ function SignalGroupBreakdown({ judge }: { judge: AggregationJudge }) {
 }
 
 function JudgeDisclosure({ judge }: { judge: AggregationJudge }) {
+  const { t } = useI18n()
   const rubricText = typeof judge.rubric === "string" && judge.rubric.trim() ? judge.rubric.trim() : null
   const total = judge.total ?? 0
   const hasStats = (judge.signalStats ?? []).some((stat) => (stat.total ?? 0) > 0)
 
   return (
     <DisclosurePanel
-      title={humanizeAnalysisTitle(judge.title)}
-      subtitle={`How often each signal appears across ${total || "the"} scored ${total === 1 ? "sample" : "samples"} (share, not a quality score)`}
-      badge={humanizeAnalysisStatus(judge.status)}
+      title={humanizeAnalysisTitle(judge.title, t)}
+      subtitle={t("reports.analysis.signalFrequency", {
+        count: total || t("reports.analysis.the"),
+        sampleLabel: total === 1 ? t("reports.analysis.sample") : t("reports.analysis.samples"),
+      })}
+      badge={humanizeAnalysisStatus(judge.status, t)}
     >
       <p className="mb-3 text-[12px] leading-relaxed text-text-dim">
-        Each sample (one per trial) is scored independently; the bar is the share of samples whose own words describe
-        that signal. Expand a signal to read example quotes.
+        {t("reports.analysis.signalMethod")}
         {rubricText ? ` ${rubricText}` : ""}
       </p>
       {judge.overallAssessment ? (
@@ -5085,7 +5277,7 @@ function JudgeDisclosure({ judge }: { judge: AggregationJudge }) {
           <SignalGroupBreakdown judge={judge} />
         </div>
       ) : (
-        <p className="text-[13px] text-text-dim">No signal results yet.</p>
+        <p className="text-[13px] text-text-dim">{t("reports.analysis.noSignals")}</p>
       )}
     </DisclosurePanel>
   )
@@ -5096,34 +5288,40 @@ function CrossFacetViewDisclosure({
 }: {
   crossFacetView: AggregationCrossFacetView
 }) {
+  const { t } = useI18n()
   const buckets = crossFacetView.buckets ?? []
   const total = buckets.reduce((sum, bucket) => sum + bucket.count, 0)
   const primaryLabel = crossFacetView.primaryFacetKey
-    ? humanizeFacetLabel(null, crossFacetView.primaryFacetKey)
+    ? humanizeFacetLabel(null, crossFacetView.primaryFacetKey, t)
     : null
   const textLabel = crossFacetView.textFacetKey
-    ? humanizeFacetLabel(null, crossFacetView.textFacetKey)
+    ? humanizeFacetLabel(null, crossFacetView.textFacetKey, t)
     : null
   const primaryLower = primaryLabel
     ? `${primaryLabel.charAt(0).toLowerCase()}${primaryLabel.slice(1)}`
     : null
   const title =
     primaryLower && textLabel
-      ? `${crossFacetReasonPhrase(crossFacetView.textFacetKey)}, grouped by ${primaryLower}`
+      ? t("reports.analysis.groupedBy", {
+          reason: crossFacetReasonPhrase(crossFacetView.textFacetKey, t),
+          answer: primaryLower,
+        })
       : crossFacetView.type === "text_by_primary_category"
-        ? "Quotes by answer group"
-        : formatBucketLabel(crossFacetView.type)
-  const subtitle = `Expand a group to read the persona quotes behind each ${primaryLower ?? "answer"}`
+        ? t("reports.analysis.quotesByAnswer")
+        : formatBucketLabel(crossFacetView.type, t)
+  const subtitle = t("reports.analysis.expandGroupQuotes", {
+    answer: primaryLower ?? t("reports.analysis.answer"),
+  })
 
   return (
     <DisclosurePanel
       title={title}
       subtitle={subtitle}
-      badge={`${buckets.length} groups`}
+      badge={t("reports.analysis.groupsCount", { count: buckets.length })}
     >
       <CountBars
         items={buckets.map((bucket) => ({
-          label: formatBucketLabel(bucket.category),
+          label: formatBucketLabel(bucket.category, t),
           count: bucket.count,
         }))}
         total={total}
@@ -5132,14 +5330,14 @@ function CrossFacetViewDisclosure({
         {buckets.map((bucket) => (
           <div key={`${crossFacetView.type}-${bucket.category}`} className="rounded-lg glass-tile p-3">
             <div className="flex items-center justify-between gap-3 text-[14px]">
-              <span className="font-medium text-text-main">{formatBucketLabel(bucket.category)}</span>
+              <span className="font-medium text-text-main">{formatBucketLabel(bucket.category, t)}</span>
               <span className="font-mono text-text-variant">{bucket.count}</span>
             </div>
             {bucket.samples.length > 0 ? (
               <div className="mt-2">
                 <DisclosurePanel
-                  title={`Examples (${bucket.samples.length})`}
-                  subtitle="Short persona quotes for this group"
+                  title={t("reports.analysis.examplesCount", { count: bucket.samples.length })}
+                  subtitle={t("reports.analysis.shortPersonaQuotes")}
                 >
                   <SampleList samples={bucket.samples} defaultExpanded />
                 </DisclosurePanel>
@@ -5161,16 +5359,17 @@ function FlatAggregationFallback({
   categorical: AggregationField[]
   textual: AggregationField[]
 }) {
+  const { t } = useI18n()
   return (
     <StudioGlassPanel className="overflow-hidden">
       <SectionHeader
-        title="Response summaries"
-        subtitle="No grouped analysis areas for this run — showing a summary of each response instead."
+        title={t("reports.report.responseSummaries")}
+        subtitle={t("reports.analysis.noGroupedAnalysis")}
       />
       <div className="space-y-5 p-4">
         {numerical.length > 0 ? (
           <div className="space-y-3">
-            <SubsectionTitle title="Numerical" />
+            <SubsectionTitle title={t("reports.report.numerical")} />
             <div className="grid gap-3 lg:grid-cols-2">
               {numerical.map((field) => (
                 <FacetCard key={field.key} field={field} />
@@ -5180,7 +5379,7 @@ function FlatAggregationFallback({
         ) : null}
         {categorical.length > 0 ? (
           <div className="space-y-3">
-            <SubsectionTitle title="Categorical" />
+            <SubsectionTitle title={t("reports.report.categorical")} />
             <div className="grid gap-3 lg:grid-cols-2">
               {categorical.map((field) => (
                 <FacetCard key={field.key} field={field} />
@@ -5190,7 +5389,7 @@ function FlatAggregationFallback({
         ) : null}
         {textual.length > 0 ? (
           <div className="space-y-3">
-            <SubsectionTitle title="Textual" />
+            <SubsectionTitle title={t("reports.report.textual")} />
             <div className="grid gap-3 lg:grid-cols-2">
               {textual.map((field) => (
                 <FacetCard key={field.key} field={field} />
@@ -5204,6 +5403,7 @@ function FlatAggregationFallback({
 }
 
 function FacetVisual({ field, compact = false }: { field: AggregationField; compact?: boolean }) {
+  const { t } = useI18n()
   if (field.kind === "numerical") {
     const min = field.numerical?.min
     const max = field.numerical?.max
@@ -5218,23 +5418,27 @@ function FacetVisual({ field, compact = false }: { field: AggregationField; comp
       <div className="space-y-3">
         <div className={`flex flex-wrap items-end justify-between gap-3 ${compact ? "sm:flex-nowrap" : ""}`}>
           <div>
-            <div className="text-[12px] uppercase tracking-wide text-text-dim">Average</div>
+            <div className="text-[12px] uppercase tracking-wide text-text-dim">
+              {t("reports.report.average")}
+            </div>
             <div className={`${compact ? "text-[22px]" : "text-[30px]"} font-mono text-text-main`}>
               {metricValue(avg)}
             </div>
           </div>
           {compact ? (
             <div className="flex flex-wrap items-center gap-2 text-[13px] text-text-variant">
-              <span>Std {metricValue(field.numerical?.std)}</span>
-              <span>Present {field.presentCount}</span>
-              {field.missingCount > 0 ? <span>Missing {field.missingCount}</span> : null}
+              <span>{t("reports.report.std")} {metricValue(field.numerical?.std)}</span>
+              <span>{t("reports.report.present")} {field.presentCount}</span>
+              {field.missingCount > 0 ? (
+                <span>{t("reports.report.missingCount", { count: field.missingCount })}</span>
+              ) : null}
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-2 text-[14px] text-text-variant sm:min-w-[220px]">
-              <MetricLine label="Std" value={metricValue(field.numerical?.std)} />
-              <MetricLine label="Range" value={`${metricValue(min)} - ${metricValue(max)}`} />
-              <MetricLine label="Present" value={String(field.presentCount)} />
-              <MetricLine label="Missing" value={String(field.missingCount)} />
+              <MetricLine label={t("reports.report.std")} value={metricValue(field.numerical?.std)} />
+              <MetricLine label={t("reports.report.range")} value={`${metricValue(min)} - ${metricValue(max)}`} />
+              <MetricLine label={t("reports.report.present")} value={String(field.presentCount)} />
+              <MetricLine label={t("reports.report.missingLabel")} value={String(field.missingCount)} />
             </div>
           )}
         </div>
@@ -5260,7 +5464,7 @@ function FacetVisual({ field, compact = false }: { field: AggregationField; comp
     return (
       <CountBars
         items={(field.categorical?.counts ?? []).slice(0, compact ? 4 : 6).map((entry) => ({
-          label: formatBucketLabel(entry.value),
+          label: formatBucketLabel(entry.value, t),
           count: entry.count,
         }))}
         total={Math.max(field.presentCount, 1)}
@@ -5277,10 +5481,12 @@ function FacetVisual({ field, compact = false }: { field: AggregationField; comp
           {compact ? previewText(field.textual.summary, 180) : fullProseText(field.textual.summary)}
         </p>
       ) : (
-        <p className="text-[14px] text-text-variant">No text summary available.</p>
+        <p className="text-[14px] text-text-variant">{t("reports.analysis.noTextSummary")}</p>
       )}
       {!compact && (field.textual?.samples?.length ?? 0) > 0 ? (
-        <div className="text-[13px] text-text-dim">{field.textual?.samples.length} evidence samples available</div>
+        <div className="text-[13px] text-text-dim">
+          {t("reports.analysis.evidenceSamples", { count: field.textual?.samples.length ?? 0 })}
+        </div>
       ) : null}
     </div>
   )
@@ -5299,8 +5505,9 @@ function CountBars({
   showDetails?: boolean
   showShare?: boolean
 }) {
+  const { t } = useI18n()
   if (items.length === 0) {
-    return <p className="text-[14px] text-text-variant">No distribution available.</p>
+    return <p className="text-[14px] text-text-variant">{t("reports.analysis.noDistribution")}</p>
   }
 
   return (
@@ -5336,6 +5543,7 @@ function SampleList({
   samples: string[]
   defaultExpanded?: boolean
 }) {
+  const { t } = useI18n()
   const [expanded, setExpanded] = useState(defaultExpanded)
   const shown = expanded ? samples : samples.slice(0, 2)
 
@@ -5357,7 +5565,9 @@ function SampleList({
           className={`inline-flex items-center gap-1 rounded glass-tile glass-tile--hover px-2 py-1 text-[13px] text-text-dim ${FOCUS_RING}`}
         >
           <Sym name={expanded ? "expand_less" : "expand_more"} size={14} />
-          {expanded ? "Show fewer quotes" : `Show ${samples.length - shown.length} more quotes`}
+          {expanded
+            ? t("reports.analysis.showFewerQuotes")
+            : t("reports.analysis.showMoreQuotes", { count: samples.length - shown.length })}
         </button>
       ) : null}
     </div>
@@ -5377,6 +5587,7 @@ function DisclosurePanel({
   children: ReactNode
   defaultOpen?: boolean
 }) {
+  const { t } = useI18n()
   const [open, setOpen] = useState(defaultOpen)
   const panelId = useId()
 
@@ -5397,7 +5608,7 @@ function DisclosurePanel({
           {subtitle ? <p className="mt-1 text-[14px] leading-relaxed text-text-dim">{subtitle}</p> : null}
         </div>
         <span className="inline-flex items-center gap-1 text-[12px] uppercase tracking-wide text-text-dim">
-          {open ? "Hide" : "View"}
+          {open ? t("reports.report.hide") : t("reports.report.view")}
           <Sym name={open ? "expand_less" : "expand_more"} size={14} />
         </span>
       </button>
@@ -5492,9 +5703,12 @@ function CoverageTile({
 
 /** Same question-type chip language as single-trial survey debrief / scorecard. */
 function SurveyQuestionTypesTile({ counts }: { counts: SurveyQuestionTypeCount[] }) {
+  const { t } = useI18n()
   return (
     <div className="min-w-[140px] rounded-lg glass-tile px-2.5 py-2">
-      <div className="text-[11px] uppercase tracking-wide text-text-dim">Question types</div>
+      <div className="text-[11px] uppercase tracking-wide text-text-dim">
+        {t("reports.report.questionTypes")}
+      </div>
       <div className="mt-1.5 flex flex-wrap gap-1.5">
         {counts.map((entry) => (
           <span
@@ -5524,6 +5738,7 @@ function MetricLine({ label, value }: { label: string; value: string }) {
 }
 
 export function HarborJobDetail({ jobName, onBack, onOpenTrial }: HarborJobDetailProps) {
+  const { t } = useI18n()
   const queryClient = useQueryClient();
   const query = useQuery<HarborJobDetail>({
     queryKey: ["harbor-job", jobName],
@@ -5570,8 +5785,8 @@ export function HarborJobDetail({ jobName, onBack, onOpenTrial }: HarborJobDetai
     (aggregationQuery.isPending || aggregationQuery.isFetching) &&
     !aggregationQuery.isError;
   const pdfMeta = useMemo(
-    () => buildBatchReportPdfMeta(jobName, job, aggregation),
-    [jobName, job, aggregation],
+    () => buildBatchReportPdfMeta(jobName, job, aggregation, t),
+    [jobName, job, aggregation, t],
   );
 
   const progress = useMemo(() => {
@@ -5603,47 +5818,49 @@ export function HarborJobDetail({ jobName, onBack, onOpenTrial }: HarborJobDetai
   return (
     <StudioPageFrame>
       <StudioPageHeader
-        eyebrow="MatrAIx · Runs"
+        eyebrow={`MatrAIx · ${t("reports.page.runsTab")}`}
         title={jobName}
         subtitle={
           launch?.configPath
             ? undefined
-            : "Open a run to see its evaluation and full conversation."
+            : t("reports.page.openRunHint")
         }
         meta={
           launch?.status ? (
             <span className="rounded-lg glass-tile px-2.5 py-1 font-mono text-[13px] text-text-variant backdrop-blur">
               {launch.status}
-              {launch.exitCode != null ? ` · exit ${launch.exitCode}` : ""}
+              {launch.exitCode != null
+                ? ` · ${t("reports.page.exit")} ${launch.exitCode}`
+                : ""}
             </span>
           ) : null
         }
         actions={
           <>
             <StudioToolbarButton icon="arrow_back" onClick={onBack}>
-              All jobs
+              {t("reports.page.allJobs")}
             </StudioToolbarButton>
             <StudioToolbarButton
               icon="refresh"
               onClick={refreshAll}
               disabled={query.isFetching || aggregationQuery.isFetching}
             >
-              Refresh
+              {t("reports.page.refresh")}
             </StudioToolbarButton>
           </>
         }
       />
       {launch?.configPath ? (
         <p className="-mt-3 mb-5 break-all font-mono text-[13px] leading-snug text-text-variant">
-          Config: {launch.configPath}
+          {t("reports.page.config")}: {launch.configPath}
         </p>
       ) : null}
 
       {query.isLoading ? (
-        <p className="text-[15px] text-text-variant">Loading job…</p>
+        <p className="text-[15px] text-text-variant">{t("reports.page.loadingJob")}</p>
       ) : query.isError ? (
         <p className="text-[15px] text-danger">
-          {query.error instanceof ApiError ? query.error.message : "Failed to load job."}
+          {query.error instanceof ApiError ? query.error.message : t("reports.page.loadFailed")}
         </p>
       ) : (
         <>
@@ -5656,18 +5873,18 @@ export function HarborJobDetail({ jobName, onBack, onOpenTrial }: HarborJobDetai
           {progress.total > 0 && !aggregation && (
             <StudioGlassPanel className="mb-5 flex flex-wrap items-center gap-3 px-4 py-3 text-[14px] text-text-variant">
               <span className="font-mono text-text-main">
-                {progress.done}/{progress.total} trials finished
+                {t("reports.page.trialsFinished", { done: progress.done, total: progress.total })}
               </span>
               {progress.running > 0 && (
                 <span className="inline-flex items-center gap-1 text-warn">
                   <span className="h-1.5 w-1.5 rounded-full bg-warn animate-pulse" />
-                  {progress.running} running
+                  {progress.running} {t("reports.page.running")}
                 </span>
               )}
               {progress.failed > 0 && (
                 <span className="inline-flex items-center gap-1 text-danger">
                   <span className="h-1.5 w-1.5 rounded-full bg-danger" />
-                  {progress.failed} failed
+                  {progress.failed} {t("reports.page.failed")}
                 </span>
               )}
             </StudioGlassPanel>
@@ -5676,7 +5893,7 @@ export function HarborJobDetail({ jobName, onBack, onOpenTrial }: HarborJobDetai
           {hasReport ? (
             <div className="mb-4 flex items-center gap-2.5">
               <span className="text-[12px] font-medium uppercase tracking-wide text-text-dim">
-                View
+                {t("reports.page.view")}
               </span>
               <div
                 className="inline-flex gap-1 rounded-xl border border-outline/50 bg-surface/40 p-1 shadow-sm"
@@ -5686,13 +5903,13 @@ export function HarborJobDetail({ jobName, onBack, onOpenTrial }: HarborJobDetai
                   active={activeView === "report"}
                   onClick={() => setView("report")}
                   icon="analytics"
-                  label="Report"
+                  label={t("reports.page.reportTab")}
                 />
                 <ViewSwitchTab
                   active={activeView === "runs"}
                   onClick={() => setView("runs")}
                   icon="groups"
-                  label={`Individual runs · ${trials.length}`}
+                  label={t("reports.page.individualRuns", { count: trials.length })}
                 />
               </div>
             </div>
@@ -5701,7 +5918,7 @@ export function HarborJobDetail({ jobName, onBack, onOpenTrial }: HarborJobDetai
           {activeView === "report" && aggregationLoading ? (
             <StudioGlassPanel className="mb-4 flex items-center gap-2 px-4 py-8 text-[15px] text-text-variant">
               <Sym name="autorenew" size={18} className="animate-rb-spin text-primary" />
-              Loading batch report…
+              {t("reports.page.loadingBatch")}
             </StudioGlassPanel>
           ) : null}
 
@@ -5717,30 +5934,36 @@ export function HarborJobDetail({ jobName, onBack, onOpenTrial }: HarborJobDetai
           <StudioGlassPanel className="overflow-hidden rounded-xl">
             <div className="flex items-center gap-2 border-b border-outline/40 px-4 py-3">
               <Sym name="groups" size={16} className="text-primary" />
-              <span className="text-[15px] font-semibold text-text-main">Individual runs</span>
+              <span className="text-[15px] font-semibold text-text-main">
+                {t("reports.page.individualRunsTitle")}
+              </span>
               <span className="rounded-full glass-tile px-2 py-0.5 font-mono text-[12px] text-text-variant">
                 {trials.length}
               </span>
               <span className="hidden text-[13px] text-text-dim sm:inline">
-                · one conversation per persona — open any for its full transcript
+                · {t("reports.page.oneConversation")}
               </span>
             </div>
-            <div className="grid grid-cols-[minmax(0,1.4fr)_minmax(0,1.2fr)_5.5rem_2rem] gap-3 border-b border-outline/40 px-4 py-2.5 text-[12px] uppercase tracking-wide text-text-dim">
-              <span>Persona</span>
-              <span>Run</span>
-              <span>Status</span>
-              <span className="sr-only">Open</span>
+            <div className="grid grid-cols-[minmax(0,1.4fr)_minmax(0,1.2fr)_5.5rem_5.5rem_2rem] gap-3 border-b border-outline/40 px-4 py-2.5 text-[12px] uppercase tracking-wide text-text-dim">
+              <span>{t("reports.page.persona")}</span>
+              <span>{t("reports.page.run")}</span>
+              <span>{t("reports.page.cost")}</span>
+              <span>{t("reports.page.status")}</span>
+              <span className="sr-only">{t("reports.page.open")}</span>
             </div>
             <ul className="divide-y divide-outline-dim">
               {trials.length === 0 ? (
                 <li className="px-4 py-8 text-center text-[15px] text-text-variant">
                   {launch?.status === "running" || launch?.status === "queued"
-                    ? "Trials are starting — they will appear here as they launch."
-                    : "No trials yet."}
+                    ? t("reports.page.trialsStarting")
+                    : t("reports.page.noTrials")}
                 </li>
               ) : (
                 trials.map((trial) => {
                   const clickable = Boolean(onOpenTrial);
+                  const trialUsage = usageFromTrialResult(trial.result);
+                  const costLabel = usageListPrimary(trialUsage, t);
+                  const usageTitle = usageCompactLine(trialUsage, t);
                   return (
                     <li key={trial.trialName}>
                       <button
@@ -5752,13 +5975,19 @@ export function HarborJobDetail({ jobName, onBack, onOpenTrial }: HarborJobDetai
                           prefetchTrialDebrief(trial.trialName);
                           onOpenTrial?.(trial.trialName);
                         }}
-                        className={`grid w-full grid-cols-[minmax(0,1.4fr)_minmax(0,1.2fr)_5.5rem_2rem] items-center gap-3 px-4 py-3 text-left text-[15px] ${
+                        className={`grid w-full grid-cols-[minmax(0,1.4fr)_minmax(0,1.2fr)_5.5rem_5.5rem_2rem] items-center gap-3 px-4 py-3 text-left text-[15px] ${
                           clickable ? "hover:bg-surface/40" : ""
                         } ${FOCUS_RING}`}
                       >
                         <TrialPersonaIdentity trial={trial} />
                         <span className="truncate font-mono text-[13px] text-text-variant">
                           {trial.trialName}
+                        </span>
+                        <span
+                          className="truncate font-mono text-[12px] tabular-nums text-text-dim"
+                          title={usageTitle ?? undefined}
+                        >
+                          {costLabel ?? "—"}
                         </span>
                         <TrialStatusBadge trial={trial} />
                         <Sym

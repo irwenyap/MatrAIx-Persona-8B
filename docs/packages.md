@@ -110,13 +110,13 @@ export LANGSMITH_API_KEY=your-api-key
 Pass the plugin when running a Matraix Playground job:
 
 ```bash
-harbor run -c config.yaml --plugin langsmith
+matraix run -c config.yaml --plugin langsmith
 ```
 
 Or use the full import path:
 
 ```bash
-harbor run -c config.yaml --plugin harbor_langsmith:LangSmithPlugin
+matraix run -c config.yaml --plugin harbor_langsmith:LangSmithPlugin
 ```
 
 ### Configuration
@@ -134,7 +134,7 @@ The plugin accepts configuration through environment variables or CLI arguments.
 Alternatively, pass options via CLI:
 
 ```bash
-harbor run -c config.yaml --plugin langsmith \
+matraix run -c config.yaml --plugin langsmith \
   --pk dataset_name=my-dataset \
   --pk experiment_name=my-run
 ```

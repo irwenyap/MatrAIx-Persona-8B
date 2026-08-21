@@ -340,7 +340,7 @@ uv run python persona/scripts/generate_dev_personas.py
 
 **Launch a grounding evaluation:**
 ```bash
-uv run harbor run -a persona-claude-code \
+uv run matraix run -a persona-claude-code \
   --ak persona_path=persona/datasets/matraix-persona-1m/persona_0001.yaml \
   -p persona/validation/tasks/probe-survey_register
 ```

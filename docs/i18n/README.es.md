@@ -59,9 +59,16 @@ El nombre alude a *The Matrix*: un mundo simulado útil para exploración,
 pruebas de estrés y generación de hipótesis — **no un sustituto de la evidencia
 de personas reales**.
 
-## Novedades
+## Novedades y reconocimiento
 
-- **[2026-08-10]** Destacado como [X Trending Story](https://x.com/i/trending/2086626337561911419): *Harvard and MIT Unveil MatrAIx with 8.3 Billion Virtual Personas*. También cubierto en medios tecnológicos, incluidos [AI Era](https://www.36kr.com/p/3932853833759876), [Numerama](https://www.numerama.com/tech/2308727-ces-chercheurs-ont-cree-83-milliards-dhumains-virtuels-pour-tester-des-produits-a-notre-place.html), [Infobae](https://www.infobae.com/tecno/2026/08/10/asi-prueba-la-ia-un-mundo-con-8300-millones-de-personas-digitales-matraix-es-el-metaverso/), [AI타임스](https://www.aitimes.com/news/articleView.html?idxno=213824), [CryptoBriefing](https://cryptobriefing.com/matraix-simulation-harvard-mit-ai-personas/) y [Startup Fortune](https://startupfortune.com/harvard-and-mit-built-an-ai-model-of-83-billion-people-to-test-products-on/), entre otros.
+- **Comentario académico** — [*Can We Simulate the World?*](https://aiscientist.substack.com/p/can-we-simulate-the-world) — Mayank Kejriwal ([*AI Scientist*](https://aiscientist.substack.com/))
+- **Descubrimiento en investigación** — Destacado en [Hugging Face Papers](https://huggingface.co/papers/2608.04205) ([Daily Papers, 2026-08-10](https://huggingface.co/papers/date/2026-08-10))
+- **Medios** — [36Kr](https://www.36kr.com/p/3932853833759876) · [Numerama](https://www.numerama.com/tech/2308727-ces-chercheurs-ont-cree-83-milliards-dhumains-virtuels-pour-tester-des-produits-a-notre-place.html) · [Infobae](https://www.infobae.com/tecno/2026/08/10/asi-prueba-la-ia-un-mundo-con-8300-millones-de-personas-digitales-matraix-es-el-metaverso/) · [AI타임스](https://www.aitimes.com/news/articleView.html?idxno=213824) · [Startup Fortune](https://startupfortune.com/harvard-and-mit-built-an-ai-model-of-83-billion-people-to-test-products-on/) · [Forbes Türkiye](https://www.forbes.com.tr/saglik/hastaya-dokunmadan-once-8-3-milyar-kez-denemek-sagligin-yeni-test-dunyasi-matraix) · [WIRED Czech](https://www.wired.cz/news-beat/harvard-a-mit-vytvorily-ai-simulaci-obsahujici-83-miliardy-virtualnich-lidi)
+- **Comentario de la industria** — Comentado por el VP y CTO de Cisco [Gianpaolo Barozzi](https://lnkd.in/p/gE9cV2nw)
+- **Social** — Destacado como [X Trending Story](https://x.com/i/trending/2086626337561911419)
+
+## Lanzamientos
+
 - **[2026-08-04]** Informe técnico en arXiv: [MatrAIx: Simulating the World with 8.3 Billion Persona Agents](https://arxiv.org/abs/2608.04205) (`2608.04205`).
 - **[2026-08-01]** Publicado [Persona 1M](https://huggingface.co/datasets/MatrAIx2026/MatrAIx_Persona_1M_Public_Release) en Hugging Face (~1M personas filtradas por calidad).
 - **[2026-07-31]** Código abierto del Playground y la biblioteca de tareas: [MatrAIx-Persona-8B](https://github.com/MatrAIx-ai/MatrAIx-Persona-8B).
@@ -73,6 +80,15 @@ de personas reales**.
 - [uv](https://docs.astral.sh/uv/) y Python 3.12
 - Node.js 20+ (solo frontends de Playground / viewer)
 - Claves de API de modelo para ejemplos de agentes de persona — ver [agents.md](../environment/agents.md)
+
+> **Usuarios de Windows**: ejecuten todo dentro de
+> [WSL2](https://learn.microsoft.com/windows/wsl/install) — abran PowerShell,
+> ejecuten `wsl --install` (instala Ubuntu), luego clonen este repositorio
+> **dentro del sistema de archivos de WSL** (p. ej. `~/MatrAIx`, no
+> `/mnt/c/…`, que es mucho más lento) y activen *WSL integration* en Docker
+> Desktop → Settings → Resources. Después, todos los comandos de este README
+> funcionan tal cual. No se admite PowerShell/cmd nativo (los verificadores de
+> tareas requieren `bash`).
 
 ## Instalación
 
@@ -86,10 +102,10 @@ uv pip install -e packages/harbor-langsmith
 uv pip install -e packages/rewardkit
 ```
 
-Todos los comandos de Matraix Playground se ejecutan como **`uv run harbor …`**.
+Ejecuta jobs y tareas con **`uv run matraix run …`**: configura el entorno de lanzamiento completo y delega en el runtime Harbor. Las utilidades del runtime (p. ej. `harbor view`, `harbor upload`) siguen bajo **`uv run harbor …`**.
 
 Configura la clave de API del modelo correspondiente a tu proveedor antes de
-ejecutar tareas por GUI o CLI (el smoke test no la necesita):
+ejecutar tareas por GUI o CLI (la prueba de humo no la necesita):
 
 ```bash
 export ANTHROPIC_API_KEY="sk-ant-..."   # modelos anthropic/claude-*
@@ -101,7 +117,7 @@ Playground también puede cargar claves desde `application/playground/.env.local
 
 ### Importar Persona 1M (recomendado)
 
-El `matraix-persona-dev-sample` del repo (~200) es solo para smoke. Para cohorts reales y muestreo en Playground, importa el 1M público:
+El `matraix-persona-dev-sample` del repo (~200) es solo para pruebas de humo. Para cohortes reales y muestreo en Playground, importa el 1M público:
 
 ```bash
 huggingface-cli download MatrAIx2026/MatrAIx_Persona_1M_Public_Release \
@@ -114,15 +130,17 @@ Detalles: [Handbook § Persona 1M](../README.md#3-persona-1m-recommended).
 
 ## Inicio rápido
 
-### Smoke test
+### Pruebas de humo (smoke tests)
 
-No se requiere clave de API. **Requiere Docker** (el smoke job usa
-`environment.type: docker`):
+Tras instalar, ejecuta estas dos comprobaciones (sin clave de API). Juntas
+confirman la ruta por defecto de Survey, Chat, Web y OS-app:
 
-```bash
-uv run harbor run -c configs/jobs/example-job-recipe/harbor-smoke-local.yaml
-```
+| Comprobación | Confirma que puedes ejecutar | Comando |
+|--------------|------------------------------|---------|
+| **Sin Docker** | Survey y Chat | `uv run matraix smoke application/tasks/example-survey_product-feedback` |
+| **Con Docker** | Web y OS-app | `uv run matraix run -c configs/jobs/example-job-recipe/harbor-smoke-local.yaml` |
 
+La primera suele terminar en segundos con `Smoke: ok`. La segunda construye una imagen local la primera vez (unos minutos) y escribe en `jobs/harbor-smoke-local/`. Pasos: [quickstart §3](../quickstart.md#3-smoke-tests-two-lanes).
 ### Ejecuciones de tareas por GUI
 
 Playground elige tareas, muestrea personas y lanza los mismos jobs de
@@ -137,14 +155,14 @@ VENV=.venv bash application/playground/backend/run_dev.sh
 cd application/playground/frontend && npm ci && npm run dev
 ```
 
-Abre **http://localhost:5173** → Playground → elige una cohort de personas →
+Abre **http://localhost:5173** → Playground → elige una cohorte de personas →
 elige tareas Survey / Chat / Web / OS app → **Lock pipeline** → **Run eval**.
 Detalles: [Playground §10](../quickstart.md#10-playground--play-tasks-visually).
 
 ### Desarrollo / ejecución por CLI
 
 **Desarrollar** — copia una tarea de referencia en `application/tasks/`, edita
-`task.toml` / `instruction.md` / `input/` / verifier y regístrala en Playground
+`task.toml` / `instruction.md` / `input/` / el verificador (verifier) y regístrala en Playground
 ([task-guide.md](../application/task-guide.md)):
 
 ```bash
@@ -169,7 +187,7 @@ uv run python application/scripts/generate_application_job.py \
   --model-name anthropic/claude-sonnet-4-6
 
 # Usa las líneas de export + la ruta del recipe que imprime el script, p. ej.:
-uv run harbor run -c configs/jobs/application-task-job-recipe/example-survey-product-feedback-auto-n1.yaml
+uv run matraix run -c configs/jobs/application-task-job-recipe/example-survey-product-feedback-auto-n1.yaml
 ```
 
 Lotes (`--sample-size N`), filtros y ejemplos chat / web / os-app:

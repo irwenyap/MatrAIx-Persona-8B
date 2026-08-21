@@ -174,7 +174,11 @@ def _normalize_turn_view(
     runtime: ChatbotTaskConfig,
 ) -> Dict[str, Any]:
     protocol = runtime.protocol
-    turn = dict(response.get(protocol.response_turn_field) or {})
+    raw_turn = response.get(protocol.response_turn_field)
+    # Some chat APIs expose a scalar turn counter rather than a structured
+    # turn object. Keep using the top-level reply instead of failing while
+    # normalizing an otherwise valid response.
+    turn = dict(raw_turn) if isinstance(raw_turn, dict) else {}
     assistant = str(
         turn.get("assistantMessage")
         or turn.get("assistantReply")
@@ -525,6 +529,7 @@ async def run_harbor_chat_eval(
     task_path: Optional[str] = None,
     persona_yaml_path: Optional[str] = None,
     repo_root: Optional[Any] = None,
+    job_dir: Optional[Any] = None,
 ) -> PlaygroundResult:
     """Async chat eval loop using a Harbor sidecar session."""
     from playground.user_sim.runner import run_playground_async
@@ -539,6 +544,7 @@ async def run_harbor_chat_eval(
         task_path=task_path,
         persona_yaml_path=persona_yaml_path,
         repo_root=repo_root,
+        job_dir=job_dir,
     )
 
 
@@ -579,6 +585,7 @@ async def run_harbor_chat_eval_for_persona(
         trial_dir=environment.trial_paths.trial_dir,
     )
     persona_path = str(getattr(persona, "persona_path", "") or "") or None
+    trial_dir = environment.trial_paths.trial_dir
     result = await run_harbor_chat_eval(
         session,
         eval_persona,
@@ -589,6 +596,7 @@ async def run_harbor_chat_eval_for_persona(
         task_path=task_path,
         persona_yaml_path=persona_path,
         repo_root=repo_root,
+        job_dir=trial_dir.parent,
     )
     if on_event is not None:
         on_event({"type": "phase", "phase": "harbor_collecting_artifacts"})

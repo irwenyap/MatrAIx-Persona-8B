@@ -11,6 +11,7 @@ import pytest
 import playground.harbor.chat_eval as chat_eval_module
 from playground.harbor.chat_eval import (
     ChatbotTaskConfig,
+    _normalize_turn_view,
     harbor_chat_config_from_env,
     harbor_output_artifacts_from_result,
     run_harbor_chat_eval_for_persona,
@@ -144,6 +145,33 @@ def test_parse_json_stdout_skips_shell_profile_noise():
     assert parsed["reply"] == "hi"
 
 
+def test_normalize_turn_view_accepts_scalar_turn_counter():
+    view = _normalize_turn_view(
+        {"sessionId": "sess-1", "reply": "Your order is in transit.", "turn": 1},
+        "Where is order #4521?",
+        ChatbotTaskConfig(),
+    )
+
+    assert view == {
+        "assistantMessage": "Your order is in transit.",
+        "userMessage": "Where is order #4521?",
+        "structuredExposure": [],
+    }
+
+
+def test_normalize_turn_view_prefers_structured_turn_reply():
+    view = _normalize_turn_view(
+        {
+            "reply": "top-level fallback",
+            "turn": {"index": 1, "assistantReply": "structured reply"},
+        },
+        "Hello",
+        ChatbotTaskConfig(),
+    )
+
+    assert view["assistantMessage"] == "structured reply"
+
+
 def test_harbor_chat_config_from_env_defaults_to_unlimited_turns(tmp_path, monkeypatch):
     input_dir = (
         tmp_path
@@ -224,8 +252,18 @@ async def test_run_harbor_chat_eval_for_persona_writes_output_artifacts(
         task_path=None,
         persona_yaml_path=None,
         repo_root=None,
+        job_dir=None,
     ):
-        del persona, sut_description, created_at, on_event, task_path, persona_yaml_path, repo_root
+        del (
+            persona,
+            sut_description,
+            created_at,
+            on_event,
+            task_path,
+            persona_yaml_path,
+            repo_root,
+            job_dir,
+        )
         session._session_id = "sess-1"
         return PlaygroundResult(
             config=config,

@@ -91,6 +91,9 @@ MANIFEST_REFERENCE_SOURCE_IDS = [
     "scope_persona_salesforce",
     "self_determination_theory",
     "world_values_survey_wave7",
+    "wvs_wave7_philippines",
+    "psa_census_puf",
+    "ndhs_ph_2022",
 ]
 
 

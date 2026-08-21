@@ -928,12 +928,12 @@ export default function Home() {
                     className="bg-muted px-1 py-0.5 cursor-default hover:bg-ring/20 hover:text-foreground transition-colors"
                     onClick={() => {
                       navigator.clipboard.writeText(
-                        "harbor run -c configs/jobs/<file>.yaml"
+                        "matraix run -c configs/jobs/<file>.yaml"
                       );
                       toast("Copied to clipboard");
                     }}
                   >
-                    harbor run -c configs/jobs/&lt;file&gt;.yaml
+                    matraix run -c configs/jobs/&lt;file&gt;.yaml
                   </code>
                 </EmptyDescription>
               </EmptyHeader>

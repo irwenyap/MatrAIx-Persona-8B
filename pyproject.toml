@@ -33,6 +33,7 @@ dependencies = [
 harbor = "harbor.cli.main:app"
 hr = "harbor.cli.main:app"
 hb = "harbor.cli.main:app"
+matraix = "matraix.cli:main"
 
 [project.optional-dependencies]
 amazon-modal = [

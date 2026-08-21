@@ -1,14 +1,28 @@
-# Auto-label PRs by code area
+# Auto-label PRs by module
 
-"area: persona":
+"persona":
   - changed-files:
       - any-glob-to-any-file:
           - persona/**
 
-"area: application":
+"application":
   - changed-files:
       - any-glob-to-any-file:
           - application/**
+
+"environment":
+  - changed-files:
+      - any-glob-to-any-file:
+          - environment/**
+          - src/**
+          - configs/**
+          - apps/**
+          - packages/**
+          - tests/**
+          - .github/**
+          - pyproject.toml
+          - uv.lock
+          - .gitignore
 
 "documentation":
   - changed-files:
@@ -22,17 +36,3 @@
       - any-glob-to-any-file:
           - docs/migration/**
           - migration/matraix/**
-
-"area: environment":
-  - changed-files:
-      - any-glob-to-any-file:
-          - environment/**
-          - src/**
-          - configs/**
-          - apps/**
-          - packages/**
-          - tests/**
-          - .github/**
-          - pyproject.toml
-          - uv.lock
-          - .gitignore

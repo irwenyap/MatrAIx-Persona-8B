@@ -20,7 +20,7 @@ application/tasks/example-survey_product-feedback/
 │   └── test_*.py       # optional helpers
 ├── reporting.json      # Batch reporting policy (contextRules, judge directives)
 ├── persona_strategy.json  # target cohort + Playground sampling defaults
-├── solution/           # optional — `harbor run -a oracle`
+├── solution/           # optional — `matraix run -a oracle`
 └── README.md           # optional notes (smoke commands, suggested agent)
 ```
 
@@ -46,7 +46,7 @@ root; `input/` holds materials mounted into the trial for the agent.
 
 ## Oracle
 
-`solution/solve.sh` is the optional oracle for `harbor run -a oracle`. It checks
+`solution/solve.sh` is the optional oracle for `matraix run -a oracle`. It checks
 that the task harness can produce a scorable result without a persona model.
 Use a normal persona agent run to exercise the full evaluation path.
 
@@ -230,13 +230,13 @@ Checked-in Docker recipes below are optional harness smokes (`force_docker`-styl
 
 ```bash
 # Matraix Playground hello-world (no API key)
-uv run harbor run -c configs/jobs/example-job-recipe/harbor-smoke-local.yaml
+uv run matraix run -c configs/jobs/example-job-recipe/harbor-smoke-local.yaml
 
 # Docker survey harness (not Mode auto)
-uv run harbor run -c configs/jobs/example-job-recipe/appSim-example-survey-local.yaml
+uv run matraix run -c configs/jobs/example-job-recipe/appSim-example-survey-local.yaml
 
 # Web examples
-uv run harbor run -c configs/jobs/example-job-recipe/appSim-example-web-playwright-local.yaml
+uv run matraix run -c configs/jobs/example-job-recipe/appSim-example-web-playwright-local.yaml
 ```
 
 Full list: [`docs/configuration.md`](../configuration.md#example-recipes).

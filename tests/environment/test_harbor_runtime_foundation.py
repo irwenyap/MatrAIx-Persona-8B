@@ -33,6 +33,7 @@ def test_harbor_console_scripts_are_registered() -> None:
         "harbor": "harbor.cli.main:app",
         "hr": "harbor.cli.main:app",
         "hb": "harbor.cli.main:app",
+        "matraix": "matraix.cli:main",
     }
     assert pyproject["tool"]["setuptools"]["package-dir"] == {
         "harbor": "environment/runtime/harbor",

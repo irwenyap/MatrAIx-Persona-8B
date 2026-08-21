@@ -71,7 +71,7 @@ export LLM_API_KEY="${ANTHROPIC_API_KEY}"
 ```
 
 ```bash
-uv run harbor run \
+uv run matraix run \
   -a persona-openhands-sdk \
   -m anthropic/claude-sonnet-4-6 \
   --ak persona_path=persona/datasets/matraix-persona-dev-sample/persona_0042.yaml \
@@ -81,13 +81,13 @@ uv run harbor run \
 Or the checked-in smoke recipe:
 
 ```bash
-uv run harbor run -c configs/jobs/example-job-recipe/appSim-example-web-playwright-local.yaml
+uv run matraix run -c configs/jobs/example-job-recipe/appSim-example-web-playwright-local.yaml
 ```
 
 Oracle (no LLM):
 
 ```bash
-uv run harbor run -p application/tasks/example-web-playwright_quote-choice -a oracle
+uv run matraix run -p application/tasks/example-web-playwright_quote-choice -a oracle
 ```
 
 **task.toml:** set `[environment].network_mode = "public"` and
@@ -108,13 +108,13 @@ maps to **`extend_system_message`**; the task instruction stays in the `task` fi
 model provider).
 
 ```bash
-uv run harbor run -c configs/jobs/example-job-recipe/appSim-example-web-browser-use-local.yaml
+uv run matraix run -c configs/jobs/example-job-recipe/appSim-example-web-browser-use-local.yaml
 ```
 
 Oracle:
 
 ```bash
-uv run harbor run -p application/tasks/example-web-browser-use_laptop-choice -a oracle
+uv run matraix run -p application/tasks/example-web-browser-use_laptop-choice -a oracle
 ```
 
 Runtime: `environment/task-environments/application/shared-web-browser-use/`.
@@ -132,7 +132,7 @@ connects in-process with `skip_docker`. Persona is merged into the **instruction
 **Cons:** Heavier base image than Playwright-only tasks.
 
 ```bash
-uv run harbor run -c configs/jobs/example-job-recipe/appSim-example-web-cocoa-local.yaml
+uv run matraix run -c configs/jobs/example-job-recipe/appSim-example-web-cocoa-local.yaml
 ```
 
 Runtime: `environment/task-environments/application/shared-web-cocoa/`.
@@ -154,13 +154,13 @@ desktop image.
 ```bash
 uv sync --extra computer-1
 export ANTHROPIC_API_KEY=...
-uv run harbor run -c configs/jobs/example-job-recipe/appSim-example-web-linux-cua-local.yaml
+uv run matraix run -c configs/jobs/example-job-recipe/appSim-example-web-linux-cua-local.yaml
 ```
 
 Oracle:
 
 ```bash
-uv run harbor run -p application/tasks/example-web-cua_bookshop-choice -a oracle
+uv run matraix run -p application/tasks/example-web-cua_bookshop-choice -a oracle
 ```
 
 Runtime: `environment/task-environments/application/shared-web-cua-linux/`.

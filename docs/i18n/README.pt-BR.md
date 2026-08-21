@@ -46,21 +46,28 @@ em tarefas reproduzíveis em quatro ambientes — **Survey**, **AI Chatbot**,
 **Web** e **App** (desktop e mobile nativos, incluindo macOS e iOS).
 
 Na base há um schema compartilhado de **1.290 dimensões categóricas** que
-cobrem background, psicologia, capacidade e comportamento. As personas combinam
+cobrem histórico, psicologia, capacidade e comportamento. As personas combinam
 geração sintética sensível a dependências com grounding humano baseado em
 evidências; um coreset determinístico e filtrado por qualidade de **um milhão de
 personas** é publicado para pesquisa no
 [Hugging Face](https://huggingface.co/datasets/MatrAIx2026/MatrAIx_Persona_1M_Public_Release).
-Telemetria compartilhada, verificação pertencente à tarefa e relatórios conectam
+Telemetria compartilhada, verificação própria de cada tarefa e relatórios conectam
 respostas e trajetórias individuais a achados em nível de subgrupo e população.
 
 O nome remete a *The Matrix*: um mundo simulado útil para exploração, testes de
 estresse e geração de hipóteses — **não um substituto para evidências de pessoas
 reais**.
 
-## Novidades
+## Novidades & reconhecimento
 
-- **[2026-08-10]** Destaque como [X Trending Story](https://x.com/i/trending/2086626337561911419): *Harvard and MIT Unveil MatrAIx with 8.3 Billion Virtual Personas*. Também coberto pela mídia de tecnologia, incluindo [AI Era](https://www.36kr.com/p/3932853833759876), [Numerama](https://www.numerama.com/tech/2308727-ces-chercheurs-ont-cree-83-milliards-dhumains-virtuels-pour-tester-des-produits-a-notre-place.html), [Infobae](https://www.infobae.com/tecno/2026/08/10/asi-prueba-la-ia-un-mundo-con-8300-millones-de-personas-digitales-matraix-es-el-metaverso/), [AI타임스](https://www.aitimes.com/news/articleView.html?idxno=213824), [CryptoBriefing](https://cryptobriefing.com/matraix-simulation-harvard-mit-ai-personas/) e [Startup Fortune](https://startupfortune.com/harvard-and-mit-built-an-ai-model-of-83-billion-people-to-test-products-on/), entre outros.
+- **Comentário acadêmico** — [*Can We Simulate the World?*](https://aiscientist.substack.com/p/can-we-simulate-the-world) — Mayank Kejriwal ([*AI Scientist*](https://aiscientist.substack.com/))
+- **Descoberta em pesquisa** — Destaque no [Hugging Face Papers](https://huggingface.co/papers/2608.04205) ([Daily Papers, 2026-08-10](https://huggingface.co/papers/date/2026-08-10))
+- **Mídia** — [36Kr](https://www.36kr.com/p/3932853833759876) · [Numerama](https://www.numerama.com/tech/2308727-ces-chercheurs-ont-cree-83-milliards-dhumains-virtuels-pour-tester-des-produits-a-notre-place.html) · [Infobae](https://www.infobae.com/tecno/2026/08/10/asi-prueba-la-ia-un-mundo-con-8300-millones-de-personas-digitales-matraix-es-el-metaverso/) · [AI타임스](https://www.aitimes.com/news/articleView.html?idxno=213824) · [Startup Fortune](https://startupfortune.com/harvard-and-mit-built-an-ai-model-of-83-billion-people-to-test-products-on/) · [Forbes Türkiye](https://www.forbes.com.tr/saglik/hastaya-dokunmadan-once-8-3-milyar-kez-denemek-sagligin-yeni-test-dunyasi-matraix) · [WIRED Czech](https://www.wired.cz/news-beat/harvard-a-mit-vytvorily-ai-simulaci-obsahujici-83-miliardy-virtualnich-lidi)
+- **Comentário da indústria** — Discutido pelo VP e CTO da Cisco [Gianpaolo Barozzi](https://lnkd.in/p/gE9cV2nw)
+- **Social** — Destaque como [X Trending Story](https://x.com/i/trending/2086626337561911419)
+
+## Lançamentos
+
 - **[2026-08-04]** Relatório técnico no arXiv: [MatrAIx: Simulating the World with 8.3 Billion Persona Agents](https://arxiv.org/abs/2608.04205) (`2608.04205`).
 - **[2026-08-01]** Publicado o [Persona 1M](https://huggingface.co/datasets/MatrAIx2026/MatrAIx_Persona_1M_Public_Release) no Hugging Face (~1M personas filtradas por qualidade).
 - **[2026-07-31]** Playground e biblioteca de tarefas em código aberto: [MatrAIx-Persona-8B](https://github.com/MatrAIx-ai/MatrAIx-Persona-8B).
@@ -72,6 +79,15 @@ reais**.
 - [uv](https://docs.astral.sh/uv/) e Python 3.12
 - Node.js 20+ (apenas frontends do Playground / viewer)
 - Chaves de API de modelo para exemplos de agentes de persona — veja [agents.md](../environment/agents.md)
+
+> **Usuários de Windows**: execute tudo dentro do
+> [WSL2](https://learn.microsoft.com/windows/wsl/install) — abra o PowerShell,
+> execute `wsl --install` (instala o Ubuntu), depois clone este repositório
+> **dentro do sistema de arquivos do WSL** (ex.: `~/MatrAIx`, não `/mnt/c/…`,
+> que é muito mais lento) e ative a *WSL integration* em Docker Desktop →
+> Settings → Resources. A partir daí, todos os comandos deste README funcionam
+> exatamente como estão. PowerShell/cmd nativo não é suportado (os
+> verificadores de tarefas exigem `bash`).
 
 ## Instalação
 
@@ -85,10 +101,10 @@ uv pip install -e packages/harbor-langsmith
 uv pip install -e packages/rewardkit
 ```
 
-Todos os comandos do Matraix Playground rodam como **`uv run harbor …`**.
+Execute jobs e tarefas com **`uv run matraix run …`**: ele configura o ambiente de lançamento completo e delega ao runtime Harbor. As utilidades do runtime (ex.: `harbor view`, `harbor upload`) continuam em **`uv run harbor …`**.
 
 Defina a chave de API do modelo correspondente ao seu provedor antes de executar
-tarefas via GUI ou CLI (o smoke test não precisa de chave):
+tarefas via GUI ou CLI (o teste de fumaça não precisa de chave):
 
 ```bash
 export ANTHROPIC_API_KEY="sk-ant-..."   # modelos anthropic/claude-*
@@ -100,7 +116,7 @@ O Playground também pode carregar chaves de `application/playground/.env.local`
 
 ### Importar Persona 1M (recomendado)
 
-O `matraix-persona-dev-sample` do repo (~200) é só para smoke. Para cohorts reais e amostragem no Playground, importe o 1M público:
+O `matraix-persona-dev-sample` do repo (~200) destina-se apenas a testes de fumaça. Para coortes reais e amostragem no Playground, importe o 1M público:
 
 ```bash
 huggingface-cli download MatrAIx2026/MatrAIx_Persona_1M_Public_Release \
@@ -113,15 +129,17 @@ Detalhes: [Handbook § Persona 1M](../README.md#3-persona-1m-recommended).
 
 ## Início rápido
 
-### Smoke test
+### Testes de fumaça (smoke tests)
 
-Nenhuma chave de API necessária. **Requer Docker** (o smoke job usa
-`environment.type: docker`):
+Após instalar, rode estas duas verificações (sem chave de API). Juntas elas
+confirmam o caminho padrão de Survey, Chat, Web e OS-app:
 
-```bash
-uv run harbor run -c configs/jobs/example-job-recipe/harbor-smoke-local.yaml
-```
+| Verificação | Confirma que você pode rodar | Comando |
+|-------------|------------------------------|---------|
+| **Sem Docker** | Survey e Chat | `uv run matraix smoke application/tasks/example-survey_product-feedback` |
+| **Com Docker** | Web e OS-app | `uv run matraix run -c configs/jobs/example-job-recipe/harbor-smoke-local.yaml` |
 
+A primeira costuma terminar em segundos com `Smoke: ok`. A segunda constrói uma imagem local na primeira execução (alguns minutos) e grava em `jobs/harbor-smoke-local/`. Passos: [quickstart §3](../quickstart.md#3-smoke-tests-two-lanes).
 ### Execuções de tarefa via GUI
 
 O Playground escolhe tarefas, amostra personas e lança os mesmos jobs do
@@ -136,14 +154,14 @@ VENV=.venv bash application/playground/backend/run_dev.sh
 cd application/playground/frontend && npm ci && npm run dev
 ```
 
-Abra **http://localhost:5173** → Playground → escolha uma cohort de personas →
+Abra **http://localhost:5173** → Playground → escolha uma coorte de personas →
 escolha tarefas Survey / Chat / Web / OS app → **Lock pipeline** → **Run eval**.
 Detalhes: [Playground §10](../quickstart.md#10-playground--play-tasks-visually).
 
 ### Desenvolvimento / execução via CLI
 
 **Desenvolver** — copie uma tarefa de referência em `application/tasks/`, edite
-`task.toml` / `instruction.md` / `input/` / verifier e registre-a no Playground
+`task.toml` / `instruction.md` / `input/` / o verificador (verifier) e registre-a no Playground
 ([task-guide.md](../application/task-guide.md)):
 
 ```bash
@@ -168,7 +186,7 @@ uv run python application/scripts/generate_application_job.py \
   --model-name anthropic/claude-sonnet-4-6
 
 # Use as linhas de export + o caminho do recipe impressos pelo script, p.ex.:
-uv run harbor run -c configs/jobs/application-task-job-recipe/example-survey-product-feedback-auto-n1.yaml
+uv run matraix run -c configs/jobs/application-task-job-recipe/example-survey-product-feedback-auto-n1.yaml
 ```
 
 Lote (`--sample-size N`), filtros e exemplos chat / web / os-app:
@@ -222,7 +240,7 @@ Datasets grandes gerados ficam fora do git (veja o release no Hugging Face acima
 [![Google Form](https://img.shields.io/badge/Google%20Form-join%20MatrAIx-4285F4?style=for-the-badge&logo=googleforms&logoColor=white)](https://forms.gle/hwEHng5HGWRqcJue9)
 
 1. Entre no Discord — nickname **`Full Name - Affiliation`**. Preencha o Google Form
-   (background, interesses, autoria / agradecimentos em papers).
+   (histórico, interesses, autoria / agradecimentos em papers).
 2. Diga oi! Gostamos de conectar pessoas com interesses ou experiências em comum!
 3. Participe da comunidade de pesquisa MatrAIx para colaboração ou contribuição!
 

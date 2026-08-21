@@ -43,7 +43,7 @@ Three ways to launch the same Matraix Playground contract:
 
 | Surface | When to use | Entry |
 |---------|-------------|-------|
-| **Matraix Playground CLI** | Scripts, CI, debugging | `uv run harbor run -c configs/jobs/…` |
+| **Matraix Playground CLI** | Scripts, CI, debugging | `uv run matraix run -c configs/jobs/…` |
 | **Playground** | Interactive task play, persona sampling | [quickstart.md §10](../quickstart.md#10-playground-play-tasks-visually) |
 | **Playground API** | Automation, external tools | `POST /api/harbor/jobs` — [rest-api.md](../application/playground-api.md) |
 
@@ -106,7 +106,8 @@ Python import names stay stable: `harbor.*`, `matraix.agents.*`, `playground.*`.
 
 ### Task exports (local + remote worker)
 
-Set before `harbor run`, or let `generate_application_job.py` print them:
+`matraix run` sets these automatically from the generated job files. Export
+them manually only when calling `harbor run` directly:
 
 | Variable | When |
 |----------|------|

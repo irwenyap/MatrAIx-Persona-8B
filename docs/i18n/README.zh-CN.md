@@ -2,7 +2,7 @@
   <h1>MatrAIx</h1>
   <p><strong>Simulate before reality.</strong></p>
   <p>
-    面向异构模拟用户的大规模、人格驱动基础设施，用于评估 AI 系统与交互式产品。
+    面向异构模拟用户、以人格驱动的人口级规模基础设施，用于评估 AI 系统与交互式产品。
   </p>
   <p>
     <a href="../../README.md">English</a> |
@@ -37,19 +37,26 @@
 
 ---
 
-**MatrAIx** 是一套面向异构模拟用户的大规模、人格驱动基础设施，用于评估 AI 系统与交互式产品。它不依赖「通用」或可互换的用户假设，而是将抽样得到的人格记录实例化为 LLM Agent，并在四类环境中以可复现任务驱动运行 —— **Survey（问卷）**、**AI Chatbot（对话）**、**Web**，以及 **App**（原生桌面与移动端，含 macOS 与 iOS）。
+**MatrAIx** 是一套面向异构模拟用户、以人格驱动的人口级规模基础设施，用于评估 AI 系统与交互式产品。它不依赖「通用」或可互换的用户假设，而是将抽样得到的人格记录实例化为 LLM Agent，并在四类环境中以可复现任务驱动运行 —— **Survey（问卷）**、**AI Chatbot（对话）**、**Web**，以及 **App**（原生桌面与移动端，含 macOS 与 iOS）。
 
-其基础是一套共享的 **1,290 个类别维度** 人格 Schema，覆盖背景、心理、能力与行为。人格结合依赖感知的合成生成与证据感知的人类 grounding；经确定性、质量过滤的 **百万人格** 共集（coreset）已在
+其基础是一套共享的 **1,290 个类别维度** 人格 Schema，覆盖背景、心理、能力与行为。人格结合了感知依赖关系的合成生成与基于证据的真人数据锚定（grounding）；经确定性、质量过滤的 **百万人格** 核心集（coreset）已在
 [Hugging Face](https://huggingface.co/datasets/MatrAIx2026/MatrAIx_Persona_1M_Public_Release)
-公开发布，供研究使用。共享遥测、任务自有验证与报告能力，将个体响应与轨迹连接到子群体与总体层面的发现。
+公开发布，供研究使用。共享遥测、任务自有的验证与报告机制，将个体响应与轨迹同子群体及总体人口层面的发现衔接起来。
 
 名称致敬 *The Matrix*：这是一个便于探索、压力测试与假设生成的模拟世界，**不能替代来自真实人群的证据**。
 
-## 动态
+## 动态与认可
 
-- **[2026-08-10]** 登上 [X Trending Story](https://x.com/i/trending/2086626337561911419)：*Harvard and MIT Unveil MatrAIx with 8.3 Billion Virtual Personas*。科技媒体亦有报道，包括 [新智元](https://www.36kr.com/p/3932853833759876)、[Numerama](https://www.numerama.com/tech/2308727-ces-chercheurs-ont-cree-83-milliards-dhumains-virtuels-pour-tester-des-produits-a-notre-place.html)、[Infobae](https://www.infobae.com/tecno/2026/08/10/asi-prueba-la-ia-un-mundo-con-8300-millones-de-personas-digitales-matraix-es-el-metaverso/)、[AI타임스](https://www.aitimes.com/news/articleView.html?idxno=213824)、[CryptoBriefing](https://cryptobriefing.com/matraix-simulation-harvard-mit-ai-personas/)、[Startup Fortune](https://startupfortune.com/harvard-and-mit-built-an-ai-model-of-83-billion-people-to-test-products-on/) 等。
+- **学术评论** — [*Can We Simulate the World?*](https://aiscientist.substack.com/p/can-we-simulate-the-world) — Mayank Kejriwal，[*AI Scientist*](https://aiscientist.substack.com/)
+- **研究发现** — 登上 [Hugging Face Papers](https://huggingface.co/papers/2608.04205)（[Daily Papers, 2026-08-10](https://huggingface.co/papers/date/2026-08-10)）
+- **媒体** — [36氪](https://www.36kr.com/p/3932853833759876) · [Numerama](https://www.numerama.com/tech/2308727-ces-chercheurs-ont-cree-83-milliards-dhumains-virtuels-pour-tester-des-produits-a-notre-place.html) · [Infobae](https://www.infobae.com/tecno/2026/08/10/asi-prueba-la-ia-un-mundo-con-8300-millones-de-personas-digitales-matraix-es-el-metaverso/) · [AI타임스](https://www.aitimes.com/news/articleView.html?idxno=213824) · [Startup Fortune](https://startupfortune.com/harvard-and-mit-built-an-ai-model-of-83-billion-people-to-test-products-on/) · [Forbes Türkiye](https://www.forbes.com.tr/saglik/hastaya-dokunmadan-once-8-3-milyar-kez-denemek-sagligin-yeni-test-dunyasi-matraix) · [WIRED Czech](https://www.wired.cz/news-beat/harvard-a-mit-vytvorily-ai-simulaci-obsahujici-83-miliardy-virtualnich-lidi)
+- **产业评论** — Cisco VP & CTO [Gianpaolo Barozzi](https://lnkd.in/p/gE9cV2nw) 有讨论
+- **社交** — 登上 [X Trending Story](https://x.com/i/trending/2086626337561911419)
+
+## 发布
+
 - **[2026-08-04]** 技术报告发布于 arXiv：[MatrAIx: Simulating the World with 8.3 Billion Persona Agents](https://arxiv.org/abs/2608.04205)（`2608.04205`）。
-- **[2026-08-01]** 在 Hugging Face 发布 [Persona 1M](https://huggingface.co/datasets/MatrAIx2026/MatrAIx_Persona_1M_Public_Release)（约 100 万条质量过滤人格）。
+- **[2026-08-01]** 在 Hugging Face 发布 [Persona 1M](https://huggingface.co/datasets/MatrAIx2026/MatrAIx_Persona_1M_Public_Release)（约 100 万条经质量过滤的人格）。
 - **[2026-07-31]** 开源 Playground 与任务库：[MatrAIx-Persona-8B](https://github.com/MatrAIx-ai/MatrAIx-Persona-8B)。
 - **[2026-07-29]** 立场短文：[From Personas to Simulated Users](https://matraix.ai/research/survey-from-personas-to-simulated-users.html)。
 
@@ -59,6 +66,13 @@
 - [uv](https://docs.astral.sh/uv/) 与 Python 3.12
 - Node.js 20+（仅 Playground / viewer 前端需要）
 - 人格 Agent 示例所需的模型 API Key —— 见 [agents.md](../environment/agents.md)
+
+> **Windows 用户**：请在
+> [WSL2](https://learn.microsoft.com/windows/wsl/install) 中运行全部命令——打开
+> PowerShell 执行 `wsl --install`（会安装 Ubuntu），然后把仓库 clone 到 **WSL
+> 文件系统内**（如 `~/MatrAIx`，不要放在 `/mnt/c/…`，后者慢得多），并在 Docker
+> Desktop → Settings → Resources 中开启 *WSL integration*。之后本 README 中的所有
+> 命令均可原样运行。不支持原生 PowerShell/cmd（任务验证脚本依赖 `bash`）。
 
 ## 安装
 
@@ -72,9 +86,9 @@ uv pip install -e packages/harbor-langsmith
 uv pip install -e packages/rewardkit
 ```
 
-所有 Matraix Playground 命令以 **`uv run harbor …`** 形式运行。
+作业与任务统一用 **`uv run matraix run …`** 运行——它会自动配置完整的启动环境，并委托给 Harbor 运行时执行。运行时工具（如 `harbor view`、`harbor upload`）仍使用 **`uv run harbor …`**。
 
-在 GUI 或 CLI 任务运行前，设置与你的提供商匹配的模型 API Key（smoke test 不需要）：
+在 GUI 或 CLI 任务运行前，设置与你的提供商匹配的模型 API Key（冒烟测试不需要）：
 
 ```bash
 export ANTHROPIC_API_KEY="sk-ant-..."   # anthropic/claude-* 模型
@@ -86,7 +100,7 @@ Playground 也可从 `application/playground/.env.local` 加载 Key。
 
 ### 导入 Persona 1M（推荐）
 
-仓库内 `matraix-persona-dev-sample`（约 200）仅用于冒烟。真实 cohort / Playground 采样请导入公开 1M：
+仓库内 `matraix-persona-dev-sample`（约 200）仅用于冒烟测试。真实群组（cohort）与 Playground 采样请导入公开的 1M 数据集：
 
 ```bash
 huggingface-cli download MatrAIx2026/MatrAIx_Persona_1M_Public_Release \
@@ -99,14 +113,17 @@ Playground：Dataset → **`matraix-persona-1m`**。CLI：`--dataset persona/dat
 
 ## 快速开始
 
-### Smoke test
+### 冒烟测试（smoke tests）
 
-无需 API Key。**需要 Docker**（smoke job 使用 `environment.type: docker`）：
+安装后先跑这两条检查（无需 API Key）。合在一起就覆盖默认路径下的四类任务
+（Survey、Chat、Web、OS-app）：
 
-```bash
-uv run harbor run -c configs/jobs/example-job-recipe/harbor-smoke-local.yaml
-```
+| 检查 | 确认你可以跑 | 命令 |
+|------|--------------|------|
+| **不用 Docker** | Survey、Chat | `uv run matraix smoke application/tasks/example-survey_product-feedback` |
+| **需要 Docker** | Web、OS-app | `uv run matraix run -c configs/jobs/example-job-recipe/harbor-smoke-local.yaml` |
 
+第一条通常几秒内打印 `Smoke: ok`。第二条首次会构建本地镜像（几分钟），成功后输出在 `jobs/harbor-smoke-local/`。步骤说明：[quickstart §3](../quickstart.md#3-smoke-tests-two-lanes)。
 ### GUI 任务运行
 
 Playground 可选择任务、抽样人格，并启动与 CLI auto 模式相同的 Matraix Playground job。
@@ -120,14 +137,14 @@ VENV=.venv bash application/playground/backend/run_dev.sh
 cd application/playground/frontend && npm ci && npm run dev
 ```
 
-打开 **http://localhost:5173** → Playground → 选择人格 cohort →
+打开 **http://localhost:5173** → Playground → 选择人格群组 →
 选择 Survey / Chat / Web / OS app 任务 → **Lock pipeline** → **Run eval**。
 详情：[Playground §10](../quickstart.md#10-playground--play-tasks-visually)。
 
 ### CLI 任务开发 / 运行
 
 **开发** — 复制 `application/tasks/` 下的参考任务，编辑
-`task.toml` / `instruction.md` / `input/` / verifier，再注册到 Playground
+`task.toml` / `instruction.md` / `input/` / 验证器（verifier），再注册到 Playground
 （[task-guide.md](../application/task-guide.md)）：
 
 ```bash
@@ -152,7 +169,7 @@ uv run python application/scripts/generate_application_job.py \
   --model-name anthropic/claude-sonnet-4-6
 
 # 使用脚本打印的 export 行与 recipe 路径，例如：
-uv run harbor run -c configs/jobs/application-task-job-recipe/example-survey-product-feedback-auto-n1.yaml
+uv run matraix run -c configs/jobs/application-task-job-recipe/example-survey-product-feedback-auto-n1.yaml
 ```
 
 批量（`--sample-size N`）、过滤条件，以及 chat / web / os-app 示例见：

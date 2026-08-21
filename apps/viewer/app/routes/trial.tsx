@@ -1748,7 +1748,7 @@ function ArtifactsViewer({
 }
 
 function getHarborCommand(trial: TrialResult): string {
-  const parts = ["harbor run"];
+  const parts = ["matraix run"];
 
   if (trial.source) {
     parts.push(`-d ${trial.source}`);

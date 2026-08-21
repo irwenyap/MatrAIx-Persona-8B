@@ -38,7 +38,7 @@ uv run python application/scripts/generate_application_job.py \
   --task application/tasks/example-survey_product-feedback \
   --execution-mode auto \
   --persona-ids 0042
-uv run harbor run -c configs/jobs/application-task-job-recipe/<generated>.yaml
+uv run matraix run -c configs/jobs/application-task-job-recipe/<generated>.yaml
 ```
 
 ## Related

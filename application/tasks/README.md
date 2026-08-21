@@ -3,6 +3,12 @@
 Task definitions for **application product research**. These were migrated from
 MatrAIx and organized under the MatrAIx `application/` module.
 
+> **Contribution status:** We are **not accepting new community contributions** of
+> application tasks under `application/tasks/` for now (new survey / chat / web /
+> os-app scenarios, or insight-driven A/B task pairs). Existing tasks remain
+> supported; platform, docs, and other non-task PRs are still welcome. If you are
+> unsure whether a change counts as a task contribution, open an issue first.
+
 This import contains application task folders, tests, and reference solutions.
 Runtime build contexts live under `environment/task-environments/application/`.
 Generated job recipes land under `configs/jobs/` (see [quickstart.md](../../docs/quickstart.md)).

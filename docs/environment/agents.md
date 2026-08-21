@@ -29,7 +29,7 @@ Web agent under auto (path heuristics):
 
 | Flag | Meaning | Example |
 |------|---------|---------|
-| `-a` | Persona agent (manual `harbor run` only) | `persona-browser-use` |
+| `-a` | Persona agent (manual `matraix run` only) | `persona-browser-use` |
 | `-m` | Persona LLM (simulated user) | `anthropic/claude-sonnet-4-6` |
 | `-p` | Task scenario | `application/tasks/example-survey_product-feedback` |
 | `--ak persona_path` | Persona YAML (**which profile**) | `persona/datasets/matraix-persona-dev-sample/persona_0042.yaml` |
@@ -191,7 +191,7 @@ on regenerate to swap the persona LLM.
 Manual Docker web one-liner (when you already know the agent):
 
 ```bash
-uv run harbor run \
+uv run matraix run \
   -a persona-browser-use \
   -m anthropic/claude-sonnet-4-6 \
   --ak persona_path=persona/datasets/matraix-persona-dev-sample/persona_0042.yaml \
@@ -201,7 +201,7 @@ uv run harbor run \
 Force Docker CLI harness for survey/chat (optional; not Mode auto):
 
 ```bash
-uv run harbor run \
+uv run matraix run \
   -a persona-claude-code \
   -m anthropic/claude-sonnet-4-6 \
   --ak persona_path=persona/datasets/matraix-persona-dev-sample/persona_0042.yaml \

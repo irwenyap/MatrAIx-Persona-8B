@@ -55,6 +55,33 @@ def _isna(v):
         return False
 
 
+def _lookup_keys(raw):
+    """Candidate map keys for a raw source value, most literal first.
+
+    pandas widens any integer column containing a missing value to float, so a
+    survey code of 2 arrives as 2.0 and stringifies to "2.0" — which silently
+    misses a map keyed on "2". That is a data-loss bug, not a crosswalk typo:
+    it hits exactly the columns that have non-response.
+
+    The literal form is still tried first so maps that were written against
+    float-formatted values (gss.py keys its child counts "0.0", "1.0", …) keep
+    working unchanged.
+    """
+    literal = str(raw).strip().lower()
+    keys = [literal]
+    if isinstance(raw, bool):
+        return keys
+    try:
+        as_float = float(raw)
+    except (TypeError, ValueError):
+        return keys
+    if as_float == int(as_float):
+        collapsed = str(int(as_float))
+        if collapsed != literal:
+            keys.append(collapsed)
+    return keys
+
+
 def apply_crosswalk(row, crosswalk, allowed):
     """Map one source ``row`` (any object with ``.get``) via ``crosswalk``.
 
@@ -77,8 +104,11 @@ def apply_crosswalk(row, crosswalk, allowed):
             if _isna(raw):
                 continue
             mapping = rule["map"]
-            key = str(raw).strip().lower()
-            target = mapping(key) if callable(mapping) else mapping.get(key, _MISS)
+            target = _MISS
+            for key in _lookup_keys(raw):
+                target = mapping(key) if callable(mapping) else mapping.get(key, _MISS)
+                if target is not _MISS:
+                    break
             if target is _MISS:
                 unmapped[dim_id] = raw
                 continue
@@ -130,6 +160,31 @@ def _selftest():
     # a source value with no map entry is recorded as unmapped, left null
     _, _, um = apply_crosswalk({"sex": "genderqueer"}, crosswalk, allowed)
     assert um == {"gender_identity": "genderqueer"}, um
+
+    # pandas widens an int column to float as soon as it holds one missing
+    # value, so a survey code of 2 arrives as 2.0. That must still hit a map
+    # keyed on "2" — otherwise every column with non-response silently drops.
+    codes = {
+        "gender_identity": {
+            "src": "sex",
+            "map": {"1": "Man", "2": "Woman"},
+            "prov": "observed",
+        }
+    }
+    for raw in (2, 2.0, "2", "2.0"):
+        obs, _, um = apply_crosswalk({"sex": raw}, codes, allowed)
+        assert obs.get("gender_identity") == "Woman", (raw, obs, um)
+    # maps written against float-formatted values keep working unchanged
+    floats = {
+        "gender_identity": {
+            "src": "sex",
+            "map": {"2.0": "Woman"},
+            "prov": "observed",
+        }
+    }
+    assert apply_crosswalk({"sex": 2.0}, floats, allowed)[0]["gender_identity"] == "Woman"
+    # a genuine non-integer must not be collapsed onto an integer key
+    assert apply_crosswalk({"sex": 2.5}, codes, allowed)[2] == {"gender_identity": 2.5}
 
     # off-schema mapped value must raise
     bad = {

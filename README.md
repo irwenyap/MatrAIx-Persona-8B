@@ -58,9 +58,16 @@ The name nods to *The Matrix*: a simulated world useful for exploration, stress
 testing, and hypothesis generation, **not a replacement for evidence from real
 people**.
 
-## News
+## News & Recognition
 
-- **[2026-08-10]** Featured as an [X Trending Story](https://x.com/i/trending/2086626337561911419): *Harvard and MIT Unveil MatrAIx with 8.3 Billion Virtual Personas*. Also covered across tech media, including [AI Era](https://www.36kr.com/p/3932853833759876), [Numerama](https://www.numerama.com/tech/2308727-ces-chercheurs-ont-cree-83-milliards-dhumains-virtuels-pour-tester-des-produits-a-notre-place.html), [Infobae](https://www.infobae.com/tecno/2026/08/10/asi-prueba-la-ia-un-mundo-con-8300-millones-de-personas-digitales-matraix-es-el-metaverso/), [AI타임스](https://www.aitimes.com/news/articleView.html?idxno=213824), [CryptoBriefing](https://cryptobriefing.com/matraix-simulation-harvard-mit-ai-personas/), and [Startup Fortune](https://startupfortune.com/harvard-and-mit-built-an-ai-model-of-83-billion-people-to-test-products-on/), among others.
+- **Academic commentary** — [*Can We Simulate the World?*](https://aiscientist.substack.com/p/can-we-simulate-the-world) — Mayank Kejriwal, [*AI Scientist*](https://aiscientist.substack.com/)
+- **Research discovery** — Featured on [Hugging Face Papers](https://huggingface.co/papers/2608.04205) ([Daily Papers, 2026-08-10](https://huggingface.co/papers/date/2026-08-10))
+- **Media** — [36Kr](https://www.36kr.com/p/3932853833759876) · [Numerama](https://www.numerama.com/tech/2308727-ces-chercheurs-ont-cree-83-milliards-dhumains-virtuels-pour-tester-des-produits-a-notre-place.html) · [Infobae](https://www.infobae.com/tecno/2026/08/10/asi-prueba-la-ia-un-mundo-con-8300-millones-de-personas-digitales-matraix-es-el-metaverso/) · [AI타임스](https://www.aitimes.com/news/articleView.html?idxno=213824) · [Startup Fortune](https://startupfortune.com/harvard-and-mit-built-an-ai-model-of-83-billion-people-to-test-products-on/) · [Forbes Türkiye](https://www.forbes.com.tr/saglik/hastaya-dokunmadan-once-8-3-milyar-kez-denemek-sagligin-yeni-test-dunyasi-matraix) · [WIRED Czech](https://www.wired.cz/news-beat/harvard-a-mit-vytvorily-ai-simulaci-obsahujici-83-miliardy-virtualnich-lidi)
+- **Industry commentary** — Discussed by Cisco VP & CTO [Gianpaolo Barozzi](https://lnkd.in/p/gE9cV2nw)
+- **Social** — Featured as an [X Trending Story](https://x.com/i/trending/2086626337561911419)
+
+## Releases
+
 - **[2026-08-04]** Technical report on arXiv: [MatrAIx: Simulating the World with 8.3 Billion Persona Agents](https://arxiv.org/abs/2608.04205) (`2608.04205`).
 - **[2026-08-01]** Released [Persona 1M](https://huggingface.co/datasets/MatrAIx2026/MatrAIx_Persona_1M_Public_Release) on Hugging Face (~1M quality-filtered personas).
 - **[2026-07-31]** Open-sourced the Playground and task library: [MatrAIx-Persona-8B](https://github.com/MatrAIx-ai/MatrAIx-Persona-8B).
@@ -68,10 +75,18 @@ people**.
 
 ## Requirements
 
-- [Docker](https://docs.docker.com/get-docker/)
+- [Docker](https://docs.docker.com/get-docker/) — needed for Web and OS-app tasks
 - [uv](https://docs.astral.sh/uv/) and Python 3.12
 - Node.js 20+ (Playground / viewer frontends only)
-- Model API keys for persona-agent examples — see [agents.md](docs/environment/agents.md)
+- Model API keys for real persona runs — see [agents.md](docs/environment/agents.md)
+  (the install checks below do not need a key)
+> **Windows users**: run everything inside
+> [WSL2](https://learn.microsoft.com/windows/wsl/install) — open PowerShell,
+> run `wsl --install` (installs Ubuntu), then clone this repo **inside the WSL
+> filesystem** (e.g. `~/MatrAIx`, not `/mnt/c/…`, which is much slower) and
+> enable *WSL integration* in Docker Desktop → Settings → Resources. Every
+> command in this README then works exactly as written. Native
+> PowerShell/cmd is not supported (the task verifiers require `bash`).
 
 ## Installation
 
@@ -85,10 +100,13 @@ uv pip install -e packages/harbor-langsmith
 uv pip install -e packages/rewardkit
 ```
 
-All Matraix Playground commands run as **`uv run harbor …`**.
+Run jobs with **`uv run matraix run …`**. After install, use the
+[smoke tests](#smoke-tests) below to confirm Survey, Chat, Web, and OS-app are
+ready (no API key). Summarize a finished job with
+**`uv run matraix results <job>`**. Advanced runtime tools stay under
+`uv run harbor …`.
 
-Set the model API key matching your provider before GUI or CLI task runs
-(smoke test does not need one):
+Set a model API key before real GUI or CLI runs (smoke checks do not need one):
 
 ```bash
 export ANTHROPIC_API_KEY="sk-ant-..."   # anthropic/claude-* models
@@ -114,14 +132,19 @@ Details: [Handbook § Persona 1M](docs/README.md#3-persona-1m-recommended).
 
 ## Quick start
 
-### Smoke test
+### Smoke tests
 
-No API key required. **Requires Docker** (the smoke job uses
-`environment.type: docker`):
+Two quick checks after install — no API key. Together they cover the default
+path for all four task types (Survey, Chat, Web, OS-app):
 
-```bash
-uv run harbor run -c configs/jobs/example-job-recipe/harbor-smoke-local.yaml
-```
+| Check | Confirms you can run | Command |
+|-------|----------------------|---------|
+| **Without Docker** | Survey and Chat | `uv run matraix smoke application/tasks/example-survey_product-feedback` |
+| **With Docker** | Web and OS-app | `uv run matraix run -c configs/jobs/example-job-recipe/harbor-smoke-local.yaml` |
+
+The first finishes in seconds and should print `Smoke: ok`. The second builds a
+small local image on first run (a few minutes), then writes under
+`jobs/harbor-smoke-local/`. Step-by-step: [quickstart §3](docs/quickstart.md#3-smoke-tests-two-lanes).
 
 ### GUI task runs
 
@@ -168,7 +191,7 @@ uv run python application/scripts/generate_application_job.py \
   --model-name anthropic/claude-sonnet-4-6
 
 # Use the export lines + recipe path the script prints, e.g.:
-uv run harbor run -c configs/jobs/application-task-job-recipe/example-survey-product-feedback-auto-n1.yaml
+uv run matraix run -c configs/jobs/application-task-job-recipe/example-survey-product-feedback-auto-n1.yaml
 ```
 
 Batch (`--sample-size N`), filters, and chat / web / os-app examples:

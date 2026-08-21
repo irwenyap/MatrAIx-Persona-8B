@@ -42,6 +42,7 @@ from matraix.application_job import (
     build_application_job_config,
     resolve_job_environment,
 )
+from matraix.launch_env import build_launch_env
 
 DEFAULT_AGENT_BY_TYPE: dict[str, str] = {
     # Keys here stay canonical; ``normalize_metadata_type()`` handles legacy
@@ -1300,21 +1301,9 @@ class HarborJobService:
         chat_max_turns: int | None,
         for_remote: bool = False,
     ) -> dict[str, str]:
-        env = {} if for_remote else dict(os.environ)
-        existing = env.get("PYTHONPATH", "")
-        path_entries = [entry for entry in existing.split(":") if entry]
-        required_paths = [
-            str(self.repo_root),
-            str(self.repo_root / "src"),
-            str(self.repo_root / "environment" / "runtime"),
-            str(self.repo_root / "environment" / "agents"),
-            str(self.repo_root / "packages" / "playground" / "src"),
-            str(self.repo_root / "application" / "playground"),
-        ]
-        for path in reversed(required_paths):
-            if path not in path_entries:
-                path_entries.insert(0, path)
-        env["PYTHONPATH"] = ":".join(path_entries)
+        # PYTHONPATH entries are shared with the `matraix run` CLI so GUI and
+        # CLI launches cannot drift apart (issue #78).
+        env = build_launch_env(self.repo_root, base_env={} if for_remote else None)
         if survey_task_path:
             env["MATRIX_SURVEY_TASK_PATH"] = survey_task_path
         if trial_profile == "user_sim_chat":
