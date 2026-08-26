@@ -58,6 +58,9 @@ PORT="${PORT:-8765}"
 HOST="${HOST:-127.0.0.1}"
 APP="backend.api.app:app"
 
+# Avoid tokenizer thread storms / segfaults when loading sentence-transformers.
+export TOKENIZERS_PARALLELISM="${TOKENIZERS_PARALLELISM:-false}"
+
 # Make `backend`, `playground`, `harbor`, and `matraix` importable.
 export PYTHONPATH="${REPO_ROOT}:${MATRAIX_SRC_DIR}:${REPO_ROOT}/environment/runtime:${MATRIX_AGENTS_DIR}:${PLAYGROUND_CORE_DIR}:${EVAL_DIR}${PYTHONPATH:+:${PYTHONPATH}}"
 export MATRIX_HARBOR_COMMAND="${MATRIX_HARBOR_COMMAND:-uv run python -m harbor.cli.main run}"

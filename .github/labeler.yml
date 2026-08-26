@@ -36,3 +36,10 @@
       - any-glob-to-any-file:
           - docs/migration/**
           - migration/matraix/**
+
+"i18n":
+  - changed-files:
+      - any-glob-to-any-file:
+          - application/playground/frontend/src/i18n/**
+          - persona/schema/labels/**
+          - docs/i18n/**

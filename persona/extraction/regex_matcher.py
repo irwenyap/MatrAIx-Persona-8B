@@ -66,11 +66,39 @@ class RegexHit:
     end: int
 
 
-def _surface_forms(dim: Dimension, value: str) -> list[str]:
+def _surface_forms(
+    dim: Dimension,
+    value: str,
+    extra_aliases: dict[tuple[str, str], tuple[str, ...]] | None = None,
+) -> list[str]:
     """All strings that, if found in the prompt, imply this value."""
     forms = [value]
     forms.extend(_VALUE_ALIASES.get((dim.id, value), ()))
-    return forms
+    if extra_aliases:
+        forms.extend(extra_aliases.get((dim.id, value), ()))
+    # Preserve order, drop empties / dupes (casefold for Latin; exact for CJK).
+    out: list[str] = []
+    seen: set[str] = set()
+    for form in forms:
+        text = (form or "").strip()
+        if not text:
+            continue
+        key = text.casefold() if text.isascii() else text
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(text)
+    return out
+
+
+def _contains_cjk(text: str) -> bool:
+    """True when ``text`` includes CJK / Hangul (word-boundary ``\\b`` is unreliable)."""
+    return any(
+        ("\u3040" <= ch <= "\u30ff")  # Hiragana / Katakana
+        or ("\u3400" <= ch <= "\u9fff")  # CJK ideographs
+        or ("\uac00" <= ch <= "\ud7af")  # Hangul syllables
+        for ch in text
+    )
 
 
 def _compile(form: str) -> re.Pattern[str]:
@@ -79,12 +107,18 @@ def _compile(form: str) -> re.Pattern[str]:
     ``\\b`` on both sides where the edge char is a word char; multi-word forms
     match with flexible internal whitespace. Non-word edges (e.g. ``"85+"``)
     fall back to a plain escaped match so the ``+`` isn't lost to ``\\b``.
+
+    CJK / Hangul forms use substring match — Unicode word boundaries do not
+    separate Japanese/Chinese/Korean tokens the way Latin spaces do.
     """
-    escaped = re.escape(form.strip())
+    text = form.strip()
+    escaped = re.escape(text)
     # Allow any run of whitespace between tokens of a multi-word value.
     escaped = re.sub(r"\\ ", r"\\s+", escaped)
-    left = r"\b" if form[:1].isalnum() else ""
-    right = r"\b" if form[-1:].isalnum() else ""
+    if _contains_cjk(text):
+        return re.compile(escaped, re.IGNORECASE)
+    left = r"\b" if text[:1].isalnum() else ""
+    right = r"\b" if text[-1:].isalnum() else ""
     return re.compile(left + escaped + right, re.IGNORECASE)
 
 
@@ -102,8 +136,13 @@ def _topic_of(dim: Dimension) -> str:
 
 
 def _topic_pattern(topic: str) -> re.Pattern[str] | None:
-    """Whole-word pattern for a topic, or None if it reduces to stopwords."""
-    words = [w for w in re.split(r"\W+", topic) if w and w.lower() not in _TOPIC_STOPWORDS]
+    """Whole-word (or CJK substring) pattern for a topic, or None if empty."""
+    text = (topic or "").strip()
+    if not text:
+        return None
+    if _contains_cjk(text):
+        return _compile(text)
+    words = [w for w in re.split(r"\W+", text) if w and w.lower() not in _TOPIC_STOPWORDS]
     if not words:
         return None
     # Match the topic phrase with flexible whitespace between its content words.
@@ -114,26 +153,39 @@ def _topic_pattern(topic: str) -> re.Pattern[str] | None:
 class RegexMatcher:
     """Compile-once, match-many regex retriever over a dimension schema."""
 
-    def __init__(self, schema: DimensionSchema) -> None:
+    def __init__(
+        self,
+        schema: DimensionSchema,
+        *,
+        extra_aliases: dict[tuple[str, str], tuple[str, ...]] | None = None,
+        extra_topics: dict[str, tuple[str, ...]] | None = None,
+    ) -> None:
         self.schema = schema
         # Dimensions that share a value tuple with many others have generic
         # scale values; gate those on their topic word appearing in the prompt.
         valueset_counts = Counter(dim.values for dim in schema)
         # dimension_id -> list of (value, compiled_pattern)
         self._patterns: dict[str, list[tuple[str, re.Pattern[str]]]] = {}
-        # dimension_id -> compiled topic pattern (only for gated dimensions)
-        self._topic_gate: dict[str, re.Pattern[str]] = {}
+        # dimension_id -> topic patterns (English + optional locale topics)
+        self._topic_gates: dict[str, list[re.Pattern[str]]] = {}
         for dim in schema:
             entries: list[tuple[str, re.Pattern[str]]] = []
             for value in dim.values:
-                for form in _surface_forms(dim, value):
+                for form in _surface_forms(dim, value, extra_aliases):
                     entries.append((value, _compile(form)))
             if entries:
                 self._patterns[dim.id] = entries
             if valueset_counts[dim.values] >= _SHARED_VALUESET_THRESHOLD:
+                gates: list[re.Pattern[str]] = []
                 gate = _topic_pattern(_topic_of(dim))
                 if gate is not None:
-                    self._topic_gate[dim.id] = gate
+                    gates.append(gate)
+                for topic in (extra_topics or {}).get(dim.id, ()):
+                    extra_gate = _topic_pattern(topic)
+                    if extra_gate is not None:
+                        gates.append(extra_gate)
+                if gates:
+                    self._topic_gates[dim.id] = gates
 
     def match(self, prompt: str) -> list[RegexHit]:
         """Return every value-level hit across all dimensions.
@@ -146,8 +198,8 @@ class RegexMatcher:
         for dim_id, entries in self._patterns.items():
             # Generic-value dimensions only fire if their topic is present, so a
             # bare "expert" doesn't light up all 143 familiarity dimensions.
-            gate = self._topic_gate.get(dim_id)
-            if gate is not None and not gate.search(prompt):
+            gates = self._topic_gates.get(dim_id)
+            if gates is not None and not any(gate.search(prompt) for gate in gates):
                 continue
             for value, pattern in entries:
                 key = (dim_id, value)
@@ -177,10 +229,12 @@ class RegexMatcher:
         asked to rule on it. Returns ``(dimension_id, position)`` pairs.
         """
         out: list[tuple[str, int]] = []
-        for dim_id, gate in self._topic_gate.items():
-            m = gate.search(prompt)
-            if m:
-                out.append((dim_id, m.start()))
+        for dim_id, gates in self._topic_gates.items():
+            for gate in gates:
+                m = gate.search(prompt)
+                if m:
+                    out.append((dim_id, m.start()))
+                    break
         return out
 
     def candidate_dimension_ids(

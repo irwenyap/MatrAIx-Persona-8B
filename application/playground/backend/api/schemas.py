@@ -835,11 +835,34 @@ class PersonaPoolCatalogResponse(BaseModel):
     dimensionCategories: Dict[str, Any] = Field(default_factory=dict)
 
 
+class PersonaDimensionLabelsResponse(BaseModel):
+    """Display-label overlay for persona dimensions in one UI locale.
+
+    ``dimensions`` maps canonical English dimension ids to translated
+    ``label`` / ``values`` entries; ``taxonomy`` maps Layer-1 / Layer-2
+    group ids (Background, Demographics, …) to display titles. Anything
+    missing falls back to English.
+    """
+
+    model_config = ConfigDict(extra="allow")
+
+    locale: str
+    available: bool = False
+    reviewStatus: Optional[str] = None
+    dimensions: Dict[str, Any] = Field(default_factory=dict)
+    taxonomy: Dict[str, str] = Field(default_factory=dict)
+
+
 class PersonaMatchAttributesRequest(BaseModel):
     """Free-text / NL prompt → catalog attribute suggestions (Treiver)."""
 
     prompt: str = ""
-    useLlm: bool = False
+    # keyword | keyword_and_embed | keyword_and_embed_and_llm (regex ∪ embed ∪ LLM judge).
+    searchMode: Literal["keyword", "keyword_and_embed", "keyword_and_embed_and_llm"] = "keyword"
+    # Load dimensions.labels.<locale>.json aliases so regex can hit localized forms.
+    locale: Optional[str] = None
+    # Cockpit persona model (LiteLLM-style id); used for keyword_and_embed_and_llm (deep match).
+    personaModel: Optional[str] = None
 
 
 class PersonaMatchedAttribute(BaseModel):
@@ -851,6 +874,8 @@ class PersonaMatchedAttribute(BaseModel):
     evidence: Optional[str] = None
     method: str = "regex"
     confidence: float = 0.0
+    # Localized display for ``value`` when a label pack exists; storage value stays English.
+    valueLabel: Optional[str] = None
 
 
 class PersonaMatchAttributesResponse(BaseModel):
@@ -859,6 +884,12 @@ class PersonaMatchAttributesResponse(BaseModel):
     prompt: str = ""
     attributes: List[PersonaMatchedAttribute] = Field(default_factory=list)
     usedLlm: bool = False
+    searchMode: str = "keyword"
+    judgeModel: Optional[str] = None
+    candidateCount: int = 0
+    suggestedDimensionIds: List[str] = Field(default_factory=list)
+    # True when sentence-transformers was unavailable and keyword overlap was used.
+    embedFallback: bool = False
 
 
 class PersonaDatasetOption(BaseModel):

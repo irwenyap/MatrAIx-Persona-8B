@@ -963,6 +963,8 @@ export interface PersonaMatchedAttribute {
   dimensionId: string;
   label: string;
   value: string;
+  /** Localized display string for ``value`` when available. */
+  valueLabel?: string | null;
   evidence?: string | null;
   method?: string;
   confidence?: number;
@@ -972,6 +974,27 @@ export interface PersonaMatchAttributesResponse {
   prompt: string;
   attributes: PersonaMatchedAttribute[];
   usedLlm: boolean;
+  searchMode?: "keyword" | "keyword_and_embed" | "keyword_and_embed_and_llm";
+  judgeModel?: string | null;
+  candidateCount?: number;
+  suggestedDimensionIds?: string[];
+  embedFallback?: boolean;
+}
+
+/** Translated display strings for one dimension (missing keys fall back to English). */
+export interface PersonaDimensionLabelEntry {
+  label?: string;
+  values?: Record<string, string>;
+}
+
+/** Display-label overlay for persona dimensions in one UI locale. */
+export interface PersonaDimensionLabels {
+  locale: string;
+  available: boolean;
+  reviewStatus?: string | null;
+  dimensions: Record<string, PersonaDimensionLabelEntry>;
+  /** Layer-1 / Layer-2 filter accordion titles (Background, Demographics, …). */
+  taxonomy?: Record<string, string>;
 }
 
 export interface PersonaDatasetOption {

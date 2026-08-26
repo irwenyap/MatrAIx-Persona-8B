@@ -153,9 +153,13 @@ export function PersonaStoreContent({
   autoFocusSearch = false,
   onOpenInPlayground,
 }: PersonaStoreContentProps) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [pool, setPool] = useState(PERSONA_BENCH_POOL);
   const [query, setQuery] = useState("");
+  const [searchTier, setSearchTier] = useState<"keyword" | "keyword_and_embed">(
+    "keyword",
+  );
+  const [deepMatch, setDeepMatch] = useState(false);
   const [filters, setFilters] = useState<PersonaDimensionFilters>(
     emptyPersonaDimensionFilters(),
   );
@@ -176,6 +180,12 @@ export function PersonaStoreContent({
   const previewGenRef = useRef(0);
   const deferredQuery = useDeferredValue(query.trim());
   const matchEnabled = enabled && shouldMatchAttributes(query.trim());
+  const searchMode =
+    searchTier === "keyword"
+      ? "keyword"
+      : deepMatch
+        ? "keyword_and_embed_and_llm"
+        : "keyword_and_embed";
   const is1m = isProduction1mRoot(pool);
   const hitQueryReady = deferredQuery.length >= MIN_HIT_QUERY_LENGTH;
   /** 1M uses a background-filled 10k preview; search/filters run on that full window. */
@@ -274,8 +284,17 @@ export function PersonaStoreContent({
   });
 
   const matchQuery = useQuery({
-    queryKey: ["persona-pool-match-attributes", query.trim()],
-    queryFn: () => api.matchPersonaAttributes(query.trim()),
+    queryKey: [
+      "persona-pool-match-attributes",
+      query.trim(),
+      searchMode,
+      locale,
+    ],
+    queryFn: () =>
+      api.matchPersonaAttributes(query.trim(), {
+        searchMode,
+        locale,
+      }),
     enabled: matchEnabled,
     staleTime: 60_000,
     refetchOnWindowFocus: false,
@@ -283,7 +302,11 @@ export function PersonaStoreContent({
 
   const suggestions: PersonaMatchedAttribute[] =
     matchQuery.data?.attributes ?? [];
-
+  const resultMode = matchQuery.data?.searchMode ?? searchMode;
+  const judgeModelShort = (matchQuery.data?.judgeModel || "")
+    .split("/")
+    .filter(Boolean)
+    .pop();
   const browseQuery = useQuery({
     queryKey: [
       "persona-pool-store",
@@ -322,7 +345,7 @@ export function PersonaStoreContent({
         value: item.pool,
         label: item.label,
         meta: unavailable
-          ? "download HF release / set MATRIX_PERSONA_1M_DIR"
+          ? t("personaSetup.dataset.downloadHint")
           : item.count > 0
             ? t("catalog.personaStore.datasetPersonas", { count: item.count })
             : undefined,
@@ -602,6 +625,61 @@ export function PersonaStoreContent({
               inputRef={inputRef}
               placeholder={t("catalog.personaStore.searchPlaceholder")}
             />
+            <div className="flex shrink-0 flex-col items-stretch gap-1">
+              <div
+                role="group"
+                aria-label={t("personaSetup.filters.searchTier")}
+                className="inline-flex h-9 overflow-hidden rounded-lg border border-outline/40 bg-surface/50"
+              >
+                <button
+                  type="button"
+                  title={t("personaSetup.filters.searchKeywordHint")}
+                  onClick={() => {
+                    setSearchTier("keyword");
+                    setDeepMatch(false);
+                  }}
+                  className={`px-2.5 text-[12px] transition ${FOCUS_RING} ${
+                    searchTier === "keyword"
+                      ? "bg-primary/15 font-medium text-primary"
+                      : "text-text-variant hover:bg-surface-high"
+                  }`}
+                >
+                  {t("personaSetup.filters.searchKeyword")}
+                </button>
+                <button
+                  type="button"
+                  title={t("personaSetup.filters.searchSmartHint")}
+                  onClick={() => setSearchTier("keyword_and_embed")}
+                  className={`px-2.5 text-[12px] transition ${FOCUS_RING} ${
+                    searchTier === "keyword_and_embed"
+                      ? "bg-primary/15 font-medium text-primary"
+                      : "text-text-variant hover:bg-surface-high"
+                  }`}
+                >
+                  {t("personaSetup.filters.searchSmart")}
+                </button>
+              </div>
+              {searchTier === "keyword_and_embed" ? (
+                <label
+                  className="inline-flex cursor-pointer items-center gap-1.5 px-0.5 text-[11px] text-text-dim"
+                  title={t("personaSetup.filters.searchDeepHint")}
+                >
+                  <input
+                    type="checkbox"
+                    checked={deepMatch}
+                    onChange={(e) => setDeepMatch(e.target.checked)}
+                    className="rounded border-outline/60"
+                  />
+                  <span className="truncate">
+                    {judgeModelShort
+                      ? t("personaSetup.filters.searchDeepWithModel", {
+                          model: judgeModelShort,
+                        })
+                      : t("personaSetup.filters.searchDeep")}
+                  </span>
+                </label>
+              ) : null}
+            </div>
             <button
               type="button"
               onClick={() => setFilterModalOpen(true)}
@@ -667,10 +745,41 @@ export function PersonaStoreContent({
             ))}
           </div>
 
+          {matchEnabled && matchQuery.isFetching ? (
+            <p className="text-[12px] text-text-dim">
+              {searchMode === "keyword_and_embed_and_llm"
+                ? t("personaSetup.filters.matchingDeep", {
+                    model: judgeModelShort || "LLM",
+                  })
+                : searchMode === "keyword_and_embed"
+                  ? t("personaSetup.filters.matchingSmart")
+                  : t("personaSetup.filters.matchingKeyword")}
+            </p>
+          ) : null}
+
+          {matchQuery.isError ? (
+            <p className="rounded-lg border border-danger/40 bg-danger/10 px-3 py-2 text-[12px] text-danger">
+              {t("personaSetup.filters.matchFailed", {
+                detail:
+                  matchQuery.error instanceof Error
+                    ? matchQuery.error.message
+                    : String(matchQuery.error),
+              })}
+            </p>
+          ) : null}
+
           {suggestions.length > 0 ? (
             <div className="flex flex-wrap items-center gap-1.5">
               <span className="text-[10px] font-semibold uppercase tracking-[0.06em] text-secondary">
                 {t("catalog.personaStore.suggested")}
+                <span className="ml-1.5 font-medium normal-case tracking-normal text-text-dim">
+                  ·{" "}
+                  {resultMode === "keyword_and_embed_and_llm"
+                    ? t("personaSetup.filters.matchedDeep")
+                    : resultMode === "keyword_and_embed"
+                      ? t("personaSetup.filters.matchedSmart")
+                      : t("personaSetup.filters.matchedKeyword")}
+                </span>
               </span>
               {suggestions.map((attr) => {
                 const active = isSuggestionSelected(filters, attr);
@@ -678,6 +787,7 @@ export function PersonaStoreContent({
                   /_/g,
                   " ",
                 );
+                const valueDisplay = attr.valueLabel || attr.value;
                 return (
                   <button
                     key={suggestionKey(attr)}
@@ -702,7 +812,7 @@ export function PersonaStoreContent({
                   >
                     <span className="opacity-70">{label}</span>
                     <span className="opacity-40">·</span>
-                    <span className="truncate">{attr.value}</span>
+                    <span className="truncate">{valueDisplay}</span>
                   </button>
                 );
               })}

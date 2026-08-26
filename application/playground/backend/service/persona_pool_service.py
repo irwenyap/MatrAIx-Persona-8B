@@ -56,6 +56,8 @@ _RESERVED_DATASET_SLUGS = frozenset(
     }
 )
 DIMENSION_CATEGORIES_PATH = "persona/schema/dimension_categories.json"
+DIMENSION_LABELS_DIR = "persona/schema/labels"
+_LABEL_LOCALE_RE = re.compile(r"^[A-Za-z0-9-]{1,32}$")
 # Soft guard for stratify cell cartesian products from dimensionFilters.
 MAX_FILTER_STRATA = 2048
 # UI keeps a full personaId list only at or below this size; larger cohorts are ref-based.
@@ -202,26 +204,79 @@ class PersonaPoolService:
         self,
         prompt: str,
         *,
-        use_llm: bool = False,
+        search_mode: str = "keyword",
+        locale: str | None = None,
+        persona_model: str | None = None,
     ) -> dict[str, Any]:
         """Map free-text / NL phrase to selectable catalog attributes (Treiver).
 
-        Default is regex-only (fast, offline). ``use_llm=True`` enables the
-        optional judge path when keys / models are available.
+        ``search_mode``:
+        * ``keyword`` — regex only (default, offline)
+        * ``keyword_and_embed`` — regex ∪ local embedding value picks
+        * ``keyword_and_embed_and_llm`` — keyword ∪ embed candidates + LLM judge (``persona_model``)
         """
+        from backend.service.config import persona_model as default_persona_model
+
         text = (prompt or "").strip()
+        mode = (search_mode or "keyword").strip().lower()
+        if mode not in {"keyword", "keyword_and_embed", "keyword_and_embed_and_llm"}:
+            mode = "keyword"
+
+        empty = {
+            "prompt": text if text else "",
+            "attributes": [],
+            "usedLlm": False,
+            "searchMode": mode,
+            "judgeModel": None,
+            "candidateCount": 0,
+            "suggestedDimensionIds": [],
+            "embedFallback": False,
+        }
         if not text:
-            return {"prompt": "", "attributes": [], "usedLlm": False}
+            return empty
+
+        value_aliases, topic_aliases, label_overlays = self._label_pack_match_assets(
+            locale
+        )
         treiver = _get_treiver()
-        result = treiver.match(text, use_llm=bool(use_llm), use_embed=bool(use_llm))
+        resolved_model = (persona_model or "").strip() or default_persona_model()
+        use_embed = mode in {"keyword_and_embed", "keyword_and_embed_and_llm"}
+        use_judge = mode == "keyword_and_embed_and_llm"
+        result = treiver.match(
+            text,
+            use_llm=use_judge,
+            use_embed=use_embed,
+            value_aliases=value_aliases or None,
+            topic_aliases=topic_aliases or None,
+            label_overlays=label_overlays or None,
+            locale_cache_key=(locale or "").strip() or None,
+            persona_model=resolved_model if use_judge else None,
+        )
+        embed_fallback = False
+        if use_embed:
+            try:
+                embedder = treiver._embed_retriever(
+                    label_overlays=label_overlays or None,
+                    cache_key=(locale or "").strip() or None,
+                )
+                embedder._ensure_matrix()
+                embed_fallback = bool(embedder._fallback)
+            except Exception:  # noqa: BLE001
+                embed_fallback = True
         attributes: list[dict[str, Any]] = []
         for attr in result.attributes:
             dim = treiver.schema.get(attr.dimension_id)
+            label = dim.label if dim and dim.label else attr.dimension_id
+            pack_label = self._label_pack_dim_label(locale, attr.dimension_id)
+            pack_value = self._label_pack_value_label(
+                locale, attr.dimension_id, attr.value
+            )
             attributes.append(
                 {
                     "dimensionId": attr.dimension_id,
-                    "label": (dim.label if dim and dim.label else attr.dimension_id),
+                    "label": pack_label or label,
                     "value": attr.value,
+                    "valueLabel": pack_value or attr.value,
                     "evidence": attr.evidence,
                     "method": attr.method,
                     "confidence": float(attr.confidence),
@@ -231,7 +286,130 @@ class PersonaPoolService:
             "prompt": text,
             "attributes": attributes,
             "usedLlm": bool(result.used_llm),
+            "searchMode": mode,
+            "judgeModel": resolved_model if use_judge else None,
+            "candidateCount": len(result.candidate_dimension_ids),
+            "suggestedDimensionIds": list(result.candidate_dimension_ids),
+            "embedFallback": embed_fallback,
         }
+
+    def _label_pack_path(self, locale: str | None) -> Path | None:
+        token = (locale or "").strip()
+        if not token or not _LABEL_LOCALE_RE.match(token):
+            return None
+        path = self.repo_root / DIMENSION_LABELS_DIR / f"dimensions.labels.{token}.json"
+        return path if path.is_file() else None
+
+    def _label_pack_dim_label(self, locale: str | None, dim_id: str) -> str | None:
+        path = self._label_pack_path(locale)
+        if path is None:
+            return None
+        try:
+            payload = self._read_json(path)
+        except (OSError, ValueError, json.JSONDecodeError):
+            return None
+        entry = (payload.get("dimensions") or {}).get(dim_id)
+        if not isinstance(entry, dict):
+            return None
+        label = entry.get("label")
+        return label.strip() if isinstance(label, str) and label.strip() else None
+
+    def _label_pack_value_label(
+        self, locale: str | None, dim_id: str, value: str
+    ) -> str | None:
+        path = self._label_pack_path(locale)
+        if path is None:
+            return None
+        try:
+            payload = self._read_json(path)
+        except (OSError, ValueError, json.JSONDecodeError):
+            return None
+        entry = (payload.get("dimensions") or {}).get(dim_id)
+        if not isinstance(entry, dict):
+            return None
+        values = entry.get("values")
+        if not isinstance(values, dict):
+            return None
+        translated = values.get(value)
+        return (
+            translated.strip()
+            if isinstance(translated, str) and translated.strip()
+            else None
+        )
+
+    def _label_pack_match_assets(
+        self, locale: str | None
+    ) -> tuple[
+        dict[tuple[str, str], tuple[str, ...]],
+        dict[str, tuple[str, ...]],
+        dict[str, dict],
+    ]:
+        """Build Treiver regex + embed assets from a locale dimension label pack."""
+        path = self._label_pack_path(locale)
+        if path is None:
+            return {}, {}, {}
+        try:
+            payload = self._read_json(path)
+        except (OSError, ValueError, json.JSONDecodeError):
+            return {}, {}, {}
+        dimensions = payload.get("dimensions")
+        if not isinstance(dimensions, dict):
+            return {}, {}, {}
+
+        value_aliases: dict[tuple[str, str], list[str]] = {}
+        topic_aliases: dict[str, list[str]] = {}
+        label_overlays: dict[str, dict] = {}
+        for dim_id, entry in dimensions.items():
+            if not isinstance(dim_id, str) or not isinstance(entry, dict):
+                continue
+            overlay_entry: dict[str, Any] = {}
+            label = entry.get("label")
+            if isinstance(label, str) and label.strip():
+                overlay_entry["label"] = label.strip()
+                topics = topic_aliases.setdefault(dim_id, [])
+                text = label.strip()
+                topics.append(text)
+                # ``Familiarity: ML`` / ``精通：机器学习`` → topic after last separator.
+                for sep in (":", "："):
+                    if sep in text:
+                        topic = text.rsplit(sep, 1)[-1].strip()
+                        if topic and topic not in topics:
+                            topics.append(topic)
+                        break
+            values = entry.get("values")
+            if isinstance(values, dict):
+                clean_values: dict[str, str] = {}
+                for en_value, translated in values.items():
+                    if not isinstance(en_value, str) or not isinstance(translated, str):
+                        continue
+                    form = translated.strip()
+                    if not form:
+                        continue
+                    clean_values[en_value] = form
+                    if form == en_value:
+                        continue
+                    bucket = value_aliases.setdefault((dim_id, en_value), [])
+                    if form not in bucket:
+                        bucket.append(form)
+                if clean_values:
+                    overlay_entry["values"] = clean_values
+            if overlay_entry:
+                label_overlays[dim_id] = overlay_entry
+
+        return (
+            {key: tuple(forms) for key, forms in value_aliases.items()},
+            {key: tuple(forms) for key, forms in topic_aliases.items()},
+            label_overlays,
+        )
+
+    def _label_pack_regex_aliases(
+        self, locale: str | None
+    ) -> tuple[
+        dict[tuple[str, str], tuple[str, ...]],
+        dict[str, tuple[str, ...]],
+    ]:
+        value_aliases, topic_aliases, _overlays = self._label_pack_match_assets(locale)
+        return value_aliases, topic_aliases
 
     def _read_json(self, path: Path) -> dict[str, Any]:
         payload = json.loads(path.read_text(encoding="utf-8"))
@@ -367,6 +545,36 @@ class PersonaPoolService:
             **summary,
             "dimensionCategoriesPath": "persona/schema/dimensions.json",
             "dimensionCategories": categories,
+        }
+
+    def get_dimension_labels(self, locale: str) -> dict[str, Any]:
+        """Display-label overlay for one locale (English fallback when absent).
+
+        Packs live in ``persona/schema/labels/dimensions.labels.<locale>.json``
+        and only carry translated labels/values keyed by canonical English
+        ids — they never replace the catalog served by :meth:`get_catalog`.
+        """
+        token = (locale or "").strip()
+        if not _LABEL_LOCALE_RE.match(token):
+            raise ValueError(f"invalid locale token: {locale!r}")
+        path = self.repo_root / DIMENSION_LABELS_DIR / f"dimensions.labels.{token}.json"
+        if not path.is_file():
+            return {
+                "locale": token,
+                "available": False,
+                "reviewStatus": None,
+                "dimensions": {},
+                "taxonomy": {},
+            }
+        payload = self._read_json(path)
+        dimensions = payload.get("dimensions")
+        taxonomy = payload.get("taxonomy")
+        return {
+            "locale": token,
+            "available": True,
+            "reviewStatus": payload.get("reviewStatus"),
+            "dimensions": dimensions if isinstance(dimensions, dict) else {},
+            "taxonomy": taxonomy if isinstance(taxonomy, dict) else {},
         }
 
     def _is_persona_dataset_dir(self, path: Path) -> bool:

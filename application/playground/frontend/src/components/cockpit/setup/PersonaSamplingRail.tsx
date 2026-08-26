@@ -30,6 +30,7 @@ import {
   type PersonaPoolSampleError,
 } from "@/lib/personaPoolCopy";
 import { syntheticDisplayName } from "@/lib/personaDisplay";
+import { useDimensionLabels } from "@/lib/dimensionLabels";
 import { FOCUS_RING, Sym, humanizeToken } from "../cockpitShared";
 import { CockpitSelect, type CockpitSelectOption } from "./CockpitSelect";
 import { CockpitToggle } from "./CockpitToggle";
@@ -185,6 +186,7 @@ function PersonaFilterChips({
   showStratify: boolean;
 }) {
   const { t } = useI18n();
+  const labels = useDimensionLabels();
   const filterCount = activeFilterCount(filters);
   if (filterCount === 0 && !(showStratify && fields.length > 0)) return null;
   return (
@@ -203,9 +205,11 @@ function PersonaFilterChips({
           <span
             key={dim}
             className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] text-primary"
-            title={values.join(", ")}
+            title={values
+              .map((value) => labels.valueLabel(dim, value))
+              .join(", ")}
           >
-            {humanizeToken(dim)}
+            {labels.dimLabel(dim, humanizeToken(dim))}
             <span className="text-primary/70"> · {values.length}</span>
           </span>
         ))}
@@ -215,7 +219,8 @@ function PersonaFilterChips({
               key={`st:${field}`}
               className="rounded-full border border-secondary/35 bg-secondary/10 px-2 py-0.5 text-[11px] text-secondary"
             >
-              {t("personaSetup.filters.stratify")} · {humanizeToken(field)}
+              {t("personaSetup.filters.stratify")} ·{" "}
+              {labels.dimLabel(field, humanizeToken(field))}
             </span>
           ))
         : null}
@@ -412,6 +417,7 @@ function TaskStrategySummary({
   onExpandedChange: (expanded: boolean) => void;
 }) {
   const { t } = useI18n();
+  const labels = useDimensionLabels();
   const sampling = readStrategySampling(strategy);
   const dimEntries = Object.entries(strategy.dimensionFilters ?? {}).filter(
     ([, values]) => Array.isArray(values) && values.length > 0,
@@ -448,7 +454,9 @@ function TaskStrategySummary({
                 : t("personaSetup.strategy.noFilters")}
               {stratify.length > 0
                 ? ` · ${t("personaSetup.strategy.stratifyFields", {
-                    fields: stratify.map(humanizeToken).join(" × "),
+                    fields: stratify
+                      .map((field) => labels.dimLabel(field, humanizeToken(field)))
+                      .join(" × "),
                   })}`
                 : ""}
             </p>
@@ -493,8 +501,8 @@ function TaskStrategySummary({
                 {dimEntries.map(([dim, values]) => (
                   <StrategyFilterValueChip
                     key={dim}
-                    label={humanizeToken(dim)}
-                    values={values}
+                    label={labels.dimLabel(dim, humanizeToken(dim))}
+                    values={values.map((value) => labels.valueLabel(dim, value))}
                     open={openFilterKey === dim}
                     onToggle={() =>
                       setOpenFilterKey((key) => (key === dim ? null : dim))
@@ -536,7 +544,7 @@ function TaskStrategySummary({
                     <div className="flex flex-wrap gap-1">
                       {stratify.map((field) => (
                         <span key={field} className={STRATEGY_STRATIFY_CHIP}>
-                          {humanizeToken(field)}
+                          {labels.dimLabel(field, humanizeToken(field))}
                         </span>
                       ))}
                     </div>
@@ -2154,6 +2162,7 @@ export function PersonaSamplingRail({
         onFieldsChange={
           filterTarget === "generation" ? setGenFields : onFieldsChange
         }
+        personaModel={personaModel}
         onClose={() => setFilterOpen(false)}
         onConfirm={(next) => {
           if (filterTarget === "generation") {

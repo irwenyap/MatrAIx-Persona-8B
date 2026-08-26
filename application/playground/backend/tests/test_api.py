@@ -41,6 +41,7 @@ def test_preflight_shape(client):
         "Web tasks",
         "Docker",
         "use.computer API",
+        "Smart attribute match (local embed)",
     } <= names
     # Not part of the shipped application task set — keep out of readiness.
     assert "Recommendation engine" not in names
@@ -68,6 +69,7 @@ def test_preflight_required_vs_optional_contract(client):
         "Acme MCP support",
         "Docker",
         "use.computer API",
+        "Smart attribute match (local embed)",
     } <= optional
     assert body["ready"] == all(c["ok"] for c in body["checks"] if not c.get("optional"))
 
@@ -241,6 +243,51 @@ def test_preflight_os_app_checks_optional(client, monkeypatch):
         assert by_name[name]["optional"] is True
     assert by_name["use.computer API"]["group"] == "OS app"
     assert "survey" in by_name["Docker"]["detail"].lower() or "Linux" in by_name["Docker"]["detail"]
+
+
+def test_preflight_smart_attribute_embed_optional(client, monkeypatch):
+    """Missing local embed must not flip overall ready."""
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-test")
+    monkeypatch.setattr(
+        "backend.api.app._sentence_transformers_importable",
+        lambda: False,
+    )
+    body = client.get("/api/preflight").json()
+    embed = next(
+        c for c in body["checks"] if c["name"] == "Smart attribute match (local embed)"
+    )
+    assert embed["optional"] is True
+    assert embed["group"] == "Persona"
+    assert embed["ok"] is False
+    assert "sentence-transformers" in embed["detail"].lower()
+    assert body["ready"] is True
+
+    monkeypatch.setattr(
+        "backend.api.app._sentence_transformers_importable",
+        lambda: True,
+    )
+    monkeypatch.setattr(
+        "backend.api.app._embed_model_weights_cached",
+        lambda _model: False,
+    )
+    body = client.get("/api/preflight").json()
+    embed = next(
+        c for c in body["checks"] if c["name"] == "Smart attribute match (local embed)"
+    )
+    assert embed["ok"] is False
+    assert "download" in embed["detail"].lower()
+    assert body["ready"] is True
+
+    monkeypatch.setattr(
+        "backend.api.app._embed_model_weights_cached",
+        lambda _model: True,
+    )
+    body = client.get("/api/preflight").json()
+    embed = next(
+        c for c in body["checks"] if c["name"] == "Smart attribute match (local embed)"
+    )
+    assert embed["ok"] is True
+    assert body["ready"] is True
 
 
 def test_config_options(client):

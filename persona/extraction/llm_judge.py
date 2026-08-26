@@ -145,13 +145,16 @@ candidate dimension, decide whether the description gives real support for one o
 its allowed values.
 
 Rules:
+- The description may be written in any language. Understand it, then map to the \
+allowed English VALUES. Never invent a non-English value string.
 - Pick a value ONLY if the description supports it. When it does not, return the \
 dimension with "value": null — do not guess to be helpful. Leaving a weakly \
 supported dimension unassigned is correct, not a failure.
 - The value MUST be copied verbatim from that dimension's allowed values. Never \
 invent a value or use a synonym.
 - "evidence" must be an exact substring quoted from the description that supports \
-the value. If value is null, evidence is null.
+the value (keep the original language of that span). If value is null, evidence \
+is null.
 - "confidence" is 0.0-1.0: how strongly the description supports this specific \
 value versus the other allowed values of the same dimension.
 - Judge each dimension independently against the description; do not let one \

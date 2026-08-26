@@ -1,6 +1,7 @@
 import { FOCUS_RING, Sym } from "../cockpitShared";
 import { useI18n } from "@/i18n/I18nProvider";
 import type { MessageKey } from "@/i18n/types";
+import { useDimensionLabels } from "@/lib/dimensionLabels";
 import { personaDisplayId, personaPrimaryName } from "@/lib/personaDisplay";
 import type { PersonaPoolPersonaCard } from "@/lib/types";
 import { PersonaAvatar } from "./PersonaAvatar";
@@ -36,6 +37,7 @@ export function BenchPersonaCard({
   hits = [],
 }: BenchPersonaCardProps) {
   const { t } = useI18n();
+  const labels = useDimensionLabels();
   const dims = Object.entries(persona.dimensions ?? {}).slice(0, 4);
   const displayName = personaPrimaryName(
     persona.name,
@@ -131,19 +133,22 @@ export function BenchPersonaCard({
 
       {visibleHits.length > 0 ? (
         <div className="mt-3 flex flex-wrap gap-1.5">
-          {visibleHits.map((hit) => (
-            <span
-              key={`${hit.dimensionId}:${hit.value}`}
-              title={`${hit.label}: ${hit.value}`}
-              className="inline-flex max-w-full items-center gap-1 rounded-full border border-primary/25 bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary"
-            >
-              <span className="opacity-70">
-                {t("cockpitSetup.persona.match")}
+          {visibleHits.map((hit) => {
+            const hitValue = labels.valueLabel(hit.dimensionId, hit.value);
+            return (
+              <span
+                key={`${hit.dimensionId}:${hit.value}`}
+                title={`${labels.dimLabel(hit.dimensionId, hit.label)}: ${hitValue}`}
+                className="inline-flex max-w-full items-center gap-1 rounded-full border border-primary/25 bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary"
+              >
+                <span className="opacity-70">
+                  {t("cockpitSetup.persona.match")}
+                </span>
+                <span className="opacity-40">·</span>
+                <span className="truncate">{hitValue}</span>
               </span>
-              <span className="opacity-40">·</span>
-              <span className="truncate">{hit.value}</span>
-            </span>
-          ))}
+            );
+          })}
           {hits.length > visibleHits.length ? (
             <span className="self-center text-[11px] text-text-dim">
               +{hits.length - visibleHits.length}
@@ -161,9 +166,12 @@ export function BenchPersonaCard({
         >
           <dl className="space-y-2">
             {dims.map(([key, value], index) => {
-              const label = key in DIM_LABEL_KEYS
-                ? t(DIM_LABEL_KEYS[key])
-                : key.replace(/_/g, " ");
+              const fallback =
+                key in DIM_LABEL_KEYS
+                  ? t(DIM_LABEL_KEYS[key])
+                  : key.replace(/_/g, " ");
+              const label = labels.dimLabel(key, fallback);
+              const displayValue = labels.valueLabel(key, value);
               return (
                 <div
                   key={key}
@@ -181,9 +189,9 @@ export function BenchPersonaCard({
                   </dt>
                   <dd
                     className="min-w-0 truncate text-[13px] leading-snug text-text-main"
-                    title={value}
+                    title={displayValue}
                   >
-                    {value}
+                    {displayValue}
                   </dd>
                 </div>
               );

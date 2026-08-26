@@ -165,6 +165,114 @@ def _docker_daemon_ok(timeout: float = 2.0) -> bool:
         return False
 
 
+_DEFAULT_TREIVER_EMBED_MODEL = "paraphrase-multilingual-MiniLM-L12-v2"
+
+
+def _treiver_embed_model_name() -> str:
+    """Same default as ``persona.extraction.embed_retriever`` (env override)."""
+    return (
+        os.environ.get("TREIVER_EMBED_MODEL") or _DEFAULT_TREIVER_EMBED_MODEL
+    ).strip() or _DEFAULT_TREIVER_EMBED_MODEL
+
+
+def _sentence_transformers_importable() -> bool:
+    try:
+        import sentence_transformers  # noqa: F401
+    except Exception:  # noqa: BLE001 - missing dep or broken install
+        return False
+    return True
+
+
+def _huggingface_hub_cache_roots() -> List[str]:
+    roots: List[str] = []
+    for key in ("HUGGINGFACE_HUB_CACHE", "HF_HUB_CACHE"):
+        value = (os.environ.get(key) or "").strip()
+        if value:
+            roots.append(value)
+    hf_home = (os.environ.get("HF_HOME") or "").strip() or os.path.expanduser(
+        "~/.cache/huggingface"
+    )
+    roots.append(os.path.join(hf_home, "hub"))
+    st_home = (os.environ.get("SENTENCE_TRANSFORMERS_HOME") or "").strip()
+    if st_home:
+        roots.append(st_home)
+    # Preserve order, drop duplicates.
+    seen: set[str] = set()
+    unique: List[str] = []
+    for root in roots:
+        if root not in seen:
+            seen.add(root)
+            unique.append(root)
+    return unique
+
+
+def _embed_model_weights_cached(model_name: str) -> bool:
+    """True when Hugging Face hub already has a non-empty snapshot for ``model_name``.
+
+    Probes the filesystem only — never downloads. Smart attribute match loads
+    the model lazily on first use; this check only warns that the first call
+    may pull ~hundreds of MB.
+    """
+    # Hub layout: models--org--name/snapshots/<rev>/...
+    folder = "models--" + model_name.replace("/", "--")
+    if not model_name.startswith("sentence-transformers/"):
+        # Default MiniLM id is bare; sentence-transformers resolves it under
+        # the sentence-transformers org namespace on the hub.
+        alt = "models--sentence-transformers--" + model_name.replace("/", "--")
+    else:
+        alt = folder
+    candidates = {folder, alt}
+    for hub in _huggingface_hub_cache_roots():
+        for name in candidates:
+            snapshots = os.path.join(hub, name, "snapshots")
+            if not os.path.isdir(snapshots):
+                continue
+            try:
+                for entry in os.scandir(snapshots):
+                    if not entry.is_dir(follow_symlinks=True):
+                        continue
+                    try:
+                        if any(os.scandir(entry.path)):
+                            return True
+                    except OSError:
+                        continue
+            except OSError:
+                continue
+    return False
+
+
+def _smart_attribute_embed_preflight() -> Dict[str, Any]:
+    """Optional checklist row for local Smart-match embeddings (never blocks ready)."""
+    model = _treiver_embed_model_name()
+    st_ok = _sentence_transformers_importable()
+    cached = _embed_model_weights_cached(model) if st_ok else False
+    ok = st_ok and cached
+    if ok:
+        detail = (
+            f"Local embed model ready ({model}). "
+            "Used by Smart attribute match in persona filters."
+        )
+    elif not st_ok:
+        detail = (
+            "sentence-transformers not installed. "
+            "Smart attribute match falls back to weaker keyword overlap until "
+            "you install it; Exact match still works."
+        )
+    else:
+        detail = (
+            f"Embed model not cached yet ({model}, ~400MB+). "
+            "First Smart attribute match will download it; later calls reuse the cache. "
+            "Exact match does not need this."
+        )
+    return {
+        "group": "Persona",
+        "name": "Smart attribute match (local embed)",
+        "ok": ok,
+        "optional": True,
+        "detail": detail,
+    }
+
+
 def preflight_checks() -> List[Dict[str, Any]]:
     """Compute the user-facing readiness checklist for application tasks.
 
@@ -188,6 +296,8 @@ def preflight_checks() -> List[Dict[str, Any]]:
     * Meal planning sidecar — ``chat_meal-planning-nutrition``.
     * Acme support API — ``example-chat-api_support_chatbot``.
     * Acme MCP — ``example-chat-mcp_support_chatbot``.
+    * Smart attribute match (local embed) — first Smart filter search may
+      download the sentence-transformers model; Exact match does not need it.
 
     RecAI / multi-agent medical are not probed here.
     """
@@ -382,6 +492,9 @@ def preflight_checks() -> List[Dict[str, Any]]:
             ),
         }
     )
+
+    # ---- Persona filter Smart match (optional; never blocks ready) ----- #
+    checks.append(_smart_attribute_embed_preflight())
 
     return checks
 
@@ -990,6 +1103,23 @@ def create_app(catalog_path: Optional[str] = None) -> FastAPI:
         except (ValueError, FileNotFoundError, OSError) as exc:
             raise HTTPException(status_code=404, detail=str(exc)) from exc
 
+    @app.get(
+        "/api/persona-pool/dimension-labels",
+        response_model=schemas.PersonaDimensionLabelsResponse,
+        tags=["persona-pool"],
+    )
+    def get_persona_dimension_labels(
+        locale: str = Query(min_length=1),
+        services: AppState = Depends(get_services),
+    ) -> Dict[str, Any]:
+        """Translated dimension labels/values for display (English fallback)."""
+        try:
+            return services.persona_pool.get_dimension_labels(locale)
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+        except OSError as exc:
+            raise HTTPException(status_code=500, detail=str(exc)) from exc
+
     @app.post(
         "/api/persona-pool/match-attributes",
         response_model=schemas.PersonaMatchAttributesResponse,
@@ -1003,7 +1133,9 @@ def create_app(catalog_path: Optional[str] = None) -> FastAPI:
         try:
             return services.persona_pool.match_attributes(
                 body.prompt,
-                use_llm=body.useLlm,
+                search_mode=body.searchMode,
+                locale=body.locale,
+                persona_model=body.personaModel,
             )
         except Exception as exc:  # noqa: BLE001 — surface matcher failures cleanly
             raise HTTPException(status_code=422, detail=str(exc)) from exc

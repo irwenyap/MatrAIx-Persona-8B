@@ -4,6 +4,10 @@ import { useQuery } from "@tanstack/react-query";
 import { useI18n } from "@/i18n/I18nProvider";
 import type { MessageKey } from "@/i18n/types";
 import { api, ApiError } from "@/lib/api";
+import {
+  type DimensionLabelLookup,
+  useDimensionLabels,
+} from "@/lib/dimensionLabels";
 import { personaDisplayId, personaPrimaryName } from "@/lib/personaDisplay";
 import {
   PERSONA_BENCH_POOL,
@@ -67,9 +71,11 @@ function spotlightDotClass(
 function TaxonomyTree({
   groups,
   t,
+  labels,
 }: {
   groups: PersonaDimensionGroup[];
   t: ReturnType<typeof useI18n>["t"];
+  labels: DimensionLabelLookup;
 }) {
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {};
@@ -119,7 +125,7 @@ function TaxonomyTree({
             >
               <span className="min-w-0">
                 <span className="block font-display text-[14px] font-semibold text-text-main">
-                  {group.label}
+                  {labels.taxonomyLabel(group.id, group.label)}
                 </span>
                 <span className="mt-1 block text-[12px] text-text-dim">
                   {t("cockpitSetup.persona.attributesAndSubgroups", {
@@ -153,7 +159,7 @@ function TaxonomyTree({
                         className={`flex w-full items-center justify-between gap-3 px-3.5 py-2.5 text-left ${FOCUS_RING}`}
                       >
                         <span className="text-[13px] font-medium text-text-main">
-                          {subgroup.label}
+                          {labels.taxonomyLabel(subgroup.id, subgroup.label)}
                         </span>
                         <span className="flex items-center gap-1.5 text-[12px] text-text-dim">
                           {subgroup.count}
@@ -165,25 +171,35 @@ function TaxonomyTree({
                       </button>
                       {subOpen ? (
                         <ul className="divide-y divide-outline/10 border-t border-outline/15 px-3.5 py-1">
-                          {subgroup.items.map((item) => (
+                          {subgroup.items.map((item) => {
+                            const dimLabel = labels.dimLabel(
+                              item.id,
+                              item.label,
+                            );
+                            const valueLabel = labels.valueLabel(
+                              item.id,
+                              item.value,
+                            );
+                            return (
                             <li
                               key={item.id}
                               className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] gap-3 py-2.5"
                             >
                               <span
                                 className="truncate text-[12px] leading-snug text-text-dim"
-                                title={item.label}
+                                title={dimLabel}
                               >
-                                {item.label}
+                                {dimLabel}
                               </span>
                               <span
                                 className="truncate text-right text-[13px] leading-snug text-text-main"
-                                title={item.value}
+                                title={valueLabel}
                               >
-                                {item.value}
+                                {valueLabel}
                               </span>
                             </li>
-                          ))}
+                            );
+                          })}
                         </ul>
                       ) : null}
                     </div>
@@ -209,6 +225,7 @@ export function BenchPersonaDetailPanel({
   className = "",
 }: BenchPersonaDetailPanelProps) {
   const { t } = useI18n();
+  const labels = useDimensionLabels();
   const personaId = persona?.personaId ?? null;
   const activePool = pool?.trim() || PERSONA_BENCH_POOL;
   const detailQuery = useQuery({
@@ -237,23 +254,29 @@ export function BenchPersonaDetailPanel({
             count: entries.length,
             items: entries.map(([id, value]) => ({
               id,
-              label: id.replace(/_/g, " "),
-              value,
+              label: labels.dimLabel(id, id.replace(/_/g, " ")),
+              value: labels.valueLabel(id, value),
             })),
           },
         ],
       },
     ];
-  }, [detailQuery.data?.dimensionGroups, dims, t]);
+  }, [detailQuery.data?.dimensionGroups, dims, t, labels]);
 
   const spotlight = useMemo(
     () =>
-      SPOTLIGHT_KEYS.map((key) => ({
-        key,
-        label: t(SPOTLIGHT_LABEL_KEYS[key]),
-        value: dims[key],
-      })).filter((item) => item.value),
-    [dims, t],
+      SPOTLIGHT_KEYS.map((key) => {
+        const raw = dims[key];
+        if (!raw) return null;
+        return {
+          key,
+          label: labels.dimLabel(key, t(SPOTLIGHT_LABEL_KEYS[key])),
+          value: labels.valueLabel(key, raw),
+        };
+      }).filter((item): item is { key: (typeof SPOTLIGHT_KEYS)[number]; label: string; value: string } =>
+        Boolean(item),
+      ),
+    [dims, t, labels],
   );
 
   if (!persona) return null;
@@ -401,7 +424,7 @@ export function BenchPersonaDetailPanel({
             </p>
           ) : null}
           {!detailQuery.isPending ? (
-            <TaxonomyTree groups={groups} t={t} />
+            <TaxonomyTree groups={groups} t={t} labels={labels} />
           ) : null}
         </div>
 

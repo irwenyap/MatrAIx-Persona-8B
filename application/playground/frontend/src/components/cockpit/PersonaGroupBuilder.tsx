@@ -6,6 +6,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { useI18n } from "@/i18n/I18nProvider";
 import { api, ApiError } from "@/lib/api";
+import { useDimensionLabels } from "@/lib/dimensionLabels";
 import type { PersonaCohortDetail, PersonaPoolCatalog } from "@/lib/types";
 import { FOCUS_RING } from "./cockpitShared";
 
@@ -47,6 +48,7 @@ export function PersonaGroupBuilder({
   onCohortChange,
 }: PersonaGroupBuilderProps) {
   const { rich, t } = useI18n();
+  const labels = useDimensionLabels();
   const queryClient = useQueryClient();
   const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
   const [previewError, setPreviewError] = useState<string | null>(null);
@@ -309,7 +311,7 @@ export function PersonaGroupBuilder({
                     className={`flex w-full items-center justify-between px-2.5 py-2 text-left text-[14px] ${FOCUS_RING}`}
                   >
                     <span className={groupActive ? "text-primary" : "text-text-main"}>
-                      {group.label}
+                      {labels.taxonomyLabel(group.id, group.label)}
                     </span>
                     <span className="text-text-dim">{open ? "−" : "+"}</span>
                   </button>
@@ -320,7 +322,12 @@ export function PersonaGroupBuilder({
                           key={dim.id}
                           className="flex flex-col gap-1 text-[13px] text-text-variant"
                         >
-                          <span className="font-mono text-[12px] text-text-dim">{dim.id}</span>
+                          <span
+                            className="font-mono text-[12px] text-text-dim"
+                            title={dim.id}
+                          >
+                            {labels.dimLabel(dim.id, dim.id)}
+                          </span>
                           <select
                             value={filters.dimensionFilters[dim.id] ?? ""}
                             onChange={(e) => setDimensionFilter(dim.id, e.target.value)}
@@ -329,7 +336,7 @@ export function PersonaGroupBuilder({
                             <option value="">{t("personaGroups.any")}</option>
                             {dim.values.map((value) => (
                               <option key={value} value={value}>
-                                {value}
+                                {labels.valueLabel(dim.id, value)}
                               </option>
                             ))}
                           </select>

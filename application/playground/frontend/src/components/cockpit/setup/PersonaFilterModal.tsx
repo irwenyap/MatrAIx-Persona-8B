@@ -4,6 +4,10 @@ import { useQuery } from "@tanstack/react-query";
 
 import { useI18n } from "@/i18n/I18nProvider";
 import { api } from "@/lib/api";
+import {
+  type DimensionLabelLookup,
+  useDimensionLabels,
+} from "@/lib/dimensionLabels";
 import type {
   PersonaMatchedAttribute,
   PersonaPoolCatalog,
@@ -31,6 +35,8 @@ export interface PersonaFilterModalProps {
   stratifyMode?: boolean;
   fields?: string[];
   onFieldsChange?: (fields: string[]) => void;
+  /** Cockpit persona model — used by Treiver LLM judge when enabled. */
+  personaModel?: string;
   onClose: () => void;
   onConfirm: (filters: PersonaDimensionFilters) => void;
 }
@@ -47,19 +53,25 @@ function dimLabel(dim: PersonaPoolDimensionOption): string {
 function findDimensionLabel(
   catalog: PersonaPoolCatalog | null,
   dimId: string,
+  labels?: DimensionLabelLookup,
 ): string {
   const groups = catalog?.dimensionCategories?.devProfile?.groups ?? [];
   for (const group of groups) {
     for (const dim of group.dimensions ?? []) {
-      if (dim.id === dimId) return dimLabel(dim);
+      if (dim.id === dimId) {
+        return labels?.dimLabel(dim.id, dimLabel(dim)) ?? dimLabel(dim);
+      }
     }
     for (const sub of group.subgroups ?? []) {
       for (const dim of sub.dimensions ?? []) {
-        if (dim.id === dimId) return dimLabel(dim);
+        if (dim.id === dimId) {
+          return labels?.dimLabel(dim.id, dimLabel(dim)) ?? dimLabel(dim);
+        }
       }
     }
   }
-  return dimId.replace(/_/g, " ");
+  const fallback = dimId.replace(/_/g, " ");
+  return labels?.dimLabel(dimId, fallback) ?? fallback;
 }
 
 function matchesQuery(text: string, query: string): boolean {
@@ -70,20 +82,34 @@ function matchesQuery(text: string, query: string): boolean {
 function dimensionMatchesQuery(
   dim: PersonaPoolDimensionOption,
   query: string,
+  labels?: DimensionLabelLookup,
 ): boolean {
   if (!query) return true;
-  if (matchesQuery(`${dimLabel(dim)} ${dim.id}`, query)) return true;
-  return (dim.values ?? []).some((value) => matchesQuery(value, query));
+  const display = labels?.dimLabel(dim.id, dimLabel(dim)) ?? dimLabel(dim);
+  if (matchesQuery(`${display} ${dimLabel(dim)} ${dim.id}`, query)) return true;
+  return (dim.values ?? []).some((value) =>
+    matchesQuery(
+      `${value} ${labels?.valueLabel(dim.id, value) ?? value}`,
+      query,
+    ),
+  );
 }
 
 function filterDimensionValues(
   dim: PersonaPoolDimensionOption,
   query: string,
+  labels?: DimensionLabelLookup,
 ): string[] {
   const values = dim.values ?? [];
   if (!query) return values;
-  if (matchesQuery(`${dimLabel(dim)} ${dim.id}`, query)) return values;
-  return values.filter((value) => matchesQuery(value, query));
+  const display = labels?.dimLabel(dim.id, dimLabel(dim)) ?? dimLabel(dim);
+  if (matchesQuery(`${display} ${dimLabel(dim)} ${dim.id}`, query)) return values;
+  return values.filter((value) =>
+    matchesQuery(
+      `${value} ${labels?.valueLabel(dim.id, value) ?? value}`,
+      query,
+    ),
+  );
 }
 
 function useDebounced<T>(value: T, delay: number): T {
@@ -102,21 +128,48 @@ export function PersonaFilterModal({
   stratifyMode = false,
   fields = [],
   onFieldsChange,
+  personaModel,
   onClose,
   onConfirm,
 }: PersonaFilterModalProps) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const labels = useDimensionLabels();
   const [draft, setDraft] = useState(filters);
   const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
   const [expandedSubgroup, setExpandedSubgroup] = useState<string | null>(null);
   const [expandedDim, setExpandedDim] = useState<string | null>(null);
   const [query, setQuery] = useState("");
+  const [searchTier, setSearchTier] = useState<"keyword" | "keyword_and_embed">(
+    "keyword",
+  );
+  const [deepMatch, setDeepMatch] = useState(false);
   const debouncedQuery = useDebounced(query.trim(), 280);
   const matchEnabled = open && shouldMatchAttributes(debouncedQuery);
+  const searchMode =
+    searchTier === "keyword"
+      ? "keyword"
+      : deepMatch
+        ? "keyword_and_embed_and_llm"
+        : "keyword_and_embed";
+  const modelShort = (personaModel || "")
+    .split("/")
+    .filter(Boolean)
+    .pop();
 
   const matchQuery = useQuery({
-    queryKey: ["persona-pool-match-attributes", debouncedQuery],
-    queryFn: () => api.matchPersonaAttributes(debouncedQuery),
+    queryKey: [
+      "persona-pool-match-attributes",
+      debouncedQuery,
+      searchMode,
+      locale,
+      personaModel ?? "",
+    ],
+    queryFn: () =>
+      api.matchPersonaAttributes(debouncedQuery, {
+        searchMode,
+        locale,
+        personaModel,
+      }),
     enabled: matchEnabled,
     staleTime: 60_000,
     refetchOnWindowFocus: false,
@@ -124,11 +177,23 @@ export function PersonaFilterModal({
 
   const suggestions: PersonaMatchedAttribute[] =
     matchQuery.data?.attributes ?? [];
+  const resultMode = matchQuery.data?.searchMode ?? searchMode;
+  const judgeModel =
+    matchQuery.data?.judgeModel || personaModel || undefined;
+  const suggestedDimIds = useMemo(() => {
+    const fromApi = matchQuery.data?.suggestedDimensionIds;
+    if (Array.isArray(fromApi) && fromApi.length > 0) {
+      return new Set(fromApi);
+    }
+    return new Set(suggestions.map((attr) => attr.dimensionId));
+  }, [matchQuery.data?.suggestedDimensionIds, suggestions]);
 
   useEffect(() => {
     if (open) {
       setDraft(filters);
       setQuery("");
+      setSearchTier("keyword");
+      setDeepMatch(false);
       setExpandedGroup(null);
       setExpandedSubgroup(null);
       setExpandedDim(null);
@@ -157,14 +222,20 @@ export function PersonaFilterModal({
 
   const visibleGroups = useMemo(() => {
     if (!normalizedQuery) return groups;
+    const smartHint =
+      searchTier === "keyword_and_embed" && suggestedDimIds.size > 0
+        ? suggestedDimIds
+        : null;
     const next: PersonaPoolDimensionGroup[] = [];
     for (const group of groups) {
       const subgroups = group.subgroups ?? [];
       if (subgroups.length > 0) {
         const matchedSubs: PersonaPoolDimensionSubgroup[] = [];
         for (const sub of subgroups) {
-          const dims = (sub.dimensions ?? []).filter((dim) =>
-            dimensionMatchesQuery(dim, normalizedQuery),
+          const dims = (sub.dimensions ?? []).filter(
+            (dim) =>
+              dimensionMatchesQuery(dim, normalizedQuery, labels) ||
+              Boolean(smartHint?.has(dim.id)),
           );
           if (dims.length === 0) continue;
           matchedSubs.push({
@@ -182,8 +253,10 @@ export function PersonaFilterModal({
         });
         continue;
       }
-      const dims = (group.dimensions ?? []).filter((dim) =>
-        dimensionMatchesQuery(dim, normalizedQuery),
+      const dims = (group.dimensions ?? []).filter(
+        (dim) =>
+          dimensionMatchesQuery(dim, normalizedQuery, labels) ||
+          Boolean(smartHint?.has(dim.id)),
       );
       if (dims.length === 0) continue;
       next.push({
@@ -193,7 +266,7 @@ export function PersonaFilterModal({
       });
     }
     return next;
-  }, [groups, normalizedQuery]);
+  }, [groups, labels, normalizedQuery, searchTier, suggestedDimIds]);
 
   const selectedChips = useMemo(() => {
     const chips: Array<{
@@ -201,6 +274,7 @@ export function PersonaFilterModal({
       dimId: string;
       label: string;
       value: string;
+      displayValue: string;
     }> = [];
     for (const source of draft.sources) {
       chips.push({
@@ -208,16 +282,23 @@ export function PersonaFilterModal({
         dimId: "source",
         label: t("personaSetup.filters.source"),
         value: source,
+        displayValue: source,
       });
     }
     for (const [dimId, values] of Object.entries(draft.dimensionFilters)) {
-      const label = findDimensionLabel(catalog, dimId);
+      const label = findDimensionLabel(catalog, dimId, labels);
       for (const value of values) {
-        chips.push({ key: `${dimId}:${value}`, dimId, label, value });
+        chips.push({
+          key: `${dimId}:${value}`,
+          dimId,
+          label,
+          value,
+          displayValue: labels.valueLabel(dimId, value),
+        });
       }
     }
     return chips;
-  }, [catalog, draft, t]);
+  }, [catalog, draft, labels, t]);
 
   if (!open) return null;
 
@@ -275,12 +356,13 @@ export function PersonaFilterModal({
   };
 
   const renderDimension = (dim: PersonaPoolDimensionOption) => {
-    const visibleValues = filterDimensionValues(dim, normalizedQuery);
+    const visibleValues = filterDimensionValues(dim, normalizedQuery, labels);
     const dimOpen =
       expandedDim === dim.id ||
       (Boolean(normalizedQuery) && visibleValues.length > 0);
     const selected = draft.dimensionFilters[dim.id] ?? [];
     const stratified = fields.includes(dim.id);
+    const displayName = labels.dimLabel(dim.id, dimLabel(dim));
     return (
       <div
         key={dim.id}
@@ -294,7 +376,7 @@ export function PersonaFilterModal({
           className={`flex w-full items-center justify-between gap-2 px-2.5 py-2 text-left text-[13px] ${FOCUS_RING}`}
         >
           <span className={selected.length ? "text-primary" : "text-text-main"}>
-            {dimLabel(dim)}
+            {displayName}
             {selected.length > 0 ? ` · ${selected.length}` : ""}
           </span>
           <div className="flex items-center gap-2">
@@ -336,7 +418,7 @@ export function PersonaFilterModal({
                       : "glass-tile glass-tile--hover text-text-variant"
                   }`}
                 >
-                  {value}
+                  {labels.valueLabel(dim.id, value)}
                 </button>
               );
             })}
@@ -346,11 +428,19 @@ export function PersonaFilterModal({
     );
   };
 
+  const matchErrorMessage =
+    matchQuery.isError && matchQuery.error instanceof Error
+      ? matchQuery.error.message
+      : matchQuery.isError
+        ? String(matchQuery.error)
+        : null;
+
   const showEmptyTree =
     Boolean(normalizedQuery) &&
     visibleGroups.length === 0 &&
     suggestions.length === 0 &&
-    !matchQuery.isFetching;
+    !matchQuery.isFetching &&
+    !matchErrorMessage;
 
   return createPortal(
     <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 sm:p-6">
@@ -424,24 +514,101 @@ export function PersonaFilterModal({
             })}
           </div>
 
-          <div className="mb-2 flex items-center justify-between gap-3">
-            <p className="text-[13px] text-text-variant">
+          <div className="mb-4">
+            <p className="mb-2 text-[13px] text-text-variant">
               {t("personaSetup.filters.profileDimensions")}
             </p>
-            <label className="relative min-w-0 flex-1 max-w-md">
-              <Sym
-                name="search"
-                size={16}
-                className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-text-dim"
-              />
-              <input
-                type="search"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder={t("personaSetup.filters.searchPlaceholder")}
-                className={`h-8 w-full rounded-md border border-outline/50 bg-field pl-8 pr-2 text-[13px] text-text-main placeholder:text-text-dim ${FOCUS_RING}`}
-              />
-            </label>
+            <div className="rounded-xl border border-outline/35 bg-surface/25 p-3">
+              <label className="relative block">
+                <Sym
+                  name="search"
+                  size={17}
+                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-dim"
+                />
+                <input
+                  type="search"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder={t("personaSetup.filters.searchPlaceholder")}
+                  className={`h-10 w-full rounded-lg border border-outline/45 bg-field pl-10 pr-3 text-[13px] text-text-main placeholder:text-text-dim ${FOCUS_RING}`}
+                />
+              </label>
+              <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-2">
+                <div
+                  role="group"
+                  aria-label={t("personaSetup.filters.searchTier")}
+                  className="inline-flex h-8 overflow-hidden rounded-lg border border-outline/40 bg-field/80"
+                >
+                  <button
+                    type="button"
+                    title={t("personaSetup.filters.searchKeywordHint")}
+                    onClick={() => {
+                      setSearchTier("keyword");
+                      setDeepMatch(false);
+                    }}
+                    className={`px-3 text-[12px] transition ${FOCUS_RING} ${
+                      searchTier === "keyword"
+                        ? "bg-primary/15 font-medium text-primary"
+                        : "text-text-variant hover:bg-surface-high/40"
+                    }`}
+                  >
+                    {t("personaSetup.filters.searchKeyword")}
+                  </button>
+                  <button
+                    type="button"
+                    title={t("personaSetup.filters.searchSmartHint")}
+                    onClick={() => setSearchTier("keyword_and_embed")}
+                    className={`px-3 text-[12px] transition ${FOCUS_RING} ${
+                      searchTier === "keyword_and_embed"
+                        ? "bg-primary/15 font-medium text-primary"
+                        : "text-text-variant hover:bg-surface-high/40"
+                    }`}
+                  >
+                    {t("personaSetup.filters.searchSmart")}
+                  </button>
+                </div>
+                {searchTier === "keyword_and_embed" ? (
+                  <label
+                    className={`inline-flex max-w-full cursor-pointer items-center gap-2 text-[12px] text-text-variant ${FOCUS_RING}`}
+                    title={t("personaSetup.filters.searchDeepHint")}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={deepMatch}
+                      onChange={(e) => setDeepMatch(e.target.checked)}
+                      className="rounded border-outline/60"
+                    />
+                    <span className="truncate">
+                      {modelShort
+                        ? t("personaSetup.filters.searchDeepWithModel", {
+                            model: modelShort,
+                          })
+                        : t("personaSetup.filters.searchDeep")}
+                    </span>
+                  </label>
+                ) : null}
+              </div>
+
+              {matchEnabled && matchQuery.isFetching ? (
+                <p className="mt-2.5 text-[12px] text-text-dim">
+                  {searchMode === "keyword_and_embed_and_llm"
+                    ? t("personaSetup.filters.matchingDeep", {
+                        model: modelShort || judgeModel || "LLM",
+                      })
+                    : searchMode === "keyword_and_embed"
+                      ? t("personaSetup.filters.matchingSmart")
+                      : t("personaSetup.filters.matchingKeyword")}
+                </p>
+              ) : null}
+
+              {matchErrorMessage ? (
+                <p className="mt-2.5 rounded-lg border border-danger/40 bg-danger/10 px-3 py-2 text-[12px] text-danger">
+                  {t("personaSetup.filters.matchFailed", {
+                    detail: matchErrorMessage,
+                  })}
+                </p>
+              ) : null}
+            </div>
           </div>
 
           {suggestions.length > 0 ? (
@@ -451,6 +618,14 @@ export function PersonaFilterModal({
                   {t("personaSetup.filters.suggestedAttributes", {
                     count: suggestions.length,
                   })}
+                  <span className="ml-1.5 text-text-dim">
+                    ·{" "}
+                    {resultMode === "keyword_and_embed_and_llm"
+                      ? t("personaSetup.filters.matchedDeep")
+                      : resultMode === "keyword_and_embed"
+                        ? t("personaSetup.filters.matchedSmart")
+                        : t("personaSetup.filters.matchedKeyword")}
+                  </span>
                 </p>
                 <button
                   type="button"
@@ -465,9 +640,9 @@ export function PersonaFilterModal({
               <div className="flex flex-wrap gap-1.5">
                 {suggestions.map((attr) => {
                   const active = isSuggestionSelected(draft, attr);
-                  const label = (attr.label || attr.dimensionId).replace(
-                    /_/g,
-                    " ",
+                  const label = labels.dimLabel(
+                    attr.dimensionId,
+                    (attr.label || attr.dimensionId).replace(/_/g, " "),
                   );
                   return (
                     <button
@@ -493,7 +668,8 @@ export function PersonaFilterModal({
                     >
                       <span className="text-text-dim">{label}</span>
                       <span className="mx-1 text-text-dim">·</span>
-                      {attr.value}
+                      {attr.valueLabel ||
+                        labels.valueLabel(attr.dimensionId, attr.value)}
                     </button>
                   );
                 })}
@@ -527,7 +703,7 @@ export function PersonaFilterModal({
                     }
                     className={`flex w-full items-center justify-between gap-2 px-3 py-2.5 text-left text-[13px] font-medium ${FOCUS_RING}`}
                   >
-                    <span>{group.label}</span>
+                    <span>{labels.taxonomyLabel(group.id, group.label)}</span>
                     <Sym
                       name={groupOpen ? "expand_less" : "expand_more"}
                       size={18}
@@ -557,7 +733,9 @@ export function PersonaFilterModal({
                                   }
                                   className={`flex w-full items-center justify-between gap-2 px-2.5 py-2 text-left text-[12px] text-text-variant ${FOCUS_RING}`}
                                 >
-                                  <span>{sub.label}</span>
+                                  <span>
+                                    {labels.taxonomyLabel(sub.id, sub.label)}
+                                  </span>
                                   <Sym
                                     name={
                                       subOpen ? "expand_less" : "expand_more"
@@ -603,7 +781,7 @@ export function PersonaFilterModal({
                       className="glass-tile glass-tile--active inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[12px] text-primary"
                     >
                       <span className="text-text-dim">{chip.label}:</span>{" "}
-                      {chip.value}
+                      {chip.displayValue}
                       <Sym name="close" size={12} />
                     </button>
                   ))}
@@ -625,7 +803,7 @@ export function PersonaFilterModal({
                 {fields.length > 0 ? (
                   <div className="flex flex-wrap gap-1.5">
                     {fields.map((field) => {
-                      const label = findDimensionLabel(catalog, field);
+                      const label = findDimensionLabel(catalog, field, labels);
                       return (
                         <button
                           key={field}

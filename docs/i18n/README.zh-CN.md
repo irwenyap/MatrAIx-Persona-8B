@@ -6,12 +6,12 @@
   </p>
   <p>
     <a href="../../README.md">English</a> |
-    <a href="README.ko.md">한국어</a> |
     <strong>简体中文</strong> |
     <a href="README.zh-TW.md">繁體中文</a> |
+    <a href="README.ko.md">한국어</a> |
     <a href="README.ja.md">日本語</a> |
-    <a href="README.pt-BR.md">Português</a> |
-    <a href="README.es.md">Español</a>
+    <a href="README.es.md">Español</a> |
+    <a href="README.pt-BR.md">Português</a>
   </p>
   <p>
     <a href="https://matraix.ai/"><img alt="Website" src="https://img.shields.io/badge/Website-matraix.ai-4f7cff?style=for-the-badge"></a>
@@ -48,10 +48,10 @@
 ## 动态与认可
 
 - **学术评论** — [*Can We Simulate the World?*](https://aiscientist.substack.com/p/can-we-simulate-the-world) — Mayank Kejriwal，[*AI Scientist*](https://aiscientist.substack.com/)
-- **研究发现** — 登上 [Hugging Face Papers](https://huggingface.co/papers/2608.04205)（[Daily Papers, 2026-08-10](https://huggingface.co/papers/date/2026-08-10)）
-- **媒体** — [36氪](https://www.36kr.com/p/3932853833759876) · [Numerama](https://www.numerama.com/tech/2308727-ces-chercheurs-ont-cree-83-milliards-dhumains-virtuels-pour-tester-des-produits-a-notre-place.html) · [Infobae](https://www.infobae.com/tecno/2026/08/10/asi-prueba-la-ia-un-mundo-con-8300-millones-de-personas-digitales-matraix-es-el-metaverso/) · [AI타임스](https://www.aitimes.com/news/articleView.html?idxno=213824) · [Startup Fortune](https://startupfortune.com/harvard-and-mit-built-an-ai-model-of-83-billion-people-to-test-products-on/) · [Forbes Türkiye](https://www.forbes.com.tr/saglik/hastaya-dokunmadan-once-8-3-milyar-kez-denemek-sagligin-yeni-test-dunyasi-matraix) · [WIRED Czech](https://www.wired.cz/news-beat/harvard-a-mit-vytvorily-ai-simulaci-obsahujici-83-miliardy-virtualnich-lidi)
-- **产业评论** — Cisco VP & CTO [Gianpaolo Barozzi](https://lnkd.in/p/gE9cV2nw) 有讨论
-- **社交** — 登上 [X Trending Story](https://x.com/i/trending/2086626337561911419)
+- **研究精选** — 登上 [Hugging Face Papers](https://huggingface.co/papers/2608.04205)（[每日论文，2026-08-10](https://huggingface.co/papers/date/2026-08-10)）
+- **媒体** — [《新苏黎世报》周日版](https://www.nzz.ch/nzz-am-sonntag/report-und-debatte/die-ki-vermessung-der-menschheit-unsere-acht-milliarden-doppelgaenger-ld.10019342) · [新智元（36氪）](https://www.36kr.com/p/3932853833759876) · [Numerama](https://www.numerama.com/tech/2308727-ces-chercheurs-ont-cree-83-milliards-dhumains-virtuels-pour-tester-des-produits-a-notre-place.html) · [Infobae](https://www.infobae.com/tecno/2026/08/10/asi-prueba-la-ia-un-mundo-con-8300-millones-de-personas-digitales-matraix-es-el-metaverso/) · [AI时报](https://www.aitimes.com/news/articleView.html?idxno=213824) · [Startup Fortune](https://startupfortune.com/harvard-and-mit-built-an-ai-model-of-83-billion-people-to-test-products-on/) · [《福布斯》土耳其版](https://www.forbes.com.tr/saglik/hastaya-dokunmadan-once-8-3-milyar-kez-denemek-sagligin-yeni-test-dunyasi-matraix) · [《连线》捷克版](https://www.wired.cz/news-beat/harvard-a-mit-vytvorily-ai-simulaci-obsahujici-83-miliardy-virtualnich-lidi)
+- **产业评论** — Cisco 副总裁兼 CTO [Gianpaolo Barozzi](https://lnkd.in/p/gE9cV2nw) 有讨论
+- **社交** — 登上 [X 热门专题](https://x.com/i/trending/2086626337561911419)
 
 ## 发布
 

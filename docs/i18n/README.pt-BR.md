@@ -7,12 +7,12 @@
   </p>
   <p>
     <a href="../../README.md">English</a> |
-    <a href="README.ko.md">한국어</a> |
     <a href="README.zh-CN.md">简体中文</a> |
     <a href="README.zh-TW.md">繁體中文</a> |
+    <a href="README.ko.md">한국어</a> |
     <a href="README.ja.md">日本語</a> |
-    <strong>Português</strong> |
-    <a href="README.es.md">Español</a>
+    <a href="README.es.md">Español</a> |
+    <strong>Português</strong>
   </p>
   <p>
     <a href="https://matraix.ai/"><img alt="Website" src="https://img.shields.io/badge/Website-matraix.ai-4f7cff?style=for-the-badge"></a>
@@ -61,10 +61,10 @@ reais**.
 ## Novidades & reconhecimento
 
 - **Comentário acadêmico** — [*Can We Simulate the World?*](https://aiscientist.substack.com/p/can-we-simulate-the-world) — Mayank Kejriwal ([*AI Scientist*](https://aiscientist.substack.com/))
-- **Descoberta em pesquisa** — Destaque no [Hugging Face Papers](https://huggingface.co/papers/2608.04205) ([Daily Papers, 2026-08-10](https://huggingface.co/papers/date/2026-08-10))
-- **Mídia** — [36Kr](https://www.36kr.com/p/3932853833759876) · [Numerama](https://www.numerama.com/tech/2308727-ces-chercheurs-ont-cree-83-milliards-dhumains-virtuels-pour-tester-des-produits-a-notre-place.html) · [Infobae](https://www.infobae.com/tecno/2026/08/10/asi-prueba-la-ia-un-mundo-con-8300-millones-de-personas-digitales-matraix-es-el-metaverso/) · [AI타임스](https://www.aitimes.com/news/articleView.html?idxno=213824) · [Startup Fortune](https://startupfortune.com/harvard-and-mit-built-an-ai-model-of-83-billion-people-to-test-products-on/) · [Forbes Türkiye](https://www.forbes.com.tr/saglik/hastaya-dokunmadan-once-8-3-milyar-kez-denemek-sagligin-yeni-test-dunyasi-matraix) · [WIRED Czech](https://www.wired.cz/news-beat/harvard-a-mit-vytvorily-ai-simulaci-obsahujici-83-miliardy-virtualnich-lidi)
-- **Comentário da indústria** — Discutido pelo VP e CTO da Cisco [Gianpaolo Barozzi](https://lnkd.in/p/gE9cV2nw)
-- **Social** — Destaque como [X Trending Story](https://x.com/i/trending/2086626337561911419)
+- **Seleção de pesquisa** — Destaque no [Hugging Face Papers](https://huggingface.co/papers/2608.04205) ([Papers do dia, 2026-08-10](https://huggingface.co/papers/date/2026-08-10))
+- **Mídia** — [NZZ am Sonntag](https://www.nzz.ch/nzz-am-sonntag/report-und-debatte/die-ki-vermessung-der-menschheit-unsere-acht-milliarden-doppelgaenger-ld.10019342) · [AI Era (via 36Kr)](https://www.36kr.com/p/3932853833759876) · [Numerama](https://www.numerama.com/tech/2308727-ces-chercheurs-ont-cree-83-milliards-dhumains-virtuels-pour-tester-des-produits-a-notre-place.html) · [Infobae](https://www.infobae.com/tecno/2026/08/10/asi-prueba-la-ia-un-mundo-con-8300-millones-de-personas-digitales-matraix-es-el-metaverso/) · [AI Times](https://www.aitimes.com/news/articleView.html?idxno=213824) · [Startup Fortune](https://startupfortune.com/harvard-and-mit-built-an-ai-model-of-83-billion-people-to-test-products-on/) · [Forbes Turquia](https://www.forbes.com.tr/saglik/hastaya-dokunmadan-once-8-3-milyar-kez-denemek-sagligin-yeni-test-dunyasi-matraix) · [WIRED Tchéquia](https://www.wired.cz/news-beat/harvard-a-mit-vytvorily-ai-simulaci-obsahujici-83-miliardy-virtualnich-lidi)
+- **Comentário da indústria** — Discutido pelo vice-presidente e CTO da Cisco [Gianpaolo Barozzi](https://lnkd.in/p/gE9cV2nw)
+- **Redes** — Destaque como [história em tendência no X](https://x.com/i/trending/2086626337561911419)
 
 ## Lançamentos
 

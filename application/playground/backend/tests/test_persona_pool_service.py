@@ -829,3 +829,51 @@ def test_generate_synthetic_pool_from_task_strategy(tmp_path, monkeypatch):
     result = service.generate_synthetic_pool(task_path="application/tasks/demo-task")
     assert result["pool"] == "persona/datasets/generated-persona-dev-strategy-demo-task"
     assert result["count"] == 2
+
+
+def test_get_dimension_labels_missing_pack_reports_unavailable(tmp_path):
+    service = PersonaPoolService(repo_root=tmp_path)
+    result = service.get_dimension_labels("ko")
+    assert result == {
+        "locale": "ko",
+        "available": False,
+        "reviewStatus": None,
+        "dimensions": {},
+        "taxonomy": {},
+    }
+
+
+def test_get_dimension_labels_reads_committed_pack(tmp_path):
+    labels_dir = tmp_path / "persona" / "schema" / "labels"
+    labels_dir.mkdir(parents=True)
+    (labels_dir / "dimensions.labels.zh-Hans.json").write_text(
+        json.dumps(
+            {
+                "formatVersion": "1.0",
+                "locale": "zh-Hans",
+                "reviewStatus": "machine-assisted",
+                "dimensions": {
+                    "primary_language": {
+                        "label": "主要语言",
+                        "values": {"Mandarin": "普通话"},
+                    }
+                },
+            },
+            ensure_ascii=False,
+        ),
+        encoding="utf-8",
+    )
+    service = PersonaPoolService(repo_root=tmp_path)
+    result = service.get_dimension_labels("zh-Hans")
+    assert result["available"] is True
+    assert result["reviewStatus"] == "machine-assisted"
+    entry = result["dimensions"]["primary_language"]
+    assert entry["label"] == "主要语言"
+    assert entry["values"]["Mandarin"] == "普通话"
+
+
+def test_get_dimension_labels_rejects_unsafe_locale_tokens(tmp_path):
+    service = PersonaPoolService(repo_root=tmp_path)
+    for bad in ("", "../secrets", "zh Hans", "a/b", "x" * 33):
+        with pytest.raises(ValueError):
+            service.get_dimension_labels(bad)
