@@ -41,6 +41,7 @@ from persona_retrieval import (  # noqa: E402
 
 DEFAULT_JOBS_DIR = REPO_ROOT / "configs" / "jobs" / "application-task-job-recipe"
 _EXECUTION_MODES = frozenset({"auto", "force_docker", "smoke"})
+_DEFAULT_N_CONCURRENT_TRIALS = 2
 
 
 def _display_path(path: Path) -> str:
@@ -75,6 +76,7 @@ def _format_run_env_comment(
     *,
     model_name: str,
     sample_size: int,
+    compute_family: str = "local",
 ) -> str:
     primary_exports = export_hint_lines(model_name)
     needs_openai_sut = any(name == "MATRIX_CHATBOT_TASK_PATH" for name, _ in exports)
@@ -86,6 +88,12 @@ def _format_run_env_comment(
     for name, value in exports:
         lines.append(f"#   export {name}={value}")
     lines.append("#   uv run matraix run -c <this-file>")
+    if compute_family and compute_family != "local":
+        lines.append(
+            "#   sidecar computeFamily={} — matraix run uses HarborJobService".format(
+                compute_family
+            )
+        )
     lines.append("#")
     for line in format_credential_preflight(
         model_name,
@@ -233,6 +241,26 @@ def main() -> None:
         help="CUA backend override (e.g. macos, ios, docker) when execution-mode is auto.",
     )
     parser.add_argument(
+        "--compute-family",
+        default="local",
+        metavar="FAMILY",
+        help=(
+            "Execution family written into the sidecar (same field as Playground "
+            "computeFamily). Default: local. matraix run -c wraps Harbor for local "
+            "and uses HarborJobService for any other value."
+        ),
+    )
+    parser.add_argument(
+        "--n-concurrent-trials",
+        type=int,
+        default=_DEFAULT_N_CONCURRENT_TRIALS,
+        metavar="N",
+        help=(
+            "Parallel persona trials (same as Playground Parallel / "
+            "nConcurrentTrials). Default: %(default)s."
+        ),
+    )
+    parser.add_argument(
         "--name",
         default=None,
         help="Job basename for output YAML (default: derived from task + stratify fields)",
@@ -275,6 +303,9 @@ def main() -> None:
         parser.error("--persona-ids cannot be combined with --cohort-id")
     if args.no_strategy and args.strategy:
         parser.error("use either --strategy or --no-strategy, not both")
+    if args.n_concurrent_trials < 1:
+        parser.error("--n-concurrent-trials must be >= 1")
+    compute_family = (args.compute_family or "local").strip().lower() or "local"
 
     try:
         plan = build_retrieval_plan(
@@ -336,7 +367,7 @@ def main() -> None:
             "job_name": job_name,
             "jobs_dir": "jobs",
             "n_attempts": 1,
-            "n_concurrent_trials": 1,
+            "n_concurrent_trials": int(args.n_concurrent_trials),
             "timeout_multiplier": 1.0,
         },
     }
@@ -350,6 +381,7 @@ def main() -> None:
     meta = job_config.pop("_job_meta")
     meta.update(
         {
+            "computeFamily": compute_family,
             "retrieval": {
                 "pool": retrieved.persona_pool,
                 "matchedCount": retrieved.matched_count,
@@ -416,7 +448,7 @@ def main() -> None:
         f"# Retrieval: {retrieval_line}\n"
         f"# Personas: {', '.join(meta['selected_persona_ids'])}\n"
         f"#\n"
-        f"{_format_run_env_comment(run_env_exports, model_name=args.model_name, sample_size=meta['sample_size'])}"
+        f"{_format_run_env_comment(run_env_exports, model_name=args.model_name, sample_size=meta['sample_size'], compute_family=compute_family)}"
     )
     out_path.write_text(
         header + yaml.safe_dump(job_config, sort_keys=False),
@@ -447,6 +479,10 @@ def main() -> None:
     for name, value in run_env_exports:
         print(f"  export {name}={value}")
     print(f"  uv run matraix run -c {_display_path(out_path)}")
+    if compute_family != "local":
+        print(
+            f"  # sidecar computeFamily={compute_family} — matraix run uses HarborJobService"
+        )
     print("Preflight:")
     for line in format_credential_preflight(
         args.model_name,

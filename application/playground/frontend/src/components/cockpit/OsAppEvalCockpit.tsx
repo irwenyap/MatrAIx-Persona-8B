@@ -196,6 +196,11 @@ export function OsAppEvalCockpit({
     clearLaunchError,
     canLaunchCohort,
     launchBatch,
+    requestConfigAnotherRun,
+    confirmConfigAnotherRun,
+    cancelConfigAnotherRun,
+    configAnotherOpen,
+    batchLaunching,
   } = useCockpitLaunch(options, "os-app", setupTaskPath, isActive);
 
 
@@ -330,6 +335,12 @@ export function OsAppEvalCockpit({
     clearLaunchError();
   }, [reset, clearBatch, clearLaunchError]);
 
+  const handleConfirmConfigAnotherRun = useCallback(() => {
+    reset();
+    confirmConfigAnotherRun();
+    setTaskId("");
+  }, [reset, confirmConfigAnotherRun]);
+
   const { onCancelRun, cancelRunBusy } = useCockpitRunCancel({
     batchJobName,
     batchComplete,
@@ -392,6 +403,7 @@ export function OsAppEvalCockpit({
     batchError,
     phase,
     batchCancelled,
+    batchLaunching,
   );
   const runProgressPct = batchJobName
     ? computeBatchProgressPct(batchJobName, batchCompletedTrials, expectedTrialCount)
@@ -529,10 +541,20 @@ export function OsAppEvalCockpit({
             (failed && !batchJobName ? null : displayError)
           }
           onNewRun={showLiveCenter ? handleNewRun : undefined}
+          onConfigAnotherRun={
+            batchJobName
+              ? batchComplete || batchCancelled
+                ? handleConfirmConfigAnotherRun
+                : requestConfigAnotherRun
+              : undefined
+          }
+          configAnotherOpen={configAnotherOpen}
+          onConfirmConfigAnother={handleConfirmConfigAnotherRun}
+          onCancelConfigAnother={cancelConfigAnotherRun}
           onCancelRun={onCancelRun}
           cancelRunBusy={cancelRunBusy}
           onViewJob={
-            batchJobName && batchComplete && onOpenHarborJob
+            batchJobName && onOpenHarborJob
               ? () => onOpenHarborJob(batchJobName)
               : !batchJobName && harborJobName && harborTrialName && onOpenHarborTrial
                 ? () => onOpenHarborTrial(harborJobName, harborTrialName)

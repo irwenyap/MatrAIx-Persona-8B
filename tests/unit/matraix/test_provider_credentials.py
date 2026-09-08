@@ -18,6 +18,43 @@ def test_resolve_openai_and_dashscope(monkeypatch) -> None:
     assert dash.present is True
 
 
+def test_resolve_gemini(monkeypatch) -> None:
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+    cred = resolve_provider_credential("gemini/gemini-2.5-pro")
+    assert cred.provider == "Gemini"
+    assert cred.env_var == "GEMINI_API_KEY"
+    assert cred.present is False
+    monkeypatch.setenv("GEMINI_API_KEY", "sk-test")
+    assert resolve_provider_credential("google/gemini-2.5-flash").present is True
+
+
+def test_resolve_xai(monkeypatch) -> None:
+    monkeypatch.delenv("XAI_API_KEY", raising=False)
+    cred = resolve_provider_credential("xai/grok-4.5")
+    assert cred.provider == "xAI"
+    assert cred.env_var == "XAI_API_KEY"
+    assert cred.present is False
+    monkeypatch.setenv("XAI_API_KEY", "sk-test")
+    assert resolve_provider_credential("xai/grok-3-mini").present is True
+
+
+def test_resolve_deepseek_and_zai(monkeypatch) -> None:
+    monkeypatch.delenv("DEEPSEEK_API_KEY", raising=False)
+    monkeypatch.delenv("ZAI_API_KEY", raising=False)
+    deepseek = resolve_provider_credential("deepseek/deepseek-v4-pro")
+    assert deepseek.provider == "DeepSeek"
+    assert deepseek.env_var == "DEEPSEEK_API_KEY"
+    assert deepseek.present is False
+    zai = resolve_provider_credential("zai/glm-4.7")
+    assert zai.provider == "Z.ai"
+    assert zai.env_var == "ZAI_API_KEY"
+    assert zai.present is False
+    monkeypatch.setenv("DEEPSEEK_API_KEY", "sk-test")
+    monkeypatch.setenv("ZAI_API_KEY", "sk-test")
+    assert resolve_provider_credential("deepseek/deepseek-chat").present is True
+    assert resolve_provider_credential("zai/glm-5").present is True
+
+
 def test_resolve_anthropic_default_and_bare_model() -> None:
     assert resolve_provider_credential("anthropic/claude-sonnet-4-6").env_var == (
         "ANTHROPIC_API_KEY"

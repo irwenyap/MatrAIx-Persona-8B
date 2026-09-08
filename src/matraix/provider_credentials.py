@@ -33,8 +33,16 @@ def resolve_provider_credential(model_name: str) -> ProviderCredential:
         return ProviderCredential("OpenAI", "OPENAI_API_KEY", value)
     if lowered.startswith("dashscope/"):
         return ProviderCredential("DashScope", "DASHSCOPE_API_KEY", value)
+    if lowered.startswith("gemini/") or lowered.startswith("google/"):
+        return ProviderCredential("Gemini", "GEMINI_API_KEY", value)
     if lowered.startswith("openrouter/"):
         return ProviderCredential("OpenRouter", "OPENROUTER_API_KEY", value)
+    if lowered.startswith("xai/"):
+        return ProviderCredential("xAI", "XAI_API_KEY", value)
+    if lowered.startswith("deepseek/"):
+        return ProviderCredential("DeepSeek", "DEEPSEEK_API_KEY", value)
+    if lowered.startswith("zai/"):
+        return ProviderCredential("Z.ai", "ZAI_API_KEY", value)
     if lowered.startswith("anthropic/"):
         return ProviderCredential("Anthropic", "ANTHROPIC_API_KEY", value)
     if "/" not in value:

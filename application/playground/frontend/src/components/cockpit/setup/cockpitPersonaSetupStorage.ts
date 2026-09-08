@@ -40,6 +40,34 @@ export function sanitizePersonaPool(pool: string | null | undefined): string {
   return text;
 }
 
+/** Operator-picked Dataset + people (not a task-fill generate pool). */
+export function hasDurableOperatorCohort(input: {
+  personaPool?: string | null;
+  selectedPersonaIds?: string[];
+  selectedCount?: number;
+  useEntirePool?: boolean;
+}): boolean {
+  if (isTaskStrategyFillPool(input.personaPool)) return false;
+  if (!(input.personaPool ?? "").trim()) return false;
+  return (
+    input.useEntirePool === true ||
+    (input.selectedPersonaIds?.length ?? 0) > 0 ||
+    (input.selectedCount ?? 0) > 0
+  );
+}
+
+/** Sampling UI that matches an explicit launch cohort (not strategy stratified-N). */
+export function samplingModeForOperatorCohort(input: {
+  selectedPersonaIds: string[];
+  selectedCount?: number;
+  useEntirePool?: boolean;
+}): PersonaSamplingMode {
+  if (input.useEntirePool) return "all";
+  const size = Math.max(input.selectedCount ?? 0, input.selectedPersonaIds.length);
+  if (size <= 1) return "single";
+  return "random";
+}
+
 export interface CockpitPersonaSetupRecord {
   selectedPersonaIds: string[];
   /** Full cohort size (may exceed selectedPersonaIds when launching by pool ref). */
@@ -236,21 +264,120 @@ export function defaultPersonaSetup(fallbackPersonaModel: string): CockpitPerson
 
 /**
  * Custom mode (Task default off) must not keep a task-fill cohort as Dataset.
- * Returns a clean sandbox record when the stored pool is strategy-owned.
+ * Falls back to the previous non-fill dataset when one is known.
  */
 export function scrubTaskStrategyFillForCustomMode(
   record: CockpitPersonaSetupRecord,
   fallbackPersonaModel: string,
+  durablePool?: string | null,
 ): CockpitPersonaSetupRecord {
   if (!isTaskStrategyFillPool(record.personaPool)) return record;
   const defaults = defaultPersonaSetup(fallbackPersonaModel);
+  const fallbackPool =
+    durablePool && !isTaskStrategyFillPool(durablePool)
+      ? sanitizePersonaPool(durablePool)
+      : PERSONA_BENCH_POOL;
   return {
     ...defaults,
+    personaPool: fallbackPool,
     personaModel: record.personaModel || defaults.personaModel,
     parallelTrials: record.parallelTrials || defaults.parallelTrials,
     useTaskDefaultStrategy: false,
     taskDefaultStrategyDismissed: true,
   };
+}
+
+/** Keep Dataset + selected ids as one selection and dismiss Task default. */
+export function keepOperatorCohort(
+  base: CockpitPersonaSetupRecord,
+  cohort: {
+    personaPool: string;
+    selectedPersonaIds: string[];
+    selectedCount: number;
+    useEntirePool: boolean;
+  },
+): CockpitPersonaSetupRecord {
+  const selectedPersonaIds = cohort.selectedPersonaIds;
+  const selectedCount = cohort.selectedCount || selectedPersonaIds.length;
+  return {
+    ...base,
+    personaPool: sanitizePersonaPool(cohort.personaPool),
+    selectedPersonaIds,
+    selectedCount,
+    useEntirePool: cohort.useEntirePool,
+    samplingMode: samplingModeForOperatorCohort({
+      selectedPersonaIds,
+      selectedCount,
+      useEntirePool: cohort.useEntirePool,
+    }),
+    useTaskDefaultStrategy: false,
+    taskDefaultStrategyDismissed: true,
+  };
+}
+
+export type TaskHydrateIncomingCohort = {
+  personaPool: string;
+  selectedPersonaIds: string[];
+  selectedCount: number;
+  useEntirePool: boolean;
+};
+
+/**
+ * Resolve cockpit persona state when a task path hydrates.
+ *
+ * Invariant: never launch pool A with ids from pool B. An operator pick
+ * (Dataset + people) restores together and turns Task default off so the
+ * rail matches POST. Task-fill pools stay ephemeral.
+ */
+export function resolveTaskHydrateSetup(input: {
+  strategy: TaskPersonaStrategy | null | undefined;
+  stored: CockpitPersonaSetupRecord;
+  hasTaskSpecificStore: boolean;
+  incoming: TaskHydrateIncomingCohort;
+  fallbackPersonaModel: string;
+}): CockpitPersonaSetupRecord {
+  const { strategy, stored, hasTaskSpecificStore, incoming, fallbackPersonaModel } = input;
+  const dismissed = stored.taskDefaultStrategyDismissed === true;
+  const modelBase: CockpitPersonaSetupRecord = {
+    ...defaultPersonaSetup(fallbackPersonaModel),
+    personaModel: stored.personaModel || fallbackPersonaModel,
+    parallelTrials: stored.parallelTrials,
+  };
+
+  // First visit of this task: honor people already on screen (or kind-level draft).
+  if (!hasTaskSpecificStore && hasDurableOperatorCohort(incoming)) {
+    return keepOperatorCohort(modelBase, incoming);
+  }
+
+  if (hasTaskSpecificStore && (dismissed || !strategy)) {
+    return scrubTaskStrategyFillForCustomMode(
+      {
+        ...stored,
+        useTaskDefaultStrategy: Boolean(strategy) && stored.useTaskDefaultStrategy,
+        taskDefaultStrategyDismissed: dismissed,
+      },
+      fallbackPersonaModel,
+    );
+  }
+
+  // This task's own fill pool is owned by Task default ON.
+  if (hasTaskSpecificStore && isTaskStrategyFillPool(stored.personaPool)) {
+    const applied = setupFromPersonaStrategy(strategy, fallbackPersonaModel, modelBase);
+    applied.personaPool = sanitizePersonaPool(stored.personaPool);
+    applied.selectedPersonaIds = stored.selectedPersonaIds;
+    applied.selectedCount = stored.selectedCount || stored.selectedPersonaIds.length;
+    applied.useEntirePool = stored.useEntirePool;
+    return applied;
+  }
+
+  // Returning with an explicit Dataset pick: restore atomically, don't show
+  // strategy stratified-N while launch would send those ids.
+  if (hasTaskSpecificStore && hasDurableOperatorCohort(stored)) {
+    return keepOperatorCohort(modelBase, stored);
+  }
+
+  // Task owns the cohort — do not paste leftover ids from a previous screen.
+  return setupFromPersonaStrategy(strategy, fallbackPersonaModel, modelBase);
 }
 
 export function setupFromPersonaStrategy(
@@ -361,6 +488,8 @@ export function readCockpitPersonaSetup(
     return {
       ...defaultPersonaSetup(fallbackPersonaModel),
       selectedPersonaIds: batch.personaIds,
+      selectedCount: batch.selectedCount || batch.personaIds.length,
+      personaPool: sanitizePersonaPool(batch.personaPool || PERSONA_BENCH_POOL),
     };
   }
 
@@ -376,8 +505,12 @@ export function writeCockpitPersonaSetup(
   const path = taskPath?.trim() ?? "";
   if (path) {
     store.byTaskPath = { ...(store.byTaskPath ?? {}), [path]: record };
-  } else {
-    store.byKind = { ...(store.byKind ?? {}), [taskKind]: record };
   }
+  // Last operator draft for this kind. New task paths fall back to byKind;
+  // never sticky-restore a task-fill pool as Dataset.
+  store.byKind = {
+    ...(store.byKind ?? {}),
+    [taskKind]: scrubTaskStrategyFillForCustomMode(record, record.personaModel),
+  };
   writeStore(store);
 }

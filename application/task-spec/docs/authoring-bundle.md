@@ -126,11 +126,47 @@ Playground uses this for Single / Random / All / Stratified defaults.
 Rules:
 
 1. Every `sampling.fields` entry must also appear under `dimensionFilters` with allowed values.
-2. Thin / missing cells → generate a local pool with `generate_dev_personas.py --strategy <task>`, sample from `matraix-persona-1m`, widen filters / sources, or reuse a **Save as dataset…** YAML pool. Sampling never synthesizes personas at draw time.
+2. Thin / missing cells → generate a local pool with `generate_dev_personas.py --strategy <task>` (same generate path as Playground, including `--overlay` custom dimensions), sample from `matraix-persona-1m`, widen filters / sources, or reuse a **Save as dataset…** YAML pool. Sampling never synthesizes personas at draw time.
 3. Do not set both `perCell` and `sampleSize` under stratified sampling.
 
+**Declared target shares (proportional mix)**
+
+`proportional` alone draws quotas ∝ the *pool's* cell population. To instead
+synthesize/draw to a mix **you** declare (e.g. 40 % Cost-sensitive / 35 %
+Value-driven / 25 % Premium-seeking), put the shares in the contract. Two
+equivalent forms:
+
+```jsonc
+// Form A — explicit sampling.portions
+"dimensionFilters": { "economic_motivation": ["Cost-sensitive", "Value-driven", "Premium-seeking"] },
+"sampling": {
+  "mode": "stratified", "fields": ["economic_motivation"],
+  "allocation": "proportional", "sampleSize": 20,
+  "portions": { "economic_motivation": { "Cost-sensitive": 0.4, "Value-driven": 0.35, "Premium-seeking": 0.25 } }
+}
+```
+
+```jsonc
+// Form B — weights authored on the filter values (portions derived automatically)
+"dimensionFilters": { "economic_motivation": { "Cost-sensitive": 0.4, "Value-driven": 0.35, "Premium-seeking": 0.25 } },
+"sampling": { "mode": "stratified", "fields": ["economic_motivation"], "allocation": "proportional", "sampleSize": 20 }
+```
+
+Notes:
+
+- Weights are relative (normalized), so `40/35/25` and `0.4/0.35/0.25` are equivalent.
+- The shared-cohort **size** is `sampleSize` (Playground's Task-plan tile lets the
+  operator override N; the declared shares still define the mix). Synthesis honors
+  the mix as *exact* marginal allocation (`50/30/20` at N=20 → `10/6/4`).
+- Shares currently apply to a **single** stratify dimension; the dim must be a real
+  schema attribute listed in `sampling.fields`. Custom (non-schema) dimensions are
+  stamped as overlays *after* sampling, so they can't carry a proportional mix.
+- CLI `generate_dev_personas.py --strategy <task>` applies the same mix (portions
+  or weighted filters). `--task … --per-cell` still fills **grounding.toml** probe
+  cells only — it does not read `persona_strategy.json`.
+
 Playground turns on **Task default strategy** from this file (filters / mode /
-allocation locked to the file). Operators can turn that switch off to edit
+allocation / portions locked to the file). Operators can turn that switch off to edit
 filters themselves, then turn it back on to re-apply the task default.
 
 ### Ensuring pool coverage

@@ -150,10 +150,19 @@ class BrowserUseHarborAgent(BaseInstalledAgent):
                 "OPENAI_API_KEY",
                 "LLM_API_KEY",
                 "DASHSCOPE_API_KEY",
+                "GEMINI_API_KEY",
+                "GOOGLE_API_KEY",
+                "OPENROUTER_API_KEY",
+                "XAI_API_KEY",
+                "DEEPSEEK_API_KEY",
+                "ZAI_API_KEY",
             )
         ):
             raise ValueError(
-                "Set ANTHROPIC_API_KEY, OPENAI_API_KEY, DASHSCOPE_API_KEY, or LLM_API_KEY for browser-use"
+                "Set ANTHROPIC_API_KEY, OPENAI_API_KEY, DASHSCOPE_API_KEY, "
+                "GEMINI_API_KEY, OPENROUTER_API_KEY, XAI_API_KEY, "
+                "DEEPSEEK_API_KEY, ZAI_API_KEY, or LLM_API_KEY "
+                "for browser-use"
             )
 
         llm_api_key = self._get_env("LLM_API_KEY")
@@ -162,11 +171,28 @@ class BrowserUseHarborAgent(BaseInstalledAgent):
             and "ANTHROPIC_API_KEY" not in env
             and "OPENAI_API_KEY" not in env
             and "DASHSCOPE_API_KEY" not in env
+            and "GEMINI_API_KEY" not in env
+            and "OPENROUTER_API_KEY" not in env
+            and "XAI_API_KEY" not in env
+            and "DEEPSEEK_API_KEY" not in env
+            and "ZAI_API_KEY" not in env
         ):
             if self.model_name.startswith("anthropic/"):
                 env["ANTHROPIC_API_KEY"] = llm_api_key
             elif self.model_name.startswith("dashscope/"):
                 env["DASHSCOPE_API_KEY"] = llm_api_key
+            elif self.model_name.startswith("gemini/") or self.model_name.startswith(
+                "google/"
+            ):
+                env["GEMINI_API_KEY"] = llm_api_key
+            elif self.model_name.startswith("openrouter/"):
+                env["OPENROUTER_API_KEY"] = llm_api_key
+            elif self.model_name.startswith("xai/"):
+                env["XAI_API_KEY"] = llm_api_key
+            elif self.model_name.startswith("deepseek/"):
+                env["DEEPSEEK_API_KEY"] = llm_api_key
+            elif self.model_name.startswith("zai/"):
+                env["ZAI_API_KEY"] = llm_api_key
             else:
                 env["OPENAI_API_KEY"] = llm_api_key
 

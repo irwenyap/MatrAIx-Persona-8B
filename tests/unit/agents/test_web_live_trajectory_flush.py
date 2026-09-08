@@ -212,3 +212,142 @@ def test_openhands_save_screenshot_b64(tmp_path):
     rel = oh._save_screenshot_b64(png, tmp_path / "images", 2)
     assert rel == "images/step_002.png"
     assert (tmp_path / "images" / "step_002.png").is_file()
+
+
+def test_cocoa_controller_type_and_gemini_api_key(monkeypatch):
+    assert cocoa._controller_type("gemini/gemini-2.5-pro") == "gemini"
+    monkeypatch.delenv("DASHSCOPE_API_KEY", raising=False)
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.delenv("LLM_API_KEY", raising=False)
+    monkeypatch.delenv("GOOGLE_API_KEY", raising=False)
+    monkeypatch.setenv("GEMINI_API_KEY", "sk-gemini-test")
+    assert cocoa._api_key("gemini/gemini-2.5-pro") == "sk-gemini-test"
+
+
+def test_cocoa_api_key_prefers_openrouter_and_xai(monkeypatch):
+    monkeypatch.delenv("DASHSCOPE_API_KEY", raising=False)
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.delenv("LLM_API_KEY", raising=False)
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+    monkeypatch.delenv("GOOGLE_API_KEY", raising=False)
+    monkeypatch.setenv("OPENROUTER_API_KEY", "sk-or-test")
+    monkeypatch.setenv("XAI_API_KEY", "sk-xai-test")
+    assert cocoa._api_key("openrouter/z-ai/glm-4.7") == "sk-or-test"
+    assert cocoa._api_key("xai/grok-4.5") == "sk-xai-test"
+    assert cocoa._llm_base_url("xai/grok-4.5") == "https://api.x.ai/v1"
+    assert cocoa._llm_base_url("openrouter/z-ai/glm-4.7") == "https://openrouter.ai/api/v1"
+
+
+def test_cocoa_api_key_prefers_deepseek_and_zai(monkeypatch):
+    monkeypatch.delenv("DASHSCOPE_API_KEY", raising=False)
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.delenv("LLM_API_KEY", raising=False)
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+    monkeypatch.delenv("GOOGLE_API_KEY", raising=False)
+    monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
+    monkeypatch.delenv("XAI_API_KEY", raising=False)
+    monkeypatch.setenv("DEEPSEEK_API_KEY", "sk-deepseek-test")
+    monkeypatch.setenv("ZAI_API_KEY", "sk-zai-test")
+    assert cocoa._api_key("deepseek/deepseek-v4-pro") == "sk-deepseek-test"
+    assert cocoa._api_key("zai/glm-4.7") == "sk-zai-test"
+    assert cocoa._llm_base_url("deepseek/deepseek-chat") == "https://api.deepseek.com"
+    assert cocoa._llm_base_url("zai/glm-5") == "https://api.z.ai/api/paas/v4"
+
+
+def test_browser_use_routes_gemini_to_openai_compatible(monkeypatch):
+    created: dict[str, str] = {}
+
+    class _ChatOpenAI:
+        def __init__(self, *, model, api_key, base_url):
+            created.update(model=model, api_key=api_key, base_url=base_url)
+
+    monkeypatch.setitem(
+        sys.modules,
+        "browser_use",
+        types.SimpleNamespace(ChatOpenAI=_ChatOpenAI, ChatAnthropic=object),
+    )
+    monkeypatch.setenv("GEMINI_API_KEY", "sk-gemini-test")
+    monkeypatch.delenv("GEMINI_API_BASE", raising=False)
+    monkeypatch.delenv("GOOGLE_API_KEY", raising=False)
+    monkeypatch.delenv("LLM_API_KEY", raising=False)
+
+    llm = bu._create_llm("gemini/gemini-2.5-flash")
+    assert isinstance(llm, _ChatOpenAI)
+    assert created == {
+        "model": "gemini-2.5-flash",
+        "api_key": "sk-gemini-test",
+        "base_url": "https://generativelanguage.googleapis.com/v1beta/openai/",
+    }
+
+
+def test_browser_use_routes_xai_and_openrouter(monkeypatch):
+    created: dict[str, str] = {}
+
+    class _ChatOpenAI:
+        def __init__(self, *, model, api_key, base_url):
+            created.update(model=model, api_key=api_key, base_url=base_url)
+
+    monkeypatch.setitem(
+        sys.modules,
+        "browser_use",
+        types.SimpleNamespace(ChatOpenAI=_ChatOpenAI, ChatAnthropic=object),
+    )
+    monkeypatch.setenv("XAI_API_KEY", "sk-xai-test")
+    monkeypatch.delenv("XAI_API_BASE", raising=False)
+    monkeypatch.delenv("LLM_API_KEY", raising=False)
+    monkeypatch.delenv("LLM_BASE_URL", raising=False)
+    bu._create_llm("xai/grok-4.5")
+    assert created == {
+        "model": "grok-4.5",
+        "api_key": "sk-xai-test",
+        "base_url": "https://api.x.ai/v1",
+    }
+
+    created.clear()
+    monkeypatch.setenv("OPENROUTER_API_KEY", "sk-or-test")
+    monkeypatch.delenv("OPENROUTER_API_BASE", raising=False)
+    monkeypatch.delenv("OPENROUTER_BASE_URL", raising=False)
+    monkeypatch.delenv("LLM_BASE_URL", raising=False)
+    bu._create_llm("openrouter/z-ai/glm-4.7")
+    assert created == {
+        "model": "z-ai/glm-4.7",
+        "api_key": "sk-or-test",
+        "base_url": "https://openrouter.ai/api/v1",
+    }
+
+
+def test_browser_use_routes_deepseek_and_zai(monkeypatch):
+    created: dict[str, str] = {}
+
+    class _ChatOpenAI:
+        def __init__(self, *, model, api_key, base_url):
+            created.update(model=model, api_key=api_key, base_url=base_url)
+
+    monkeypatch.setitem(
+        sys.modules,
+        "browser_use",
+        types.SimpleNamespace(ChatOpenAI=_ChatOpenAI, ChatAnthropic=object),
+    )
+    monkeypatch.setenv("DEEPSEEK_API_KEY", "sk-deepseek-test")
+    monkeypatch.delenv("DEEPSEEK_API_BASE", raising=False)
+    monkeypatch.delenv("LLM_API_KEY", raising=False)
+    monkeypatch.delenv("LLM_BASE_URL", raising=False)
+    bu._create_llm("deepseek/deepseek-v4-pro")
+    assert created == {
+        "model": "deepseek-v4-pro",
+        "api_key": "sk-deepseek-test",
+        "base_url": "https://api.deepseek.com",
+    }
+
+    created.clear()
+    monkeypatch.setenv("ZAI_API_KEY", "sk-zai-test")
+    monkeypatch.delenv("ZAI_API_BASE", raising=False)
+    bu._create_llm("zai/glm-4.7")
+    assert created == {
+        "model": "glm-4.7",
+        "api_key": "sk-zai-test",
+        "base_url": "https://api.z.ai/api/paas/v4",
+    }

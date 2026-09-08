@@ -261,7 +261,16 @@ def _section_for(dim_id: str, category: str) -> str:
     return "Other attributes"
 
 
-def _label_for(dim_id: str, meta: dict[str, Any] | None) -> str:
+def _label_for(
+    dim_id: str,
+    meta: dict[str, Any] | None,
+    *,
+    labels: dict[str, str] | None = None,
+) -> str:
+    if labels:
+        custom = str(labels.get(dim_id) or labels.get(dim_id.lower()) or "").strip()
+        if custom:
+            return custom
     if meta and meta.get("label"):
         return str(meta["label"]).strip()
     return dim_id.replace("_", " ")
@@ -290,10 +299,36 @@ def resolve_profile_max_chars(max_chars: int | None = None) -> int | None:
     return DEFAULT_PROFILE_MAX_CHARS
 
 
+def overlay_labels_from_persona_path(persona_path: str | Path | None) -> dict[str, str]:
+    """id → display label from the pool ``manifest.json`` next to a persona YAML."""
+    if not persona_path:
+        return {}
+    path = Path(persona_path)
+    manifest_path = path.parent / "manifest.json"
+    if not manifest_path.is_file():
+        return {}
+    try:
+        payload = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except Exception:  # noqa: BLE001
+        return {}
+    if not isinstance(payload, dict):
+        return {}
+    from matraix.persona_generator import overlay_dimensions_from_manifest
+
+    labels: dict[str, str] = {}
+    for row in overlay_dimensions_from_manifest(payload):
+        dim_id = str(row.get("id") or "").strip()
+        label = str(row.get("label") or "").strip()
+        if dim_id and label and dim_id not in labels:
+            labels[dim_id] = label
+    return labels
+
+
 def collect_dimension_items(
     dimensions: dict[str, Any],
     *,
     catalog_path: str = DEFAULT_CATALOG_PATH,
+    dimension_labels: dict[str, str] | None = None,
 ) -> dict[str, list[tuple[str, str, str]]]:
     """Group keepable dims into section -> [(dim_id, label, value), ...]."""
     catalog = load_dimension_catalog(catalog_path)
@@ -321,7 +356,7 @@ def collect_dimension_items(
 
         category = str((meta or {}).get("category") or "")
         heading = _section_for(dim_id, category)
-        label = _label_for(dim_id, meta)
+        label = _label_for(dim_id, meta, labels=dimension_labels)
         grouped.setdefault(heading, []).append((dim_id, label, text))
 
     return {key: value for key, value in grouped.items() if value}
@@ -332,13 +367,18 @@ def build_dimension_narrative(
     *,
     catalog_path: str = DEFAULT_CATALOG_PATH,
     max_chars: int | None = None,
+    dimension_labels: dict[str, str] | None = None,
 ) -> list[str]:
     """Schema-driven profile sections for agent roleplay (full 1290, adaptive).
 
     Returns a list of markdown section blocks for the Jinja persona macros.
     """
     budget = resolve_profile_max_chars(max_chars)
-    grouped = collect_dimension_items(dimensions, catalog_path=catalog_path)
+    grouped = collect_dimension_items(
+        dimensions,
+        catalog_path=catalog_path,
+        dimension_labels=dimension_labels,
+    )
     if not grouped:
         return []
 
@@ -401,10 +441,14 @@ def build_template_context_extras(
     *,
     catalog_path: str = DEFAULT_CATALOG_PATH,
     max_chars: int | None = None,
+    dimension_labels: dict[str, str] | None = None,
 ) -> dict[str, Any]:
     return {
         "dimension_profile_narrative": build_dimension_narrative(
-            dimensions, catalog_path=catalog_path, max_chars=max_chars
+            dimensions,
+            catalog_path=catalog_path,
+            max_chars=max_chars,
+            dimension_labels=dimension_labels,
         ),
         "dimension_catalog_path": catalog_path,
     }

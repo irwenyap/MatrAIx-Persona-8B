@@ -38,6 +38,19 @@ def _create_llm(model: str):
 
     from browser_use import ChatOpenAI
 
+    if provider in ("gemini", "google"):
+        api_key = (
+            os.environ.get("GEMINI_API_KEY")
+            or os.environ.get("GOOGLE_API_KEY")
+            or os.environ.get("LLM_API_KEY")
+            or ""
+        ).strip()
+        base_url = (
+            os.environ.get("GEMINI_API_BASE")
+            or "https://generativelanguage.googleapis.com/v1beta/openai/"
+        ).strip()
+        return ChatOpenAI(model=bare, api_key=api_key, base_url=base_url)
+
     if provider == "dashscope":
         api_key = (
             os.environ.get("DASHSCOPE_API_KEY")
@@ -49,6 +62,42 @@ def _create_llm(model: str):
             os.environ.get("DASHSCOPE_API_BASE")
             or os.environ.get("LLM_BASE_URL")
             or "https://dashscope.aliyuncs.com/compatible-mode/v1"
+        ).strip()
+        return ChatOpenAI(model=bare, api_key=api_key, base_url=base_url)
+
+    if provider == "openrouter":
+        api_key = (
+            os.environ.get("OPENROUTER_API_KEY") or os.environ.get("LLM_API_KEY") or ""
+        ).strip()
+        base_url = (
+            os.environ.get("OPENROUTER_API_BASE")
+            or os.environ.get("OPENROUTER_BASE_URL")
+            or "https://openrouter.ai/api/v1"
+        ).strip()
+        return ChatOpenAI(model=bare, api_key=api_key, base_url=base_url)
+
+    if provider == "xai":
+        api_key = (
+            os.environ.get("XAI_API_KEY") or os.environ.get("LLM_API_KEY") or ""
+        ).strip()
+        base_url = (os.environ.get("XAI_API_BASE") or "https://api.x.ai/v1").strip()
+        return ChatOpenAI(model=bare, api_key=api_key, base_url=base_url)
+
+    if provider == "deepseek":
+        api_key = (
+            os.environ.get("DEEPSEEK_API_KEY") or os.environ.get("LLM_API_KEY") or ""
+        ).strip()
+        base_url = (
+            os.environ.get("DEEPSEEK_API_BASE") or "https://api.deepseek.com"
+        ).strip()
+        return ChatOpenAI(model=bare, api_key=api_key, base_url=base_url)
+
+    if provider == "zai":
+        api_key = (
+            os.environ.get("ZAI_API_KEY") or os.environ.get("LLM_API_KEY") or ""
+        ).strip()
+        base_url = (
+            os.environ.get("ZAI_API_BASE") or "https://api.z.ai/api/paas/v4"
         ).strip()
         return ChatOpenAI(model=bare, api_key=api_key, base_url=base_url)
 

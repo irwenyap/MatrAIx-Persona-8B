@@ -397,3 +397,52 @@ def build_production_filter_categories(
             "groups": groups,
         },
     }
+
+
+STUDY_OVERLAY_GROUP_ID = "study-overlay"
+
+
+def overlay_catalog_group(
+    overlay_dimensions: list[dict[str, Any]],
+    *,
+    label: str = "Study dimensions",
+) -> dict[str, Any] | None:
+    """Filter-tree group for cohort-scoped overlay dimensions."""
+    dims: list[dict[str, Any]] = []
+    for row in overlay_dimensions:
+        if not isinstance(row, dict):
+            continue
+        dim_id = str(row.get("id") or "").strip()
+        values = [str(value) for value in (row.get("values") or []) if str(value).strip()]
+        if not dim_id or not values:
+            continue
+        dims.append(
+            {
+                "id": dim_id,
+                "label": str(row.get("label") or dim_id).strip(),
+                "values": values,
+            }
+        )
+    if not dims:
+        return None
+    dim_ids = [str(dim["id"]) for dim in dims]
+    return {
+        "id": STUDY_OVERLAY_GROUP_ID,
+        "label": label,
+        "dimensionIds": dim_ids,
+        "dimensions": dims,
+    }
+
+
+def prepend_overlay_group(
+    categories: dict[str, Any],
+    overlay_dimensions: list[dict[str, Any]] | None,
+) -> dict[str, Any]:
+    group = overlay_catalog_group(overlay_dimensions or [])
+    if group is None:
+        return categories
+    profile = dict(categories.get("devProfile") or {})
+    groups = [group, *[row for row in (profile.get("groups") or []) if isinstance(row, dict)]]
+    next_profile = dict(profile)
+    next_profile["groups"] = groups
+    return {**categories, "devProfile": next_profile}

@@ -284,7 +284,7 @@ def preflight_checks() -> List[Dict[str, Any]]:
     **Required** (block platform ready)
 
     * Model credentials — at least one of OpenAI / Anthropic / DashScope
-      / OpenRouter
+      / OpenRouter / Gemini / xAI / DeepSeek / Z.ai
       (every survey / chat / web / os-app run needs a persona or agent model).
     * Survey forms / Web tasks — surfaces are always available in-process.
 
@@ -310,6 +310,10 @@ def preflight_checks() -> List[Dict[str, Any]]:
     )
     dashscope_key = bool(os.environ.get("DASHSCOPE_API_KEY"))
     openrouter_key = bool(os.environ.get("OPENROUTER_API_KEY"))
+    gemini_key = bool(os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY"))
+    xai_key = bool(os.environ.get("XAI_API_KEY"))
+    deepseek_key = bool(os.environ.get("DEEPSEEK_API_KEY"))
+    zai_key = bool(os.environ.get("ZAI_API_KEY"))
     configured = [
         label
         for label, present in (
@@ -317,6 +321,10 @@ def preflight_checks() -> List[Dict[str, Any]]:
             ("Anthropic", anthropic_key),
             ("DashScope", dashscope_key),
             ("OpenRouter", openrouter_key),
+            ("Gemini", gemini_key),
+            ("xAI", xai_key),
+            ("DeepSeek", deepseek_key),
+            ("Z.ai", zai_key),
         )
         if present
     ]
@@ -328,8 +336,9 @@ def preflight_checks() -> List[Dict[str, Any]]:
             "detail": (
                 "Configured: {}.".format(", ".join(configured))
                 if configured
-                else "Not configured. Set OpenAI, Anthropic, DashScope, or "
-                "OpenRouter credentials to run application tasks."
+                else "Not configured. Set OpenAI, Anthropic, DashScope, "
+                "OpenRouter, Gemini, xAI, DeepSeek, or Z.ai credentials "
+                "to run application tasks."
             ),
         }
     )
@@ -383,6 +392,58 @@ def preflight_checks() -> List[Dict[str, Any]]:
                 "Configured."
                 if openrouter_key
                 else "Not configured. Needed only for OpenRouter persona models."
+            ),
+        }
+    )
+    checks.append(
+        {
+            "group": "Core",
+            "name": "Gemini credentials",
+            "ok": gemini_key,
+            "optional": True,
+            "detail": (
+                "Configured. Used by Gemini persona models."
+                if gemini_key
+                else "Not configured. Needed only for Gemini persona models."
+            ),
+        }
+    )
+    checks.append(
+        {
+            "group": "Core",
+            "name": "xAI credentials",
+            "ok": xai_key,
+            "optional": True,
+            "detail": (
+                "Configured. Used by Grok persona models."
+                if xai_key
+                else "Not configured. Needed only for Grok persona models."
+            ),
+        }
+    )
+    checks.append(
+        {
+            "group": "Core",
+            "name": "DeepSeek credentials",
+            "ok": deepseek_key,
+            "optional": True,
+            "detail": (
+                "Configured. Used by official DeepSeek persona models."
+                if deepseek_key
+                else "Not configured. Needed only for official DeepSeek persona models."
+            ),
+        }
+    )
+    checks.append(
+        {
+            "group": "Core",
+            "name": "Z.ai credentials",
+            "ok": zai_key,
+            "optional": True,
+            "detail": (
+                "Configured. Used by official GLM persona models."
+                if zai_key
+                else "Not configured. Needed only for official GLM persona models."
             ),
         }
     )
@@ -1150,6 +1211,23 @@ def create_app(catalog_path: Optional[str] = None) -> FastAPI:
         services: AppState = Depends(get_services),
     ) -> Dict[str, Any]:
         try:
+            portions = body.portions
+            if not portions and body.taskPath:
+                from backend.service.task_persona_strategy_service import (
+                    get_task_persona_strategy,
+                )
+
+                strategy = get_task_persona_strategy(
+                    body.taskPath, repo_root=services.harbor_jobs.repo_root
+                )
+                sampling = (
+                    strategy.get("sampling")
+                    if isinstance(strategy, dict) and isinstance(strategy.get("sampling"), dict)
+                    else {}
+                )
+                raw = sampling.get("portions") if isinstance(sampling, dict) else None
+                if isinstance(raw, dict) and raw:
+                    portions = raw
             return services.persona_pool.sample_pool(
                 persona_pool=body.pool,
                 sample_size=body.sampleSize,
@@ -1159,9 +1237,11 @@ def create_app(catalog_path: Optional[str] = None) -> FastAPI:
                 stratify_fields=body.fields,
                 sample_size_per_value_group=body.perCell,
                 allocation=body.allocation,
+                portions=portions,
                 task_path=body.taskPath,
                 preview_limit=body.previewLimit,
                 include_persona_ids=body.includePersonaIds,
+                include_dimensions=body.includeDimensions,
             )
         except ValueError as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from exc
@@ -1187,6 +1267,12 @@ def create_app(catalog_path: Optional[str] = None) -> FastAPI:
             allocation=body.allocation,
             per_cell=body.perCell,
             sample_size=body.sampleSize,
+            marginals=body.marginals,
+            overlay_dimensions=[
+                row.model_dump() for row in (body.overlayDimensions or [])
+            ]
+            or None,
+            contrast=[row.model_dump() for row in (body.contrast or [])] or None,
             task_path=body.taskPath,
             name=body.name,
         )
@@ -1235,6 +1321,27 @@ def create_app(catalog_path: Optional[str] = None) -> FastAPI:
                 yield json.dumps(item, ensure_ascii=False) + "\n"
 
         return StreamingResponse(ndjson(), media_type="application/x-ndjson")
+
+    @app.post(
+        "/api/persona-pool/contrast",
+        response_model=schemas.PersonaPoolGenerateResponse,
+        tags=["persona-pool"],
+    )
+    def contrast_persona_pool(
+        body: schemas.PersonaPoolContrastRequest,
+        services: AppState = Depends(get_services),
+    ) -> Dict[str, Any]:
+        try:
+            return services.persona_pool.clone_contrast_pool(
+                persona_pool=body.pool,
+                overlay_id=body.overlayId,
+                value=body.value,
+                name=body.name,
+            )
+        except FileNotFoundError as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
 
     @app.get(
         "/api/persona-pool/personas",

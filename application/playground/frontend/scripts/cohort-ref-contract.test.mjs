@@ -44,6 +44,20 @@ test("launch helper omits personaIds when useEntirePool", () => {
   assert.match(launch, /personaIds:\s*input\.selectedPersonaIds/);
 });
 
+test("task hydrate keeps Dataset + ids together and does not paste leftover people onto strategy pool", () => {
+  const storage = read("src/components/cockpit/setup/cockpitPersonaSetupStorage.ts");
+  const hook = read("src/components/cockpit/setup/useSetupPersonaSampling.ts");
+  assert.match(storage, /export function resolveTaskHydrateSetup/);
+  assert.match(storage, /keepOperatorCohort/);
+  assert.match(storage, /hasDurableOperatorCohort/);
+  assert.match(hook, /resolveTaskHydrateSetup\(/);
+  assert.match(hook, /incomingCohortRef/);
+  assert.doesNotMatch(
+    hook,
+    /applied\.selectedPersonaIds = stored\.selectedPersonaIds/,
+  );
+});
+
 test("parallel trials are not hard-capped by task type", () => {
   assert.throws(() => read("src/components/cockpit/setup/cockpitParallelCaps.ts"), /ENOENT/);
   const bar = read("src/components/cockpit/setup/RunLaunchBar.tsx");

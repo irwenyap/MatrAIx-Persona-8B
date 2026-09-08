@@ -1,6 +1,7 @@
 import { useI18n } from "@/i18n/I18nProvider";
 import { FOCUS_RING, Sym } from "../cockpitShared";
 import { CockpitInlineCount } from "./CockpitCountField";
+import { ConfigAnotherRunDialog } from "./ConfigAnotherRunDialog";
 
 export type RunLaunchPhase =
   "idle" | "launching" | "running" | "done" | "error";
@@ -31,6 +32,11 @@ export interface RunLaunchBarProps {
   retryBusy?: boolean;
   /** When the live panel already shows a failure card, keep the bar to actions only. */
   compactOnFailure?: boolean;
+  /** Open the confirm dialog to background this batch and reset setup. */
+  onConfigAnotherRun?: () => void;
+  configAnotherOpen?: boolean;
+  onConfirmConfigAnother?: () => void;
+  onCancelConfigAnother?: () => void;
 }
 
 export function RunLaunchBar({
@@ -55,12 +61,19 @@ export function RunLaunchBar({
   onRetryFailed,
   failedCount = 0,
   retryBusy = false,
+  onConfigAnotherRun,
+  configAnotherOpen = false,
+  onConfirmConfigAnother,
+  onCancelConfigAnother,
 }: RunLaunchBarProps) {
   const { t } = useI18n();
   const active = runPhase !== "idle";
   const failed = runPhase === "error";
   const done = runPhase === "done";
-  const pct = Math.max(0, Math.min(100, progressPct));
+  const pct =
+    runPhase === "launching" && progressPct <= 0
+      ? 12
+      : Math.max(0, Math.min(100, progressPct));
   const parallelMax = Math.max(1, personaCount);
 
   return (
@@ -105,9 +118,11 @@ export function RunLaunchBar({
               <div className="min-w-0">
                 <p className="truncate font-display text-[15px] font-semibold leading-tight text-text-main">
                   {progressLabel ??
-                    (isBatch
-                      ? t("cockpitSetup.run.batch")
-                      : t("cockpitSetup.run.runningSimulation"))}
+                    (runPhase === "launching"
+                      ? t("cockpitSetup.run.launching")
+                      : isBatch
+                        ? t("cockpitSetup.run.batch")
+                        : t("cockpitSetup.run.runningSimulation"))}
                 </p>
                 {progressSublabel && (
                   <p className="mt-0.5 truncate text-[12px] text-text-dim">
@@ -131,6 +146,16 @@ export function RunLaunchBar({
                     : isBatch
                       ? t("cockpitSetup.run.stopBatch")
                       : t("cockpitSetup.run.stopRun")}
+                </button>
+              )}
+              {onConfigAnotherRun && isBatch && (
+                <button
+                  type="button"
+                  onClick={onConfigAnotherRun}
+                  className={`inline-flex items-center gap-1.5 rounded-lg border border-outline/55 bg-transparent px-3.5 py-2 text-[14px] font-medium text-text-variant transition hover:border-outline hover:bg-surface-low hover:text-text-main active:scale-[0.98] ${FOCUS_RING}`}
+                >
+                  <Sym name="tune" size={16} />
+                  {t("cockpitSetup.run.configAnother")}
                 </button>
               )}
               {onRetryFailed &&
@@ -166,7 +191,7 @@ export function RunLaunchBar({
                   {t("cockpitSetup.run.download")}
                 </button>
               )}
-              {onViewJob && done && (
+              {onViewJob && (done || failed) && (
                 <button
                   type="button"
                   onClick={onViewJob}
@@ -178,7 +203,7 @@ export function RunLaunchBar({
                     : t("cockpitSetup.run.viewTrial")}
                 </button>
               )}
-              {onNewRun && (done || failed) && (
+              {onNewRun && (done || failed) && !(isBatch && onConfigAnotherRun) && (
                 <button
                   type="button"
                   onClick={onNewRun}
@@ -238,6 +263,11 @@ export function RunLaunchBar({
           </p>
         </>
       )}
+      <ConfigAnotherRunDialog
+        open={configAnotherOpen}
+        onCancel={onCancelConfigAnother ?? (() => undefined)}
+        onConfirm={onConfirmConfigAnother ?? (() => undefined)}
+      />
     </div>
   );
 }

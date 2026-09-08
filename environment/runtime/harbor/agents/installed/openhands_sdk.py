@@ -224,6 +224,18 @@ class OpenHandsSDK(BaseInstalledAgent):
             llm_api_key = self._get_env("LLM_API_KEY")
         if llm_api_key is None and self.model_name and self.model_name.startswith("dashscope/"):
             llm_api_key = self._get_env("DASHSCOPE_API_KEY")
+        if llm_api_key is None and self.model_name and (
+            self.model_name.startswith("gemini/") or self.model_name.startswith("google/")
+        ):
+            llm_api_key = self._get_env("GEMINI_API_KEY") or self._get_env("GOOGLE_API_KEY")
+        if llm_api_key is None and self.model_name and self.model_name.startswith("openrouter/"):
+            llm_api_key = self._get_env("OPENROUTER_API_KEY")
+        if llm_api_key is None and self.model_name and self.model_name.startswith("xai/"):
+            llm_api_key = self._get_env("XAI_API_KEY")
+        if llm_api_key is None and self.model_name and self.model_name.startswith("deepseek/"):
+            llm_api_key = self._get_env("DEEPSEEK_API_KEY")
+        if llm_api_key is None and self.model_name and self.model_name.startswith("zai/"):
+            llm_api_key = self._get_env("ZAI_API_KEY")
         if llm_api_key is None:
             raise ValueError("LLM_API_KEY environment variable must be set")
         env["LLM_API_KEY"] = llm_api_key

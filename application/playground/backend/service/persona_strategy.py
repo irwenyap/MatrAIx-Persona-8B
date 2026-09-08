@@ -1,4 +1,11 @@
-"""Load and validate per-task ``persona_strategy.json`` (Playground sampling defaults)."""
+"""Load and validate per-task ``persona_strategy.json`` (Playground sampling defaults).
+
+The strategy declares *who* belongs in the cohort (filters, stratify, optional
+target mix). Mix can be authored on the filter values themselves
+(``dimensionFilters.<dim> = {value: weight}``) or as ``sampling.portions``.
+Dataset ``pool`` is optional and only a soft hint — operators pick the persona
+dataset at run time.
+"""
 
 from __future__ import annotations
 
@@ -58,7 +65,7 @@ def normalize_persona_strategy(raw: dict[str, Any]) -> dict[str, Any]:
     schema_version = str(raw.get("schemaVersion") or "1.0").strip() or "1.0"
     pool = str(raw.get("pool") or "").strip() or None
     sources = _as_str_list(raw.get("sources"))
-    dimension_filters = _as_dimension_filters(raw.get("dimensionFilters"))
+    dimension_filters, filter_weights = _parse_dimension_filters(raw.get("dimensionFilters"))
 
     seed = raw.get("seed")
     if isinstance(seed, bool) or not isinstance(seed, (int, float)):
@@ -73,6 +80,15 @@ def normalize_persona_strategy(raw: dict[str, Any]) -> dict[str, Any]:
         if isinstance(sampling_raw, dict)
         else {"mode": "random", "sampleSize": 4}
     )
+    if (
+        sampling.get("allocation") == "proportional"
+        and filter_weights
+        and not sampling.get("portions")
+    ):
+        fields = set(sampling.get("fields") or [])
+        derived = {dim: weights for dim, weights in filter_weights.items() if dim in fields}
+        if derived:
+            sampling["portions"] = derived
 
     payload: dict[str, Any] = {
         "schemaVersion": schema_version,
@@ -172,7 +188,9 @@ def validate_persona_strategy_file(
         # Validate quotas against the author-authored block so normalize cannot
         # silently drop a conflicting sampleSize / perCell before we complain.
         errors.extend(
-            _validate_stratified_sampling(rel, normalized, sampling, raw_sampling)
+            _validate_stratified_sampling(
+                rel, normalized, sampling, raw_sampling, raw.get("dimensionFilters")
+            )
         )
 
     return errors
@@ -183,6 +201,7 @@ def _validate_stratified_sampling(
     normalized: dict[str, Any],
     sampling: dict[str, Any],
     raw_sampling: dict[str, Any],
+    raw_filters: object = None,
 ) -> list[str]:
     errors: list[str] = []
     fields = sampling.get("fields") or []
@@ -206,6 +225,8 @@ def _validate_stratified_sampling(
             f"dimensionFilters with allowed values (missing: {', '.join(missing_axes)}); "
             "otherwise Playground cannot guarantee cell coverage or synthesize gaps"
         )
+
+    errors.extend(_validate_portions(rel, raw_sampling, allocation, fields, raw_filters))
 
     if allocation == "perCell":
         per_cell = sampling.get("perCell")
@@ -257,6 +278,65 @@ def _validate_stratified_sampling(
     return errors
 
 
+def _validate_portions(
+    rel: str,
+    raw_sampling: dict[str, Any],
+    allocation: object,
+    fields: list[str],
+    raw_filters: object = None,
+) -> list[str]:
+    """Validate optional target shares from ``sampling.portions`` or weighted filters."""
+    portions = raw_sampling.get("portions")
+    source = "sampling.portions"
+    if portions is None:
+        _, filter_weights = _parse_dimension_filters(raw_filters)
+        field_set = {str(f) for f in fields}
+        mix = {
+            dim: weights
+            for dim, weights in filter_weights.items()
+            if str(dim) in field_set
+        }
+        if not mix:
+            return []
+        portions = mix
+        source = "dimensionFilters"
+    errors: list[str] = []
+    if allocation != "proportional":
+        errors.append(
+            f'{rel}: {source} mix weights are only valid with allocation "proportional" '
+            "(declared target shares reweight a proportional draw)"
+        )
+    if not isinstance(portions, dict) or not portions:
+        errors.append(
+            f"{rel}: {source} must be a non-empty object of "
+            "{dimension: {value: weight}}"
+        )
+        return errors
+    if len(portions) > 1:
+        errors.append(
+            f"{rel}: {source} currently supports a single dimension "
+            f"(got {', '.join(sorted(str(dim) for dim in portions))})"
+        )
+    for dim, weights in portions.items():
+        if str(dim) not in fields:
+            errors.append(
+                f"{rel}: {source} dimension {str(dim)!r} must be one of "
+                "sampling.fields"
+            )
+        if not isinstance(weights, dict) or not weights:
+            errors.append(
+                f"{rel}: {source}[{str(dim)!r}] must map values to positive weights"
+            )
+            continue
+        for label, weight in weights.items():
+            if isinstance(weight, bool) or not isinstance(weight, (int, float)) or float(weight) <= 0:
+                errors.append(
+                    f"{rel}: {source}[{str(dim)!r}][{str(label)!r}] "
+                    "must be a positive number"
+                )
+    return errors
+
+
 def _normalize_sampling_block(raw: dict[str, Any]) -> dict[str, Any]:
     mode = str(raw.get("mode") or "").strip().lower()
     if mode not in PERSONA_SAMPLING_MODES:
@@ -296,6 +376,10 @@ def _normalize_sampling_block(raw: dict[str, Any]) -> dict[str, Any]:
         block["perCell"] = _as_positive_int(raw.get("perCell")) or 1
     else:
         block["sampleSize"] = _as_positive_int(raw.get("sampleSize")) or 1
+    if allocation == "proportional":
+        portions = _as_portions(raw.get("portions"))
+        if portions:
+            block["portions"] = portions
     return block
 
 
@@ -319,6 +403,8 @@ def sampling_to_pool_kwargs(sampling: dict[str, Any] | None) -> dict[str, Any]:
         out["sample_size"] = _as_positive_int(block.get("sampleSize")) or 1
         out["sample_size_per_value_group"] = None
         out["allocation"] = allocation
+        if allocation == "proportional":
+            out["portions"] = _as_portions(block.get("portions")) or None
     elif mode == "random":
         out["sample_size"] = _as_positive_int(block.get("sampleSize")) or 4
         out["stratify_fields"] = None
@@ -332,19 +418,69 @@ def _as_positive_int(value: object) -> int | None:
     return number if number >= 1 else None
 
 
+def _as_portions(value: object) -> dict[str, dict[str, float]]:
+    """Coerce ``{dimension: {value: weight}}`` target shares (positive weights only)."""
+    if not isinstance(value, dict):
+        return {}
+    out: dict[str, dict[str, float]] = {}
+    for dim, weights in value.items():
+        dim_name = str(dim).strip()
+        if not dim_name or not isinstance(weights, dict):
+            continue
+        coerced: dict[str, float] = {}
+        for label, weight in weights.items():
+            key = str(label).strip()
+            if not key or isinstance(weight, bool) or not isinstance(weight, (int, float)):
+                continue
+            if float(weight) > 0:
+                coerced[key] = float(weight)
+        if coerced:
+            out[dim_name] = coerced
+    return out
+
+
 def _as_str_list(value: object) -> list[str]:
     if not isinstance(value, list):
         return []
     return [str(item).strip() for item in value if str(item).strip()]
 
 
-def _as_dimension_filters(value: object) -> dict[str, list[str]]:
+def _parse_dimension_filters(
+    value: object,
+) -> tuple[dict[str, list[str]], dict[str, dict[str, float]]]:
+    """Parse ``dimensionFilters``: value lists, or ``{value: share|null}`` maps.
+
+    A number is a mix share (used when that dim is a stratify field).
+    ``null`` means eligible only — included in the filter, not in the mix.
+    """
     if not isinstance(value, dict):
-        return {}
-    out: dict[str, list[str]] = {}
+        return {}, {}
+    filters: dict[str, list[str]] = {}
+    weights_out: dict[str, dict[str, float]] = {}
     for key, raw in value.items():
         dim = str(key).strip()
         if not dim:
+            continue
+        if isinstance(raw, dict) and raw:
+            values: list[str] = []
+            weights: dict[str, float] = {}
+            for label, weight in raw.items():
+                name = str(label).strip()
+                if not name:
+                    continue
+                if weight is None:
+                    values.append(name)
+                    continue
+                if isinstance(weight, bool) or not isinstance(weight, (int, float)):
+                    continue
+                if float(weight) <= 0:
+                    continue
+                values.append(name)
+                weights[name] = float(weight)
+            if values:
+                filters[dim] = values
+                if weights:
+                    weights_out[dim] = weights
             continue
         if isinstance(raw, list):
             values = [str(item).strip() for item in raw if str(item).strip()]
@@ -354,5 +490,5 @@ def _as_dimension_filters(value: object) -> dict[str, list[str]]:
             text = str(raw).strip()
             values = [text] if text else []
         if values:
-            out[dim] = values
-    return out
+            filters[dim] = values
+    return filters, weights_out

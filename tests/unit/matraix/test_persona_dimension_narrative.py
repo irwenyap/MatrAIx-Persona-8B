@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import json
+from pathlib import Path
+
 from matraix.agents.persona.loader import load_persona
 from matraix.persona_agent_context import (
     RECOMMENDED_MAX_INPUT_TOKENS,
@@ -11,6 +14,7 @@ from matraix.persona_agent_context import (
 from matraix.persona_dimension_catalog import (
     build_dimension_narrative,
     collect_dimension_items,
+    overlay_labels_from_persona_path,
 )
 
 
@@ -107,6 +111,31 @@ def test_coding_style_dimensions_appear_in_skills_section():
     assert "code comment style: extensive inline comments" in text
     assert "code naming verbosity: single-letter names" in text
     assert "code summary/tldr documentation: never includes tldr" in text
+
+
+def test_overlay_dimension_uses_manifest_label_in_narrative(tmp_path: Path):
+    yaml_path = tmp_path / "persona.yaml"
+    yaml_path.write_text(
+        "persona_id: '0001'\ndimensions:\n  overlay_1: High\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "manifest.json").write_text(
+        json.dumps(
+            {
+                "overlay_dimensions": [
+                    {"id": "overlay_1", "label": "品牌信任", "values": ["Low", "High"]}
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+    paragraphs = build_dimension_narrative(
+        {"overlay_1": "High"},
+        dimension_labels=overlay_labels_from_persona_path(yaml_path),
+    )
+    text = "\n".join(paragraphs)
+    assert "品牌信任: High" in text
+    assert "overlay 1:" not in text.lower()
 
 
 def test_persona_agent_context_floor():

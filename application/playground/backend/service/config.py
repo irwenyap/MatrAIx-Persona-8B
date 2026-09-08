@@ -28,8 +28,8 @@ REMOTE_RUNNER_API_URL_ENV = "REMOTE_RUNNER_API_URL"
 DEFAULT_PERSONA_MODEL = "anthropic/claude-haiku-4-5"
 
 # Persona-model IDs use LiteLLM provider prefixes (``anthropic/``, ``openai/``,
-# ``dashscope/``, ``openrouter/``). OpenAI-compatible providers use their own
-# credentials and endpoints.
+# ``gemini/``, ``xai/``, ``deepseek/``, ``zai/``, ``dashscope/``, ``openrouter/``).
+# OpenAI-compatible providers use their own credentials and endpoints.
 PERSONA_MODEL_KNOB_META: Dict[str, Dict[str, str]] = {
     "anthropic/claude-haiku-4-5": {
         "label": "Claude Haiku 4.5",
@@ -58,6 +58,42 @@ PERSONA_MODEL_KNOB_META: Dict[str, Dict[str, str]] = {
     "openai/gpt-5.5": {
         "label": "GPT-5.5",
         "description": "OpenAI computer-use CUA (default OpenAI desktop CUA model).",
+    },
+    "gemini/gemini-2.5-flash": {
+        "label": "Gemini 2.5 Flash",
+        "description": "Google persona simulation with lower cost.",
+    },
+    "gemini/gemini-2.5-pro": {
+        "label": "Gemini 2.5 Pro",
+        "description": "Google persona simulation with stronger reasoning.",
+    },
+    "gemini/gemini-2.5-computer-use-preview-10-2025": {
+        "label": "Gemini 2.5 Computer Use",
+        "description": "Google computer-use CUA (macOS/Linux desktop).",
+    },
+    "xai/grok-4.5": {
+        "label": "Grok 4.5",
+        "description": "xAI flagship persona simulation.",
+    },
+    "xai/grok-3-mini": {
+        "label": "Grok 3 Mini",
+        "description": "xAI lower-cost persona simulation.",
+    },
+    "deepseek/deepseek-v4-pro": {
+        "label": "DeepSeek V4 Pro",
+        "description": "DeepSeek official API flagship.",
+    },
+    "deepseek/deepseek-chat": {
+        "label": "DeepSeek Chat",
+        "description": "DeepSeek official API chat alias.",
+    },
+    "zai/glm-5": {
+        "label": "GLM 5",
+        "description": "Z.ai official GLM flagship.",
+    },
+    "zai/glm-4.7": {
+        "label": "GLM 4.7",
+        "description": "Z.ai official GLM 4.7.",
     },
     "dashscope/qwen3.6-plus-2026-04-02": {
         "label": "Qwen 3.6 Plus · Apr 2026",

@@ -286,3 +286,59 @@ def test_preview_production_1m_pages_are_stable(tmp_path, monkeypatch):
     )
     assert [card["personaId"] for card in again["personas"]] == ids0
 
+
+def _tiny_1m_repo(tmp_path, monkeypatch, *, rows: int = 200) -> Path:
+    release = _write_tiny_release(tmp_path, rows=rows)
+    monkeypatch.setenv(pool_mod.ENV_1M_DIR, str(release))
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    (repo / "persona/schema").mkdir(parents=True)
+    (repo / "persona/schema/dimension_categories.json").write_text(
+        json.dumps({"schemaVersion": "1.0", "personaSources": [], "devProfile": {"groups": []}}),
+        encoding="utf-8",
+    )
+    return repo
+
+
+def test_sample_production_1m_honors_declared_portions(tmp_path, monkeypatch):
+    repo = _tiny_1m_repo(tmp_path, monkeypatch, rows=200)
+    result = pool_mod.sample_production_1m(
+        repo_root=repo,
+        sample_size=10,
+        seed=7,
+        stratify_fields=["age_bracket"],
+        allocation="proportional",
+        portions={"age_bracket": {"18-24": 0.7, "25-34": 0.3}},
+    )
+    ages = [card["dimensions"]["age_bracket"] for card in result["personas"]]
+    assert ages.count("18-24") == 7
+    assert ages.count("25-34") == 3
+    assert set(ages) == {"18-24", "25-34"}
+
+
+def test_sample_production_1m_portions_require_stratify_field(tmp_path, monkeypatch):
+    repo = _tiny_1m_repo(tmp_path, monkeypatch, rows=40)
+    with pytest.raises(ValueError, match="require a stratify field"):
+        pool_mod.sample_production_1m(
+            repo_root=repo,
+            sample_size=10,
+            seed=7,
+            portions={"age_bracket": {"18-24": 0.7, "25-34": 0.3}},
+        )
+
+
+def test_persona_pool_service_samples_1m_portions(tmp_path, monkeypatch):
+    repo = _tiny_1m_repo(tmp_path, monkeypatch, rows=200)
+    service = PersonaPoolService(repo_root=repo)
+    sampled = service.sample_pool(
+        persona_pool=pool_mod.PRODUCTION_1M_POOL,
+        sample_size=10,
+        seed=7,
+        stratify_fields=["age_bracket"],
+        allocation="proportional",
+        portions={"age_bracket": {"18-24": 0.7, "25-34": 0.3}},
+    )
+    ages = [card["dimensions"]["age_bracket"] for card in sampled["personas"]]
+    assert ages.count("18-24") == 7
+    assert ages.count("25-34") == 3
+

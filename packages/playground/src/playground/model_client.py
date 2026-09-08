@@ -19,7 +19,11 @@ from playground.openai_client import (
 )
 
 DASHSCOPE_DEFAULT_BASE_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1"
+GEMINI_DEFAULT_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai/"
 OPENROUTER_DEFAULT_BASE_URL = "https://openrouter.ai/api/v1"
+XAI_DEFAULT_BASE_URL = "https://api.x.ai/v1"
+DEEPSEEK_DEFAULT_BASE_URL = "https://api.deepseek.com"
+ZAI_DEFAULT_BASE_URL = "https://api.z.ai/api/paas/v4"
 
 
 def dashscope_model_id(model: str) -> str:
@@ -44,6 +48,98 @@ def dashscope_openai_client_kwargs(model: str) -> Dict[str, str]:
     ).strip()
     return {
         "model": dashscope_model_id(model),
+        "api_key": api_key,
+        "base_url": base_url,
+    }
+
+
+def gemini_model_id(model: str) -> str:
+    """Return the bare Gemini model id from a Harbor persona model string."""
+    value = (model or "").strip()
+    if value.startswith("gemini/") or value.startswith("google/"):
+        return value.split("/", 1)[1]
+    return value
+
+
+def gemini_openai_client_kwargs(model: str) -> Dict[str, str]:
+    """OpenAI SDK kwargs for Google AI Studio's OpenAI-compatible chat API."""
+    api_key = (
+        os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY") or ""
+    ).strip()
+    if not api_key:
+        raise RuntimeError(
+            "GEMINI_API_KEY or GOOGLE_API_KEY is required for persona model {!r}".format(
+                model
+            )
+        )
+    base_url = (os.environ.get("GEMINI_API_BASE") or GEMINI_DEFAULT_BASE_URL).strip()
+    return {
+        "model": gemini_model_id(model),
+        "api_key": api_key,
+        "base_url": base_url,
+    }
+
+
+def xai_model_id(model: str) -> str:
+    """Return the bare xAI model id from a Harbor persona model string."""
+    value = (model or "").strip()
+    if value.startswith("xai/"):
+        return value.split("/", 1)[1]
+    return value
+
+
+def xai_openai_client_kwargs(model: str) -> Dict[str, str]:
+    """OpenAI SDK kwargs for xAI's OpenAI-compatible chat API."""
+    api_key = (os.environ.get("XAI_API_KEY") or "").strip()
+    if not api_key:
+        raise RuntimeError("XAI_API_KEY is required for persona model {!r}".format(model))
+    base_url = (os.environ.get("XAI_API_BASE") or XAI_DEFAULT_BASE_URL).strip()
+    return {
+        "model": xai_model_id(model),
+        "api_key": api_key,
+        "base_url": base_url,
+    }
+
+
+def deepseek_model_id(model: str) -> str:
+    """Return the bare DeepSeek model id from a Harbor persona model string."""
+    value = (model or "").strip()
+    if value.startswith("deepseek/"):
+        return value.split("/", 1)[1]
+    return value
+
+
+def deepseek_openai_client_kwargs(model: str) -> Dict[str, str]:
+    """OpenAI SDK kwargs for DeepSeek's official OpenAI-compatible chat API."""
+    api_key = (os.environ.get("DEEPSEEK_API_KEY") or "").strip()
+    if not api_key:
+        raise RuntimeError(
+            "DEEPSEEK_API_KEY is required for persona model {!r}".format(model)
+        )
+    base_url = (os.environ.get("DEEPSEEK_API_BASE") or DEEPSEEK_DEFAULT_BASE_URL).strip()
+    return {
+        "model": deepseek_model_id(model),
+        "api_key": api_key,
+        "base_url": base_url,
+    }
+
+
+def zai_model_id(model: str) -> str:
+    """Return the bare Z.ai GLM model id from a Harbor persona model string."""
+    value = (model or "").strip()
+    if value.startswith("zai/"):
+        return value.split("/", 1)[1]
+    return value
+
+
+def zai_openai_client_kwargs(model: str) -> Dict[str, str]:
+    """OpenAI SDK kwargs for Z.ai's official OpenAI-compatible chat API."""
+    api_key = (os.environ.get("ZAI_API_KEY") or "").strip()
+    if not api_key:
+        raise RuntimeError("ZAI_API_KEY is required for persona model {!r}".format(model))
+    base_url = (os.environ.get("ZAI_API_BASE") or ZAI_DEFAULT_BASE_URL).strip()
+    return {
+        "model": zai_model_id(model),
         "api_key": api_key,
         "base_url": base_url,
     }
@@ -217,6 +313,16 @@ def build_json_client(model: str, *, temperature: float = 0.7) -> Any:
             timeout_seconds=timeout_seconds,
             provider="dashscope",
         )
+    if value.startswith("gemini/") or value.startswith("google/"):
+        kwargs = gemini_openai_client_kwargs(value)
+        return OpenAIChatClient(
+            model=kwargs["model"],
+            api_key=kwargs["api_key"],
+            base_url=kwargs["base_url"],
+            temperature=temperature,
+            timeout_seconds=timeout_seconds,
+            provider="gemini",
+        )
     if value.startswith("openrouter/"):
         kwargs = openrouter_openai_client_kwargs(value)
         return OpenAIChatClient(
@@ -226,6 +332,36 @@ def build_json_client(model: str, *, temperature: float = 0.7) -> Any:
             temperature=temperature,
             timeout_seconds=timeout_seconds,
             provider="openrouter",
+        )
+    if value.startswith("xai/"):
+        kwargs = xai_openai_client_kwargs(value)
+        return OpenAIChatClient(
+            model=kwargs["model"],
+            api_key=kwargs["api_key"],
+            base_url=kwargs["base_url"],
+            temperature=temperature,
+            timeout_seconds=timeout_seconds,
+            provider="xai",
+        )
+    if value.startswith("deepseek/"):
+        kwargs = deepseek_openai_client_kwargs(value)
+        return OpenAIChatClient(
+            model=kwargs["model"],
+            api_key=kwargs["api_key"],
+            base_url=kwargs["base_url"],
+            temperature=temperature,
+            timeout_seconds=timeout_seconds,
+            provider="deepseek",
+        )
+    if value.startswith("zai/"):
+        kwargs = zai_openai_client_kwargs(value)
+        return OpenAIChatClient(
+            model=kwargs["model"],
+            api_key=kwargs["api_key"],
+            base_url=kwargs["base_url"],
+            temperature=temperature,
+            timeout_seconds=timeout_seconds,
+            provider="zai",
         )
     if value.startswith("openai/"):
         return OpenAIChatClient(

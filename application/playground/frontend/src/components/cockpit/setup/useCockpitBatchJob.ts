@@ -1,7 +1,7 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 
-import { api } from "@/lib/api";
+import { api, ApiError } from "@/lib/api";
 import type { I18nContextValue } from "@/i18n/I18nProvider";
 import type { PersonaPoolPersonaCard } from "@/lib/types";
 import { PERSONA_CARD_PREVIEW_LIMIT } from "@/lib/types";
@@ -177,16 +177,28 @@ export function useCockpitBatchJob(
     [effectivePersonaIds],
   );
 
-  // Launches that predate pool persistence: recover the resolved pool from the
-  // job config's persona_path (…/cohorts/cohort-x/persona_y.yaml → cohort dir).
-  const jobPoolQuery = useQuery({
+  // Confirm the attached job still exists (reload can restore a stale name
+  // from localStorage). Also recover the launch-time pool from persona_path
+  // when older records omitted it (…/cohorts/cohort-x/persona_y.yaml).
+  const attachedJobQuery = useQuery({
     queryKey: ["batch-job-persona-pool", batchJobName],
     queryFn: () => api.getHarborJob(batchJobName as string),
-    enabled: Boolean(batchJobName) && !restoredPersonaPool,
+    enabled: Boolean(batchJobName) && !batchCancelled,
+    retry: false,
     staleTime: Infinity,
   });
+
+  useEffect(() => {
+    if (!batchJobName || !attachedJobQuery.isError) return;
+    if (
+      attachedJobQuery.error instanceof ApiError &&
+      attachedJobQuery.error.status === 404
+    ) {
+      clearBatch();
+    }
+  }, [attachedJobQuery.error, attachedJobQuery.isError, batchJobName, clearBatch]);
   const derivedJobPool = useMemo(() => {
-    const agents = (jobPoolQuery.data?.config as { agents?: unknown } | null | undefined)?.agents;
+    const agents = (attachedJobQuery.data?.config as { agents?: unknown } | null | undefined)?.agents;
     if (!Array.isArray(agents)) return null;
     for (const agent of agents) {
       const path = (agent as { kwargs?: { persona_path?: unknown } } | null)?.kwargs
@@ -196,7 +208,7 @@ export function useCockpitBatchJob(
       }
     }
     return null;
-  }, [jobPoolQuery.data?.config]);
+  }, [attachedJobQuery.data?.config]);
 
   const batchPersonaPool = restoredPersonaPool ?? derivedJobPool;
 
@@ -322,7 +334,9 @@ export function resolveRunLaunchPhase(
   batchError: string | null,
   phase: HarborCockpitPhase,
   batchCancelled = false,
+  batchLaunching = false,
 ): RunLaunchPhase {
+  if (batchLaunching) return "launching";
   if (batchJobName) {
     if (batchCancelled) return "error";
     if (batchComplete) return "done";

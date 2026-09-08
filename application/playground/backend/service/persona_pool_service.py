@@ -13,6 +13,14 @@ from pathlib import Path
 from typing import Any, Callable, Literal
 
 from matraix.persona_dimension_catalog import values_for_dimension
+from matraix.persona_generator import (
+    GENERATE_COUNT_MAX,
+    MAX_FILTER_STRATA,
+    clone_contrast_personas,
+    overlay_dimensions_from_manifest,
+    resolve_contrast_overlay,
+    validate_contrast_stamps_against_dag,
+)
 from matraix.persona_job import (
     _stratify_bucket_key,
     load_manifest,
@@ -20,7 +28,10 @@ from matraix.persona_job import (
     sample_personas_stratified,
 )
 
-from backend.service.persona_sampling_alloc import sample_proportional_from_buckets
+from backend.service.persona_sampling_alloc import (
+    sample_by_portions_from_buckets,
+    sample_proportional_from_buckets,
+)
 
 PERSONA_CARD_DIMENSIONS = (
     "age_bracket",
@@ -58,14 +69,11 @@ _RESERVED_DATASET_SLUGS = frozenset(
 DIMENSION_CATEGORIES_PATH = "persona/schema/dimension_categories.json"
 DIMENSION_LABELS_DIR = "persona/schema/labels"
 _LABEL_LOCALE_RE = re.compile(r"^[A-Za-z0-9-]{1,32}$")
-# Soft guard for stratify cell cartesian products from dimensionFilters.
-MAX_FILTER_STRATA = 2048
 # UI keeps a full personaId list only at or below this size; larger cohorts are ref-based.
 PERSONA_UI_ID_LIST_MAX = 100
 PERSONA_CARD_PREVIEW_DEFAULT = 32
-GENERATE_COUNT_DEFAULT = 2000
-GENERATE_COUNT_MAX = 5000
 GENERATED_POOL_PREFIX = "generated-persona-dev"
+_GENERATED_RUN_TS = re.compile(r"^(.*)-(\d{8})-(\d{6})(?:-\d+)?$")
 CohortKind = Literal["recipe", "frozen"]
 
 
@@ -120,6 +128,92 @@ def _cohort_slug(value: str) -> str:
     if not slug:
         raise ValueError("cohort id must not be empty")
     return slug
+
+
+def _overlay_from_manifest(manifest: dict[str, Any]) -> list[dict[str, Any]]:
+    out: list[dict[str, Any]] = []
+    for row in overlay_dimensions_from_manifest(manifest):
+        dim_id = str(row.get("id") or "").strip()
+        values = [str(value) for value in (row.get("values") or []) if str(value).strip()]
+        if not dim_id or not values:
+            continue
+        out.append(
+            {
+                "id": dim_id,
+                "label": str(row.get("label") or dim_id).strip(),
+                "values": values,
+            }
+        )
+    return out
+
+
+def _generated_run_stamp() -> str:
+    return datetime.now().astimezone().strftime("%Y%m%d-%H%M%S")
+
+
+def _generated_pool_folder(kind_slug: str, datasets_root: Path) -> str:
+    """``generated-persona-dev-<kind>-YYYYMMDD-HHMMSS`` so runs do not overwrite."""
+    stamp = _generated_run_stamp()
+    base = f"{GENERATED_POOL_PREFIX}-{kind_slug}-{stamp}"
+    folder = base
+    n = 2
+    while (datasets_root / folder).exists():
+        folder = f"{base}-{n}"
+        n += 1
+    return folder
+
+
+def _generated_pool_label(folder: str, path: Path | None = None) -> str:
+    """``Contrast shared · 2026-08-23 19:28:47`` — from the folder name, else mtime."""
+    prefix = f"{GENERATED_POOL_PREFIX}-"
+    if not folder.startswith(prefix):
+        return folder
+    rest = folder[len(prefix):]
+    match = _GENERATED_RUN_TS.match(rest)
+    if match:
+        kind, day, tod = match.group(1), match.group(2), match.group(3)
+        stamp = f"{day[:4]}-{day[4:6]}-{day[6:]} {tod[:2]}:{tod[2:4]}:{tod[4:]}"
+        return f"{_humanize_generated_kind(kind)} · {stamp}"
+    when = None
+    if path is not None:
+        try:
+            when = (
+                datetime.fromtimestamp(path.stat().st_mtime)
+                .astimezone()
+                .strftime("%Y-%m-%d %H:%M")
+            )
+        except OSError:
+            when = None
+    if when:
+        return f"{_humanize_generated_kind(rest)} · {when}"
+    return folder
+
+
+def _humanize_generated_kind(kind: str) -> str:
+    text = str(kind or "").strip()
+    if not text:
+        return text
+    if text.startswith("contrast-"):
+        return f"Contrast · {text[len('contrast-'):]}"
+    return text
+
+
+def _contrast_clone_label(folder: str, resolved: list[dict[str, Any]]) -> str:
+    """Dropdown label: ``Contrast · Brand=Low · 2026-08-24 03:23:25``."""
+    bits = [
+        f"{row.get('label') or row.get('id')}={row.get('value')}"
+        for row in resolved
+        if row.get("value")
+    ]
+    stamp = None
+    prefix = f"{GENERATED_POOL_PREFIX}-"
+    if folder.startswith(prefix):
+        match = _GENERATED_RUN_TS.match(folder[len(prefix):])
+        if match:
+            day, tod = match.group(2), match.group(3)
+            stamp = f"{day[:4]}-{day[4:6]}-{day[6:]} {tod[:2]}:{tod[2:4]}:{tod[4:]}"
+    head = f"Contrast · {', '.join(bits)}" if bits else "Contrast"
+    return f"{head} · {stamp}" if stamp else head
 
 
 def _sampled_cohort_pool(parent_pool: str, digest: str) -> str:
@@ -429,6 +523,7 @@ class PersonaPoolService:
                 "sourceCounts": {},
                 "schemaVersion": None,
                 "dimensionCategoriesPath": DIMENSION_CATEGORIES_PATH,
+                "overlayDimensions": [],
             }
         manifest = self._read_json(manifest_path)
         return {
@@ -440,6 +535,7 @@ class PersonaPoolService:
             "dimensionCategoriesPath": str(
                 manifest.get("dimension_categories") or DIMENSION_CATEGORIES_PATH
             ),
+            "overlayDimensions": _overlay_from_manifest(manifest),
         }
 
     def load_dimension_categories(
@@ -499,7 +595,10 @@ class PersonaPoolService:
             is_production_1m_root,
             production_1m_available,
         )
-        from backend.service.persona_taxonomy import build_production_filter_categories
+        from backend.service.persona_taxonomy import (
+            build_production_filter_categories,
+            prepend_overlay_group,
+        )
 
         if is_production_1m_root(persona_pool):
             source_counts = {
@@ -541,6 +640,9 @@ class PersonaPoolService:
             schema_path=dimensions_schema if dimensions_schema.is_file() else None,
             persona_sources=persona_sources,
         )
+        overlay = list(summary.get("overlayDimensions") or [])
+        if overlay:
+            categories = prepend_overlay_group(categories, overlay)
         return {
             **summary,
             "dimensionCategoriesPath": "persona/schema/dimensions.json",
@@ -664,8 +766,13 @@ class PersonaPoolService:
                     if manifest_kind == "saved-persona-dataset"
                     else "dataset"
                 )
+                label = (
+                    _generated_pool_label(child.name, child)
+                    if child.name.startswith(f"{GENERATED_POOL_PREFIX}-")
+                    else child.name
+                )
                 by_pool[pool] = self._dataset_entry(
-                    pool=pool, label=child.name, kind=kind, path=child
+                    pool=pool, label=label, kind=kind, path=child
                 )
 
             # Intentionally omit matraix-persona-1m/cohorts/* from Dataset.
@@ -809,6 +916,9 @@ class PersonaPoolService:
             "hf_repo": parent_manifest.get("hf_repo"),
             "personas": manifest_personas,
         }
+        overlay = _overlay_from_manifest(parent_manifest)
+        if overlay:
+            manifest["overlay_dimensions"] = overlay
         (dest_dir / "manifest.json").write_text(
             json.dumps(manifest, indent=2, ensure_ascii=True) + "\n",
             encoding="utf-8",
@@ -832,6 +942,9 @@ class PersonaPoolService:
         allocation: str | None = None,
         per_cell: int | None = None,
         sample_size: int | None = None,
+        marginals: dict[str, dict[str, float]] | None = None,
+        overlay_dimensions: list[dict[str, Any]] | None = None,
+        contrast: list[dict[str, Any]] | None = None,
         task_path: str | None = None,
         name: str | None = None,
         on_progress: Callable[[dict[str, Any]], None] | None = None,
@@ -840,14 +953,20 @@ class PersonaPoolService:
 
         ``task_path`` loads that task's ``persona_strategy.json`` (one-time fill).
         Otherwise this is a custom Generation draw (plain ``count`` or stratified).
+        ``overlay_dimensions`` are study attrs stamped after the Full-DAG sample.
+        ``contrast`` writes extra stamped datasets from the first pool.
 
         ``on_progress`` receives NDJSON-friendly events::
             ``{"type":"progress","stage":...,"ratio":0..1,"label":...}``.
         """
+        from matraix.persona_consistency import load_dev_dimension_ids
         from matraix.persona_generator import (
-            generate_persona_pool,
-            stratified_cell_quota,
-            strategy_pin_cells,
+            apply_dimension_stamps,
+            contrast_base_stamps,
+            contrast_stamp_combinations,
+            generate_synthetic_personas,
+            normalize_generate_contrast,
+            normalize_overlay_dimensions,
             write_persona_dataset,
         )
 
@@ -858,6 +977,9 @@ class PersonaPoolService:
             label: str,
             done: int | None = None,
             total: int | None = None,
+            dataset_index: int | None = None,
+            dataset_total: int | None = None,
+            dataset_label: str | None = None,
         ) -> None:
             if on_progress is None:
                 return
@@ -871,6 +993,12 @@ class PersonaPoolService:
                 payload["done"] = int(done)
             if total is not None:
                 payload["total"] = int(total)
+            if dataset_index is not None:
+                payload["datasetIndex"] = int(dataset_index)
+            if dataset_total is not None:
+                payload["datasetTotal"] = int(dataset_total)
+            if dataset_label is not None:
+                payload["datasetLabel"] = str(dataset_label)
             on_progress(payload)
 
         filters = self._filters_as_lists(self._normalize_dimension_filters(dimension_filters))
@@ -911,114 +1039,242 @@ class PersonaPoolService:
                 if isinstance(sampling.get("perCell"), int)
                 else None
             )
+            # Request sampleSize is an explicit operator override; strategy is fallback.
             sample_n = (
-                sampling.get("sampleSize")
-                if isinstance(sampling.get("sampleSize"), int)
-                else None
+                sample_n
+                if sample_n is not None
+                else (
+                    sampling.get("sampleSize")
+                    if isinstance(sampling.get("sampleSize"), int)
+                    else None
+                )
             )
+            if marginals is None:
+                strategy_portions = strategy.get("portions")
+                if not isinstance(strategy_portions, dict) or not strategy_portions:
+                    strategy_portions = (
+                        sampling.get("portions")
+                        if isinstance(sampling.get("portions"), dict)
+                        else None
+                    )
+                if isinstance(strategy_portions, dict) and strategy_portions:
+                    marginals = strategy_portions
             if isinstance(strategy.get("seed"), int):
                 seed = int(strategy["seed"])
             task_slug = _cohort_slug(Path(str(task_path).strip()).name)
             kind_slug = kind_slug or f"strategy-{task_slug}"
 
-        missing = [field for field in fields if field not in filters]
-        if missing:
-            raise ValueError(
-                "every sampling.fields entry must also appear in dimensionFilters "
-                f"(missing: {', '.join(missing)})"
-            )
+            # Non-schema strategy filters are study attributes — auto-stamp overlays.
+            # Skip when the schema catalog is absent (unit tests / ad-hoc roots)
+            # so real schema dims are not treated as overlays.
+            catalog = self.repo_root / "persona/schema/dimensions.json"
+            if catalog.is_file():
+                schema_ids = set(load_dev_dimension_ids(catalog_path=str(catalog)))
+                overlay_in = list(overlay_dimensions or [])
+                have_overlay = {str(row.get("id") or "").strip() for row in overlay_in}
+                for dim_id, vals in filters.items():
+                    if dim_id in schema_ids or dim_id in have_overlay or dim_id in fields:
+                        continue
+                    overlay_in.append({"id": dim_id, "label": dim_id, "values": list(vals)})
+                    have_overlay.add(dim_id)
+                if len(overlay_in) != len(overlay_dimensions or []):
+                    overlay_dimensions = overlay_in
+                    fields = [f for f in fields if f not in have_overlay]
 
-        stratum_top_up: list[dict[str, str]] | None = None
-        min_per_stratum = 0
-        pool_count = 0
-        pin_cells = bool(task_path) or bool(fields) or bool(filters and alloc)
-        if pin_cells:
-            if not filters:
-                raise ValueError("stratified generation requires dimensionFilters")
-            cells, dropped = strategy_pin_cells(
-                dimension_filters=filters,
-                stratify_fields=fields,
-                seed=seed,
-                max_strata=MAX_FILTER_STRATA,
+        overlay_norm = normalize_overlay_dimensions(overlay_dimensions)
+        contrast_plan: list[dict[str, Any]] = []
+        filling_task = bool(task_path and str(task_path).strip())
+        if contrast and not filling_task:
+            catalog = self.repo_root / "persona/schema/dimensions.json"
+            schema_ids = (
+                set(load_dev_dimension_ids(catalog_path=str(catalog)))
+                if catalog.is_file()
+                else None
             )
-            del dropped
-            if not cells:
-                raise ValueError("dimensionFilters produced zero cells the DAG can pin")
-            min_per_stratum = stratified_cell_quota(
-                allocation=alloc,
-                per_cell=per_cell_n,
-                sample_size=sample_n,
-                n_cells=len(cells),
+            contrast_plan = normalize_generate_contrast(
+                overlay_norm,
+                contrast,
+                schema_ids=schema_ids,
             )
-            estimated = len(cells) * min_per_stratum
-            if estimated > GENERATE_COUNT_MAX:
-                raise ValueError(
-                    f"stratified generation would write {estimated} personas "
-                    f"(max {GENERATE_COUNT_MAX})"
+            if contrast_plan:
+                overlay_ids = {str(row["id"]) for row in overlay_norm}
+                contrast_ids = {str(arm["id"]) for arm in contrast_plan}
+                overlay_contrast_ids = contrast_ids & overlay_ids
+                fields = [field for field in fields if field not in overlay_contrast_ids]
+                if not fields:
+                    remaining_catalog = [
+                        key for key in filters if key not in overlay_ids
+                    ]
+                    if not remaining_catalog:
+                        if not (isinstance(count, int) and count >= 1):
+                            if per_cell_n:
+                                count = per_cell_n
+                            elif sample_n:
+                                count = sample_n
+                        per_cell_n = None
+                        sample_n = None
+                        alloc = None
+
+        # Declared target shares generate to that mix (exact marginals), not
+        # uniform per-cell ceil that overshoots and ignores the mix.
+        if marginals and alloc == "proportional":
+            alloc = "independentMarginal"
+
+        combos = contrast_stamp_combinations(contrast_plan)
+        dataset_total = 1 + len(combos)
+        emit(
+            "prepare",
+            ratio=0.02,
+            label="Sampling Full DAG…",
+            dataset_index=0,
+            dataset_total=dataset_total,
+            dataset_label="Sampling…",
+        )
+        generated = generate_synthetic_personas(
+            count=count,
+            seed=seed,
+            dimension_filters=filters,
+            stratify_fields=fields,
+            allocation=alloc,
+            per_cell=per_cell_n,
+            sample_size=sample_n,
+            marginals=marginals,
+            overlay_dimensions=overlay_norm or overlay_dimensions,
+            catalog_path=self.repo_root / "persona/schema/dimensions.json",
+            force_pin=filling_task,
+        )
+        personas = generated.personas
+        overlay = generated.overlay
+        pool_count = generated.folder_count
+
+        base_stamps = contrast_base_stamps(contrast_plan)
+        base_resolved: list[dict[str, Any]] = []
+        if base_stamps:
+            catalog = self.repo_root / "persona/schema/dimensions.json"
+            schema_ids = (
+                set(load_dev_dimension_ids(catalog_path=str(catalog)))
+                if catalog.is_file()
+                else None
+            )
+            for dim_id, text in base_stamps.items():
+                dim = resolve_contrast_overlay(
+                    overlay,
+                    dim_id,
+                    text,
+                    schema_ids=schema_ids,
                 )
-            stratum_top_up = cells
-            pool_count = 0
-        else:
-            pool_count = GENERATE_COUNT_DEFAULT if count is None else int(count)
-            if pool_count < 1:
-                raise ValueError("count must be >= 1")
-            if pool_count > GENERATE_COUNT_MAX:
-                raise ValueError(f"count must be <= {GENERATE_COUNT_MAX}")
+                base_resolved.append(
+                    {
+                        "id": str(dim["id"]),
+                        "label": dim.get("label") or dim_id,
+                        "value": str(text).strip(),
+                    }
+                )
+            stamp_map = {row["id"]: row["value"] for row in base_resolved}
+            validate_contrast_stamps_against_dag(
+                personas,
+                stamp_map,
+                schema_ids=schema_ids,
+            )
+            apply_dimension_stamps(personas, stamp_map)
 
         if not kind_slug:
-            kind_slug = str(pool_count if pool_count > 0 else "stratified")
-        folder = f"{GENERATED_POOL_PREFIX}-{kind_slug}"
+            if base_resolved:
+                slug_parts = [
+                    f"{_cohort_slug(row['id'])}-{_cohort_slug(row['value'])}"
+                    for row in base_resolved
+                ]
+                kind_slug = f"contrast-{'-'.join(slug_parts)}"
+            else:
+                kind_slug = str(pool_count if pool_count > 0 else "stratified")
+        folder = _generated_pool_folder(kind_slug, self.repo_root / DATASETS_DIR)
         rel_pool = f"{DATASETS_DIR}/{folder}"
         out_dir = self.repo_root / rel_pool
-
-        emit("prepare", ratio=0.02, label="Preparing output folder…")
         if out_dir.exists():
             for stale in out_dir.glob("persona_*.yaml"):
                 stale.unlink()
 
-        emit(
-            "sample",
-            ratio=0.08,
-            label=(
-                f"Sampling Full DAG ({pool_count} personas)…"
-                if pool_count > 0
-                else "Sampling stratified cells…"
-            ),
+        combos = contrast_stamp_combinations(contrast_plan)
+        parent_label = (
+            _contrast_clone_label(folder, base_resolved)
+            if base_resolved
+            else _generated_pool_label(folder)
         )
-        personas = generate_persona_pool(
-            count=pool_count,
-            seed=seed,
-            stratum_top_up=stratum_top_up,
-            min_per_stratum=min_per_stratum,
-            include_smoke=pool_count > 0,
+        parent_progress_label = (
+            "Contrast · "
+            + ", ".join(f"{row['label']}={row['value']}" for row in base_resolved)
+            if base_resolved
+            else parent_label.split(" · ")[0]
         )
-        if not personas:
-            raise ValueError("generation produced no personas")
-        emit(
+
+        def _emit_dataset(
+            stage: str,
+            *,
+            dataset_index: int,
+            dataset_label: str,
+            ratio: float,
+            label: str,
+            done: int | None = None,
+            total: int | None = None,
+        ) -> None:
+            emit(
+                stage,
+                ratio=ratio,
+                label=label,
+                done=done,
+                total=total,
+                dataset_index=dataset_index,
+                dataset_total=dataset_total,
+                dataset_label=dataset_label,
+            )
+
+        _emit_dataset(
             "sample",
-            ratio=0.18,
+            dataset_index=0,
+            dataset_label=parent_progress_label,
+            ratio=0.12,
             label=f"Sampled {len(personas)} personas",
             done=len(personas),
             total=len(personas),
         )
 
-        def _write_progress(stage: str, payload: dict[str, Any]) -> None:
-            if stage == "write":
-                done = int(payload.get("done") or 0)
-                total = max(1, int(payload.get("total") or 1))
-                # Write dominates wall time — map 18% → 90%.
-                ratio = 0.18 + 0.72 * (done / total)
-                emit(
-                    "write",
-                    ratio=ratio,
-                    label=str(payload.get("label") or "Writing personas…"),
-                    done=done,
-                    total=total,
-                )
-                return
-            if stage == "manifest":
-                emit("manifest", ratio=0.92, label=str(payload.get("label") or "Writing manifest…"))
+        def _write_progress_for(
+            dataset_index: int,
+            dataset_label: str,
+        ) -> Callable[[str, dict[str, Any]], None]:
+            def _write_progress(stage: str, payload: dict[str, Any]) -> None:
+                if stage == "write":
+                    done = int(payload.get("done") or 0)
+                    total = max(1, int(payload.get("total") or 1))
+                    ratio = 0.15 + 0.75 * (done / total)
+                    _emit_dataset(
+                        "write",
+                        dataset_index=dataset_index,
+                        dataset_label=dataset_label,
+                        ratio=ratio,
+                        label=str(payload.get("label") or "Writing personas…"),
+                        done=done,
+                        total=total,
+                    )
+                    return
+                if stage == "manifest":
+                    _emit_dataset(
+                        "manifest",
+                        dataset_index=dataset_index,
+                        dataset_label=dataset_label,
+                        ratio=0.95,
+                        label=str(payload.get("label") or "Writing manifest…"),
+                    )
 
+            return _write_progress
+
+        _emit_dataset(
+            "write",
+            dataset_index=0,
+            dataset_label=parent_progress_label,
+            ratio=0.15,
+            label="Writing personas…",
+        )
         manifest = write_persona_dataset(
             out_dir=out_dir,
             personas=personas,
@@ -1026,20 +1282,246 @@ class PersonaPoolService:
             kind=folder,
             seed=seed,
             smoke_persona_id="0042",
-            on_progress=_write_progress if on_progress is not None else None,
+            overlay_dimensions=overlay or None,
+            on_progress=(
+                _write_progress_for(0, parent_progress_label)
+                if on_progress is not None
+                else None
+            ),
         )
-        emit("done", ratio=1.0, label=f"Generated {int(manifest['count'])} personas")
+        _emit_dataset(
+            "done",
+            dataset_index=0,
+            dataset_label=parent_progress_label,
+            ratio=1.0,
+            label=f"Wrote {int(manifest['count'])} personas",
+        )
+
+        contrast_pools: list[dict[str, Any]] = []
+        for combo_index, stamps in enumerate(combos):
+            dataset_index = 1 + combo_index
+            resolved_preview = [
+                {
+                    "id": key,
+                    "label": next(
+                        (
+                            str(row.get("label") or key)
+                            for row in overlay
+                            if str(row.get("id")) == key
+                        ),
+                        key,
+                    ),
+                    "value": value,
+                }
+                for key, value in stamps.items()
+            ]
+            dataset_label = "Contrast · " + ", ".join(
+                f"{row['label']}={row['value']}" for row in resolved_preview
+            )
+            _emit_dataset(
+                "contrast",
+                dataset_index=dataset_index,
+                dataset_label=dataset_label,
+                ratio=0.05,
+                label=f"Stamping {dataset_label}…",
+                done=combo_index + 1,
+                total=len(combos),
+            )
+            contrast_pools.append(
+                self._write_contrast_clone(
+                    personas=personas,
+                    overlay=overlay,
+                    stamps=stamps,
+                    parent_pool=rel_pool,
+                    on_progress=(
+                        _write_progress_for(dataset_index, dataset_label)
+                        if on_progress is not None
+                        else None
+                    ),
+                )
+            )
+            _emit_dataset(
+                "done",
+                dataset_index=dataset_index,
+                dataset_label=dataset_label,
+                ratio=1.0,
+                label=f"Wrote contrast {combo_index + 1}/{len(combos)}",
+            )
         persona_ids = [str(entry["persona_id"]) for entry in personas]
         return {
             "pool": rel_pool,
-            "label": folder,
+            "label": parent_label,
             "count": int(manifest["count"]),
             "dimensionCount": int(manifest.get("dimension_count") or 0),
             "source": "synthetic",
             "kind": "dataset",
             "personaIds": persona_ids,
             "seed": seed,
+            "contrastStamps": (
+                {row["id"]: row["value"] for row in base_resolved}
+                if base_resolved
+                else None
+            ),
+            "contrastPools": contrast_pools,
         }
+
+    def clone_contrast_pool(
+        self,
+        *,
+        persona_pool: str,
+        overlay_id: str,
+        value: str,
+        name: str | None = None,
+    ) -> dict[str, Any]:
+        """Clone a YAML dataset and change one custom dimension only."""
+        from backend.service.persona_1m_pool import is_production_1m_root
+
+        src_rel = str(persona_pool or "").strip() or DEFAULT_PERSONA_POOL
+        if is_production_1m_root(src_rel):
+            raise ValueError(
+                "Cannot build a contrast from the 1M pool. "
+                "Generate or save a dataset first."
+            )
+
+        summary = self.load_manifest_summary(src_rel)
+        overlay = list(summary.get("overlayDimensions") or [])
+        if not overlay:
+            raise ValueError(
+                "This dataset has no custom dimensions. "
+                "Generate a pool with a custom dimension first."
+            )
+        personas = self._load_pool_personas(src_rel)
+        if not personas:
+            raise ValueError(f"{src_rel} has no persona YAML files")
+        if len(personas) > GENERATE_COUNT_MAX:
+            raise ValueError(
+                f"Contrast copies at most {GENERATE_COUNT_MAX} personas "
+                f"({src_rel} has {len(personas)})"
+            )
+        return self._write_contrast_clone(
+            personas=personas,
+            overlay=overlay,
+            overlay_id=overlay_id,
+            value=value,
+            parent_pool=src_rel,
+            name=name,
+        )
+
+    def _write_contrast_clone(
+        self,
+        *,
+        personas: list[dict[str, Any]],
+        overlay: list[dict[str, Any]],
+        overlay_id: str | None = None,
+        value: str | None = None,
+        stamps: dict[str, str] | None = None,
+        parent_pool: str,
+        name: str | None = None,
+        on_progress: Callable[[str, dict[str, Any]], None] | None = None,
+    ) -> dict[str, Any]:
+        from matraix.persona_consistency import load_dev_dimension_ids
+        from matraix.persona_generator import write_persona_dataset
+
+        catalog = self.repo_root / "persona/schema/dimensions.json"
+        schema_ids = (
+            set(load_dev_dimension_ids(catalog_path=str(catalog)))
+            if catalog.is_file()
+            else None
+        )
+        mapping: dict[str, str] = dict(stamps or {})
+        if overlay_id and value:
+            mapping[str(overlay_id)] = str(value)
+        if not mapping:
+            raise ValueError("contrast dimension and value are required")
+        resolved: list[dict[str, Any]] = []
+        for dim_id, text in mapping.items():
+            dim = resolve_contrast_overlay(
+                overlay,
+                dim_id,
+                text,
+                schema_ids=schema_ids,
+            )
+            resolved.append({"id": str(dim["id"]), "label": dim.get("label") or dim_id, "value": str(text).strip()})
+        stamp_map = {row["id"]: row["value"] for row in resolved}
+        validate_contrast_stamps_against_dag(
+            personas,
+            stamp_map,
+            schema_ids=schema_ids,
+        )
+        cloned = clone_contrast_personas(personas, stamps=stamp_map)
+        slug_parts = [
+            f"{_cohort_slug(row['id'])}-{_cohort_slug(row['value'])}" for row in resolved
+        ]
+        kind_slug = (
+            _cohort_slug(name)
+            if name and str(name).strip()
+            else f"contrast-{'-'.join(slug_parts)}"
+        )
+        folder = _generated_pool_folder(kind_slug, self.repo_root / DATASETS_DIR)
+        rel_pool = f"{DATASETS_DIR}/{folder}"
+        out_dir = self.repo_root / rel_pool
+        first = resolved[0]
+        manifest = write_persona_dataset(
+            out_dir=out_dir,
+            personas=cloned,
+            repo_root=self.repo_root,
+            kind=folder,
+            seed=0,
+            smoke_persona_id=str(cloned[0]["persona_id"]),
+            overlay_dimensions=overlay,
+            on_progress=on_progress,
+            extra_manifest={
+                "parent_pool": parent_pool,
+                "contrast": {
+                    "dimension": first["id"],
+                    "label": first["label"],
+                    "value": first["value"],
+                    "stamps": {row["id"]: row["value"] for row in resolved},
+                    "source_pool": parent_pool,
+                },
+            },
+        )
+        return {
+            "pool": rel_pool,
+            "label": _contrast_clone_label(folder, resolved),
+            "count": int(manifest["count"]),
+            "dimensionCount": int(manifest.get("dimension_count") or 0),
+            "source": "synthetic",
+            "kind": "dataset",
+            "personaIds": [str(entry["persona_id"]) for entry in cloned],
+            "seed": 0,
+            "parentPool": parent_pool,
+            "contrastStamps": {row["id"]: row["value"] for row in resolved},
+        }
+
+    def _load_pool_personas(self, persona_pool: str) -> list[dict[str, Any]]:
+        pool_dir = self._pool_dir(persona_pool)
+        entries = load_manifest(pool_dir, repo_root=self.repo_root)
+        personas: list[dict[str, Any]] = []
+        for entry in entries:
+            rel = entry.get("path")
+            raw: dict[str, Any] | None = None
+            if rel:
+                path = self.repo_root / str(rel)
+                if path.is_file():
+                    loaded = yaml.safe_load(path.read_text(encoding="utf-8"))
+                    if isinstance(loaded, dict):
+                        raw = loaded
+            if raw is None and isinstance(entry.get("dimensions"), dict):
+                raw = {
+                    "persona_id": entry.get("persona_id"),
+                    "version": entry.get("version", "1.0"),
+                    "source": entry.get("source"),
+                    "dimensions": dict(entry["dimensions"]),
+                    **(
+                        {"pair_id": entry["pair_id"]}
+                        if entry.get("pair_id")
+                        else {}
+                    ),
+                }
+            if raw is not None:
+                personas.append(raw)
+        return personas
 
     def _normalize_dimension_filters(
         self, dimension_filters: dict[str, str | list[str]] | None
@@ -1149,6 +1631,21 @@ class PersonaPoolService:
                 if value is not None and str(value).strip()
             }
         return {}
+
+    @staticmethod
+    def _resolve_extra_card_dimensions(
+        *,
+        stratify_fields: list[str] | None,
+        include_dimensions: list[str] | None,
+    ) -> list[str]:
+        seen: set[str] = set()
+        out: list[str] = []
+        for raw in [*(stratify_fields or []), *(include_dimensions or [])]:
+            dim_id = str(raw or "").removeprefix("dimensions.").strip()
+            if dim_id and dim_id != "source" and dim_id not in seen:
+                seen.add(dim_id)
+                out.append(dim_id)
+        return out
 
     def _persona_card(self, entry: dict[str, Any]) -> dict[str, Any]:
         dims = self._yaml_dimensions(entry)
@@ -1630,9 +2127,11 @@ class PersonaPoolService:
         stratify_fields: list[str] | None = None,
         sample_size_per_value_group: int | None = None,
         allocation: str | None = None,
+        portions: dict[str, dict[str, float]] | None = None,
         task_path: str | None = None,
         preview_limit: int = PERSONA_CARD_PREVIEW_DEFAULT,
         include_persona_ids: bool | None = None,
+        include_dimensions: list[str] | None = None,
     ) -> dict[str, Any]:
         from backend.service.persona_1m_pool import (
             is_production_1m_root,
@@ -1656,6 +2155,7 @@ class PersonaPoolService:
                 stratify_fields=stratify_fields,
                 sample_size_per_value_group=sample_size_per_value_group,
                 allocation=allocation_norm,
+                portions=portions,
             )
             return self._shape_sample_response(
                 result,
@@ -1723,6 +2223,8 @@ class PersonaPoolService:
                 stratify_fields=stratify_fields,
                 sample_size_per_value_group=sample_size_per_value_group,
                 allocation=allocation_norm,
+                portions=portions,
+                include_dimensions=include_dimensions,
             )
         except ValueError as exc:
             raise ValueError(with_coverage_hint(str(exc), task_path=task_path)) from exc
@@ -1743,6 +2245,8 @@ class PersonaPoolService:
         stratify_fields: list[str] | None = None,
         sample_size_per_value_group: int | None = None,
         allocation: str | None = None,
+        portions: dict[str, dict[str, float]] | None = None,
+        include_dimensions: list[str] | None = None,
     ) -> dict[str, Any]:
         matched = self.filter_pool(
             persona_pool=persona_pool,
@@ -1772,9 +2276,28 @@ class PersonaPoolService:
                 raise ValueError(f"No personas with stratify fields ({label})")
 
             if allocation_norm == "proportional":
-                chosen = sample_proportional_from_buckets(
-                    buckets, sample_size=sample_size, seed=seed
-                )
+                if portions:
+                    if len(bare_fields) != 1:
+                        raise ValueError(
+                            "portions currently supports a single stratify field "
+                            f"(got {', '.join(bare_fields)})"
+                        )
+                    field = bare_fields[0]
+                    weights = portions.get(field)
+                    if not isinstance(weights, dict) or not weights:
+                        raise ValueError(
+                            f"portions has no target weights for stratify field {field!r}"
+                        )
+                    chosen = sample_by_portions_from_buckets(
+                        buckets,
+                        weights=weights,
+                        sample_size=sample_size,
+                        seed=seed,
+                    )
+                else:
+                    chosen = sample_proportional_from_buckets(
+                        buckets, sample_size=sample_size, seed=seed
+                    )
             elif allocation_norm == "perCell" or sample_size_per_value_group is not None:
                 per_group = (
                     int(sample_size_per_value_group)
@@ -1813,6 +2336,18 @@ class PersonaPoolService:
                 )
             chosen = sample_personas(matched, sample_size=sample_size, seed=seed)
         personas = [self._persona_card(entry) for entry in chosen]
+        extra_dims = self._resolve_extra_card_dimensions(
+            stratify_fields=stratify_fields,
+            include_dimensions=include_dimensions,
+        )
+        if extra_dims:
+            for card, entry in zip(personas, chosen):
+                full = self._yaml_dimensions(entry)
+                dims_out = card.setdefault("dimensions", {})
+                for dim_id in extra_dims:
+                    value = full.get(dim_id)
+                    if value is not None and str(value).strip():
+                        dims_out[dim_id] = str(value)
         persona_ids = [row["personaId"] for row in personas if row["personaId"]]
         pool_out = persona_pool
         if len(persona_ids) > PERSONA_UI_ID_LIST_MAX:

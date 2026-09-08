@@ -237,6 +237,54 @@ def test_main_run_sets_max_cost_usd_env(tmp_path: Path, monkeypatch) -> None:
     ]
 
 
+def test_main_run_non_local_sidecar_uses_harbor_job_service(
+    tmp_path: Path, monkeypatch
+) -> None:
+    root = _fake_checkout(tmp_path)
+    config = _write_job(
+        root,
+        sidecar={
+            "task": "application/tasks/foo",
+            "trial_profile": "json_survey",
+            "execution_mode": "auto",
+            "computeFamily": "hosted",
+            "selected_persona_ids": ["0042"],
+            "seed": 1,
+        },
+    )
+    captured: dict[str, object] = {}
+
+    def fake_run_via_harbor_job_service(**kwargs):
+        captured.update(kwargs)
+        return 0
+
+    monkeypatch.setattr(
+        "matraix.job_run.run_via_harbor_job_service",
+        fake_run_via_harbor_job_service,
+    )
+    harbor_calls = _stub_harbor(monkeypatch)
+
+    original_cwd = Path.cwd()
+    original_sys_path = list(sys.path)
+    try:
+        with pytest.raises(SystemExit) as excinfo:
+            cli.main(["run", "-c", str(config), "--compute-family", "hosted"])
+    finally:
+        os.chdir(original_cwd)
+        sys.path[:] = original_sys_path
+
+    assert excinfo.value.code == 0
+    assert captured["compute_family"] == "hosted"
+    assert captured["config_path"] == config
+    assert "args" not in harbor_calls
+
+
+def test_main_run_compute_family_without_config_exits() -> None:
+    with pytest.raises(SystemExit) as excinfo:
+        cli.main(["run", "--compute-family", "hosted", "-p", "application/tasks/foo"])
+    assert "--compute-family requires" in str(excinfo.value)
+
+
 def test_main_results_prints_text_summary(tmp_path: Path, monkeypatch, capsys) -> None:
     from matraix.job_results import collect_job_results
 

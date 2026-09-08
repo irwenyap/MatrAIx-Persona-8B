@@ -13,7 +13,6 @@ import { api, ApiError } from "@/lib/api";
 import {
   PERSONA_BENCH_POOL,
   PERSONA_CARD_PREVIEW_LIMIT,
-  PERSONA_GENERATE_COUNT_DEFAULT,
   PERSONA_GENERATE_COUNT_MAX,
   PERSONA_PRODUCTION_1M_POOL,
   PERSONA_SAMPLE_SIZE_MAX_DEV,
@@ -22,6 +21,7 @@ import {
   type PersonaPoolGenerateProgress,
   type PersonaPoolGenerateResult,
   type PersonaPoolPersonaCard,
+  type OverlayDimension,
   type TaskPersonaStrategy,
 } from "@/lib/types";
 import {
@@ -40,7 +40,10 @@ import { CockpitRailHeader } from "./CockpitRailHeader";
 import { PersonaFilterModal } from "./PersonaFilterModal";
 import {
   activeFilterCount,
+  collectCatalogDimIds,
   emptyPersonaDimensionFilters,
+  filterAxisIds,
+  filterSelectionCounts,
   filtersForSampleApi,
   readStrategySampling,
   type PersonaDimensionFilters,
@@ -51,6 +54,12 @@ import {
 import type { PlaygroundTaskType } from "../TaskTypeSwitch";
 
 type Translate = ReturnType<typeof useI18n>["t"];
+
+const GENERATE_HINT_KEYS = {
+  perCell: "personaSetup.generateHint.perCell",
+  total: "personaSetup.generateHint.total",
+  random: "personaSetup.generateDescription",
+} as const;
 
 function slugifyDatasetName(value: string): string {
   return value
@@ -171,8 +180,11 @@ function isGeneratedDevPool(pool: string): boolean {
   return /(?:^|\/)generated-persona-dev-/.test(pool);
 }
 
+/** Custom Random count — small enough to try without a 2k synth. */
+const CUSTOM_GENERATE_COUNT_DEFAULT = 10;
+
 function clampGenerateCount(value: number): number {
-  if (!Number.isFinite(value)) return PERSONA_GENERATE_COUNT_DEFAULT;
+  if (!Number.isFinite(value)) return CUSTOM_GENERATE_COUNT_DEFAULT;
   return Math.min(PERSONA_GENERATE_COUNT_MAX, Math.max(1, Math.round(value)));
 }
 
@@ -180,15 +192,19 @@ function PersonaFilterChips({
   filters,
   fields,
   showStratify,
+  overlayLabels,
 }: {
   filters: PersonaDimensionFilters;
   fields: string[];
   showStratify: boolean;
+  overlayLabels?: Record<string, string>;
 }) {
   const { t } = useI18n();
   const labels = useDimensionLabels();
   const filterCount = activeFilterCount(filters);
   if (filterCount === 0 && !(showStratify && fields.length > 0)) return null;
+  const dimName = (dim: string) =>
+    overlayLabels?.[dim] || labels.dimLabel(dim, humanizeToken(dim));
   return (
     <div className="flex flex-wrap gap-1 px-0.5">
       {filters.sources.map((source) => (
@@ -209,7 +225,7 @@ function PersonaFilterChips({
               .map((value) => labels.valueLabel(dim, value))
               .join(", ")}
           >
-            {labels.dimLabel(dim, humanizeToken(dim))}
+            {dimName(dim)}
             <span className="text-primary/70"> · {values.length}</span>
           </span>
         ))}
@@ -219,8 +235,7 @@ function PersonaFilterChips({
               key={`st:${field}`}
               className="rounded-full border border-secondary/35 bg-secondary/10 px-2 py-0.5 text-[11px] text-secondary"
             >
-              {t("personaSetup.filters.stratify")} ·{" "}
-              {labels.dimLabel(field, humanizeToken(field))}
+              {t("personaSetup.filters.stratify")} · {dimName(field)}
             </span>
           ))
         : null}
@@ -428,7 +443,17 @@ function TaskStrategySummary({
   const showAllocation = sampling.mode === "stratified" || stratify.length > 0;
   const sampleType = strategySampleTypeLabel(t, sampling);
   const allocLabel = allocationLabel(t, sampling.allocation);
-  const allocDescription = allocationTitle(t, sampling.allocation);
+  // Declared target shares reweight a proportional draw; surface them and adjust
+  // the allocation description away from the default "by cell population".
+  const portionEntries = Object.entries(strategy.sampling?.portions ?? {}).filter(
+    ([, weights]) =>
+      weights && typeof weights === "object" && Object.keys(weights).length > 0,
+  );
+  const hasShares = portionEntries.length > 0;
+  const allocDescription =
+    hasShares && sampling.allocation === "proportional"
+      ? t("personaSetup.allocationTitle.proportionalShares")
+      : allocationTitle(t, sampling.allocation);
   const [openFilterKey, setOpenFilterKey] = useState<string | null>(null);
 
   useEffect(() => {
@@ -533,6 +558,32 @@ function TaskStrategySummary({
                   </span>
                 </StrategyKvRow>
               ) : null}
+              {hasShares ? (
+                <StrategyKvRow label={t("personaSetup.strategy.targetMix")}>
+                  <div className="flex flex-col gap-1">
+                    {portionEntries.map(([dim, weights]) => {
+                      const total =
+                        Object.values(weights).reduce(
+                          (sum, w) => sum + (w > 0 ? w : 0),
+                          0,
+                        ) || 1;
+                      return (
+                        <div key={dim} className="flex flex-wrap gap-1">
+                          {Object.entries(weights).map(([value, weight]) => (
+                            <span key={value} className={STRATEGY_STRATIFY_CHIP}>
+                              {labels.valueLabel(dim, value)}
+                              <span className="text-secondary/70">
+                                {" · "}
+                                {Math.round((weight / total) * 100)}%
+                              </span>
+                            </span>
+                          ))}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </StrategyKvRow>
+              ) : null}
               {sampleType ? (
                 <StrategyKvRow label={t("personaSetup.strategy.sample")}>
                   <span className="font-medium">{sampleType}</span>
@@ -575,30 +626,231 @@ function fallbackQuickPickCards(): PersonaPoolPersonaCard[] {
 function GenerateProgressBar({
   progress,
 }: {
-  progress: Pick<PersonaPoolGenerateProgress, "ratio" | "label" | "stage">;
+  progress: Pick<
+    PersonaPoolGenerateProgress,
+    "ratio" | "label" | "stage"
+  > & { datasetLabel?: string };
 }) {
   const pct = Math.max(0, Math.min(100, Math.round(progress.ratio * 100)));
+  const title = progress.datasetLabel || progress.label;
   return (
     <div className="space-y-1" aria-live="polite">
       <div className="flex items-center justify-between gap-2 text-[11px] leading-snug">
-        <span className="min-w-0 truncate text-text-variant">
-          {progress.label}
+        <span className="min-w-0 truncate text-text-variant" title={title}>
+          {title}
         </span>
         <span className="shrink-0 font-mono text-text-dim">{pct}%</span>
       </div>
+      {progress.datasetLabel && progress.label !== progress.datasetLabel ? (
+        <p className="truncate text-[10px] leading-snug text-text-dim">
+          {progress.label}
+        </p>
+      ) : null}
       <div
         className="h-1.5 overflow-hidden rounded-full bg-outline/35"
         role="progressbar"
         aria-valuemin={0}
         aria-valuemax={100}
         aria-valuenow={pct}
-        aria-label={progress.label}
+        aria-label={title}
       >
         <div
           className="h-full rounded-full bg-primary transition-[width] duration-200 ease-out"
           style={{ width: `${pct}%` }}
         />
       </div>
+    </div>
+  );
+}
+
+type GenerateTrack = {
+  key: string;
+  label: string;
+  ratio: number;
+  detail: string;
+  status: "pending" | "active" | "done";
+};
+
+function GenerateProgressTracks({ tracks }: { tracks: GenerateTrack[] }) {
+  if (tracks.length === 0) return null;
+  return (
+    <div className="space-y-2" aria-live="polite">
+      {tracks.map((track) => (
+        <GenerateProgressBar
+          key={track.key}
+          progress={{
+            ratio:
+              track.status === "done"
+                ? 1
+                : track.status === "pending"
+                  ? 0
+                  : track.ratio,
+            label: track.detail || track.label,
+            datasetLabel: track.label,
+            stage: track.status === "done" ? "done" : "write",
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+/** Task-plan (contract) synthesis: strategy-driven, read-only except cohort N. */
+function ContractSynthBlock({
+  strategy,
+  view,
+  customDims,
+  contractSize,
+  onContractSize,
+  contractSizeDraft,
+  onContractSizeDraft,
+  seed,
+  onSeed,
+  strategyOpen,
+  onStrategyOpen,
+  generating,
+  disabled,
+  onGenerate,
+  tracks,
+  progress,
+  error,
+}: {
+  strategy: TaskPersonaStrategy;
+  view: {
+    fill: "random" | "perCell" | "proportional" | "equalTotal";
+    derivedN: number;
+    sizeEditable: boolean;
+  } | null;
+  customDims: { id: string; values: string[] }[];
+  contractSize: number | null;
+  onContractSize: (n: number | null) => void;
+  contractSizeDraft: string | null;
+  onContractSizeDraft: (v: string | null) => void;
+  seed: number;
+  onSeed: (n: number) => void;
+  strategyOpen: boolean;
+  onStrategyOpen: (v: boolean) => void;
+  generating: boolean;
+  disabled: boolean;
+  onGenerate: () => void;
+  tracks: GenerateTrack[];
+  progress: PersonaPoolGenerateProgress | null;
+  error: string | null;
+}) {
+  const { t } = useI18n();
+  const labels = useDimensionLabels();
+  const effectiveN = contractSize ?? view?.derivedN ?? 0;
+  const sizeEditable = view?.sizeEditable ?? false;
+  return (
+    <div className="space-y-2">
+      <div className="glass-tile rounded-lg px-2.5 py-2">
+        <TaskStrategySummary
+          strategy={strategy}
+          expanded={strategyOpen}
+          onExpandedChange={onStrategyOpen}
+        />
+      </div>
+      {customDims.length > 0 ? (
+        <div className="rounded-lg border border-primary/25 bg-primary/[0.05] px-2.5 py-2">
+          <p className="text-[11px] font-medium leading-snug text-text-main">
+            {t("personaSetup.synth.customDimsNote", { count: customDims.length })}
+          </p>
+          <div className="mt-1 flex flex-wrap gap-1">
+            {customDims.map((d) => (
+              <span
+                key={d.id}
+                className="rounded bg-surface/70 px-1.5 py-0.5 text-[10.5px] text-text-dim"
+                title={d.values.join(", ")}
+              >
+                {labels.dimLabel(d.id, humanizeToken(d.id))}
+                <span className="text-text-dim/70"> · {d.values.length}</span>
+              </span>
+            ))}
+          </div>
+        </div>
+      ) : null}
+      <div className="flex items-end gap-2">
+        <label className="flex w-[4.25rem] shrink-0 flex-col gap-0.5">
+          <span className="text-[12px] text-text-dim">
+            {t("personaSetup.strategy.sample")}
+          </span>
+          {sizeEditable ? (
+            <input
+              type="number"
+              inputMode="numeric"
+              min={1}
+              max={PERSONA_GENERATE_COUNT_MAX}
+              step={1}
+              value={contractSizeDraft ?? effectiveN}
+              disabled={disabled || generating}
+              onFocus={() => onContractSizeDraft(String(effectiveN))}
+              onChange={(e) => {
+                const raw = e.target.value;
+                if (raw === "" || /^\d+$/.test(raw)) onContractSizeDraft(raw);
+              }}
+              onBlur={() => {
+                const raw = contractSizeDraft;
+                onContractSizeDraft(null);
+                if (raw === "" || raw == null) return;
+                onContractSize(clampGenerateCount(Number(raw)));
+              }}
+              className={`h-9 w-full rounded-lg border border-outline/50 bg-surface/60 px-1.5 text-center font-mono text-[15px] text-text-main disabled:opacity-50 ${FOCUS_RING}`}
+            />
+          ) : (
+            <span
+              className="flex h-9 w-full items-center justify-center rounded-lg border border-outline/40 bg-surface/40 px-1.5 text-center font-mono text-[15px] text-text-main"
+              title={t("personaSetup.synth.sizeFromCells")}
+            >
+              {effectiveN}
+            </span>
+          )}
+        </label>
+        <label className="flex w-[4.25rem] shrink-0 flex-col gap-0.5">
+          <span className="text-[12px] text-text-dim">
+            {t("personaSetup.seed")}
+          </span>
+          <input
+            type="number"
+            inputMode="numeric"
+            step={1}
+            value={seed}
+            disabled={disabled || generating}
+            onChange={(e) => onSeed(Number(e.target.value) || 0)}
+            className={`h-9 w-full rounded-lg border border-outline/50 bg-surface/60 px-1.5 text-center font-mono text-[15px] text-text-main disabled:opacity-50 ${FOCUS_RING}`}
+          />
+        </label>
+        <button
+          type="button"
+          disabled={disabled || generating}
+          onClick={onGenerate}
+          className={`flex h-9 min-w-0 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg bg-primary text-[13px] font-medium text-on-primary hover:opacity-90 disabled:opacity-50 ${FOCUS_RING}`}
+        >
+          <Sym
+            name={generating ? "autorenew" : "auto_awesome"}
+            size={15}
+            className={generating ? "animate-rb-spin" : undefined}
+          />
+          {generating
+            ? t("personaSetup.generating")
+            : t("personaSetup.generate")}
+        </button>
+      </div>
+      {tracks.length > 0 ? (
+        <GenerateProgressTracks tracks={tracks} />
+      ) : generating && progress ? (
+        <GenerateProgressBar progress={progress} />
+      ) : (
+        <p className="text-[11px] leading-snug text-text-dim">
+          {t("personaSetup.synth.taskPlanHint")}
+        </p>
+      )}
+      {error ? (
+        <div className="rounded-lg border border-danger/30 bg-danger/5 px-2.5 py-2">
+          <p className="whitespace-pre-wrap text-[12px] leading-snug text-danger">
+            {error}
+          </p>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -697,14 +949,29 @@ export function PersonaSamplingRail({
   const [saveOpen, setSaveOpen] = useState(false);
   const [savingDataset, setSavingDataset] = useState(false);
   const [saveDatasetError, setSaveDatasetError] = useState<string | null>(null);
-  const [genMode, setGenMode] = useState<"random" | "stratified">("random");
-  const [genCount, setGenCount] = useState(PERSONA_GENERATE_COUNT_DEFAULT);
+  const [genMode, setGenMode] = useState<"random" | "perCell" | "total">(
+    "random",
+  );
+  const [genCount, setGenCount] = useState(CUSTOM_GENERATE_COUNT_DEFAULT);
   const [genCountDraft, setGenCountDraft] = useState<string | null>(null);
   const [genSeed, setGenSeed] = useState(42);
-  const [genAllocation, setGenAllocation] =
-    useState<StratifiedAllocation>("perCell");
   const [genPerCell, setGenPerCell] = useState(2);
   const [genSampleSize, setGenSampleSize] = useState(32);
+  const [genMarginals, setGenMarginals] = useState<
+    Record<string, Record<string, number>>
+  >({});
+  const [genOverlay, setGenOverlay] = useState<OverlayDimension[]>([]);
+  // Synthesis path: "contract" fills from the task's persona_strategy.json;
+  // "custom" is the free-form random/by-cell/by-share builder below.
+  const [genSynthMode, setGenSynthMode] = useState<"contract" | "custom">(
+    hasTaskStrategy ? "contract" : "custom",
+  );
+  const genSynthTouched = useRef(false);
+  const [genContractSize, setGenContractSize] = useState<number | null>(null);
+  const [genContractSizeDraft, setGenContractSizeDraft] = useState<string | null>(
+    null,
+  );
+  const [genStrategyOpen, setGenStrategyOpen] = useState(false);
   const pullErrorRecoveryHint =
     pullError?.showRecoveryHint
       ? t("personaSetup.errors.poolCoverageHint", {
@@ -716,11 +983,11 @@ export function PersonaSamplingRail({
   const [genFilters, setGenFilters] = useState<PersonaDimensionFilters>(
     emptyPersonaDimensionFilters,
   );
-  const [genFields, setGenFields] = useState<string[]>([]);
   const [generating, setGenerating] = useState(false);
   const [generateError, setGenerateError] = useState<string | null>(null);
   const [generateProgress, setGenerateProgress] =
     useState<PersonaPoolGenerateProgress | null>(null);
+  const [generateTracks, setGenerateTracks] = useState<GenerateTrack[]>([]);
   /** Task-default strategy detail — collapses after a successful pull / synthesize. */
   const [strategySummaryOpen, setStrategySummaryOpen] = useState(true);
 
@@ -821,7 +1088,7 @@ export function PersonaSamplingRail({
       return selectedPersonaIds.map((personaId) => ({
         personaId,
         name: syntheticDisplayName(personaId),
-        source: "matraix-persona-dev-sample",
+        source: activePool.split("/").filter(Boolean).pop() || "matraix-persona-dev-sample",
         dimensions: {},
       }));
     }
@@ -833,6 +1100,7 @@ export function PersonaSamplingRail({
     disabled,
     selectedPersonaIds,
     lockedCohortQuery.data?.personas,
+    activePool,
   ]);
 
   useEffect(() => {
@@ -844,9 +1112,10 @@ export function PersonaSamplingRail({
     if (useTaskDefaultStrategy) setStrategySummaryOpen(true);
   }, [taskPath, useTaskDefaultStrategy]);
 
-  // Turning Task default off resets pool/selection in the parent — drop local preview too.
+  // Turning Task default on starts a fresh strategy pull — drop stale preview.
+  // Turning it off keeps Dataset + selection, so leave preview cards in place.
   useEffect(() => {
-    if (!useTaskDefaultStrategy) {
+    if (useTaskDefaultStrategy) {
       setPreviewCards([]);
       setPullError(null);
       setGenerateError(null);
@@ -859,6 +1128,9 @@ export function PersonaSamplingRail({
         // Cohort-ref selection is not per-card editable.
         return;
       }
+      // Launch pool must match the Dataset those cards were loaded from.
+      const cardPool = panelMode === "single" ? sourcePool : activePool;
+      onPersonaPoolChange?.(cardPool);
       if (mode === "single") {
         onSelectedPersonaIdsChange(
           selectedPersonaIds.includes(personaId) ? [] : [personaId],
@@ -873,10 +1145,14 @@ export function PersonaSamplingRail({
       onSelectedCountChange?.(next.length);
     },
     [
+      activePool,
       mode,
+      onPersonaPoolChange,
       onSelectedCountChange,
       onSelectedPersonaIdsChange,
+      panelMode,
       selectedPersonaIds,
+      sourcePool,
       useEntirePool,
     ],
   );
@@ -950,6 +1226,7 @@ export function PersonaSamplingRail({
       const isPerCell =
         panelMode === "stratified" && panelAllocation === "perCell";
       const perCellQuota = isPerCell ? clampPerCell(perCell ?? 1) : undefined;
+      const strategyPortions = taskPersonaStrategy?.sampling?.portions;
       const result = await api.samplePersonaPool({
         pool: sourcePool,
         sampleSize,
@@ -959,6 +1236,10 @@ export function PersonaSamplingRail({
         fields: panelMode === "stratified" ? panelFields : undefined,
         perCell: perCellQuota,
         allocation: panelMode === "stratified" ? panelAllocation : undefined,
+        portions:
+          strategyPortions && Object.keys(strategyPortions).length > 0
+            ? strategyPortions
+            : undefined,
         taskPath: taskPath?.trim() || undefined,
       });
       const cards = result.personas
@@ -1008,6 +1289,7 @@ export function PersonaSamplingRail({
     sourcePool,
     strategyLocked,
     taskPath,
+    taskPersonaStrategy,
     t,
   ]);
 
@@ -1024,6 +1306,9 @@ export function PersonaSamplingRail({
     ) => {
       await queryClient.invalidateQueries({
         queryKey: ["persona-pool-datasets"],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: ["persona-pool-catalog"],
       });
       const count = result.count;
       const ids = result.personaIds ?? [];
@@ -1079,42 +1364,210 @@ export function PersonaSamplingRail({
     ],
   );
 
+  const genAxes = useMemo(() => filterAxisIds(genFilters), [genFilters]);
+  const genOverlayLabels = useMemo(
+    () => Object.fromEntries(genOverlay.map((dim) => [dim.id, dim.label])),
+    [genOverlay],
+  );
+  const resetCustomGeneration = useCallback(() => {
+    setGenMode("random");
+    setGenCount(CUSTOM_GENERATE_COUNT_DEFAULT);
+    setGenCountDraft(null);
+    setGenPerCell(2);
+    setGenSampleSize(32);
+    setGenMarginals({});
+    setGenOverlay([]);
+    setGenFilters(emptyPersonaDimensionFilters);
+  }, []);
+
+  useEffect(() => {
+    setGenMarginals((prev) => {
+      const next: Record<string, Record<string, number>> = {};
+      for (const dim of genAxes) {
+        const values = genFilters.dimensionFilters[dim] ?? [];
+        next[dim] = {};
+        for (const value of values) {
+          next[dim][value] = prev[dim]?.[value] ?? 1;
+        }
+      }
+      return next;
+    });
+  }, [genAxes, genFilters]);
+
+  // New task → wipe Custom. Toggling Task plan / Custom keeps that draft.
+  useEffect(() => {
+    genSynthTouched.current = false;
+    setGenContractSize(null);
+    resetCustomGeneration();
+  }, [taskPath, resetCustomGeneration]);
+
+  // Keep the synth path defaulted to the task plan once a strategy loads, until
+  // the operator explicitly picks a path.
+  useEffect(() => {
+    if (genSynthTouched.current) return;
+    setGenSynthMode(hasTaskStrategy ? "contract" : "custom");
+  }, [hasTaskStrategy]);
+
+  const isContractSynth =
+    genSynthMode === "contract" && hasTaskStrategy && !!taskPersonaStrategy;
+
+  // Contract synth is driven entirely by persona_strategy.json; derive a
+  // read-only preview of what will be generated (fill mode + cohort size).
+  const contractView = useMemo(() => {
+    if (!taskPersonaStrategy) return null;
+    const s = readStrategySampling(taskPersonaStrategy);
+    const fill: "random" | "perCell" | "proportional" | "equalTotal" =
+      s.mode === "random"
+        ? "random"
+        : s.allocation === "perCell"
+          ? "perCell"
+          : s.allocation === "proportional"
+            ? "proportional"
+            : "equalTotal";
+    const filters = taskPersonaStrategy.dimensionFilters ?? {};
+    const fieldIds = s.fields.length > 0 ? s.fields : Object.keys(filters);
+    const combos = fieldIds.reduce(
+      (n, f) => n * Math.max(1, (filters[f] ?? []).length),
+      1,
+    );
+    const perCellN = s.perCell ?? 1;
+    const derivedN =
+      fill === "perCell"
+        ? Math.max(1, combos * Math.max(1, perCellN))
+        : Math.max(1, s.sampleSize ?? 8);
+    return { fill, derivedN, sizeEditable: fill !== "perCell" };
+  }, [taskPersonaStrategy]);
+
+  // Strategy dims that are not part of the Full-DAG schema — the backend stamps
+  // them as study overlays; surface them here so the operator sees what's custom.
+  const contractCustomDims = useMemo(() => {
+    if (!taskPersonaStrategy || !catalogQuery.data) return [];
+    const schemaIds = collectCatalogDimIds(catalogQuery.data);
+    const filters = taskPersonaStrategy.dimensionFilters ?? {};
+    const out: { id: string; values: string[] }[] = [];
+    for (const [dim, values] of Object.entries(filters)) {
+      if (!Array.isArray(values) || values.length === 0) continue;
+      if (!schemaIds.has(dim)) out.push({ id: dim, values });
+    }
+    return out;
+  }, [taskPersonaStrategy, catalogQuery.data]);
+
   const handleGenerate = useCallback(async () => {
     setGenerating(true);
     setGenerateError(null);
-    setGenerateProgress({
-      type: "progress",
-      stage: "prepare",
-      ratio: 0.02,
-      label: t("personaSetup.progress.startingGeneration"),
-    });
+    setGenerateProgress(null);
     try {
-      const isStratified = genMode === "stratified";
-      if (isStratified && genFields.length === 0) {
-        throw new ApiError(422, t("personaSetup.errors.pickStratifyField"));
+      setGenerateTracks([
+        {
+          key: "dataset",
+          label: t("personaSetup.progress.independentDataset"),
+          ratio: 0,
+          detail: t("personaSetup.progress.waiting"),
+          status: "pending",
+        },
+      ]);
+      const patchTracks = (event: PersonaPoolGenerateProgress) => {
+        setGenerateTracks((prev) => {
+          if (prev.length === 0) return prev;
+          const index =
+            typeof event.datasetIndex === "number" ? event.datasetIndex : 0;
+          return prev.map((track, trackIndex) => {
+            if (trackIndex !== index) {
+              if (trackIndex < index && track.status !== "done") {
+                return { ...track, status: "done", ratio: 1 };
+              }
+              return track;
+            }
+            const done = event.stage === "done" || event.ratio >= 0.999;
+            return {
+              ...track,
+              label: event.datasetLabel || track.label,
+              ratio: done ? 1 : event.ratio,
+              detail: event.label || track.detail,
+              status: done ? "done" : "active",
+            };
+          });
+        });
+        setGenerateProgress(event);
+      };
+
+      if (isContractSynth) {
+        const path = taskPath?.trim();
+        if (!path) {
+          throw new ApiError(422, t("personaSetup.errors.selectTask"));
+        }
+        const result = await api.generatePersonaPool(
+          {
+            taskPath: path,
+            seed: genSeed,
+            ...(genContractSize != null ? { sampleSize: genContractSize } : {}),
+          },
+          { onProgress: patchTracks },
+        );
+        await applyGeneratedPool(result, { selectCohort: true });
+        setGenerateTracks((prev) =>
+          prev.map((track) => ({ ...track, status: "done", ratio: 1 })),
+        );
+        return;
       }
-      const dimensionFilters = isStratified
-        ? filtersForSampleApi(genFilters)
-        : undefined;
+
+      const hasOverlay = genOverlay.length > 0;
+      const filtersSelected =
+        filterSelectionCounts(genFilters).attributes > 0 ||
+        genFilters.sources.length > 0;
+      if (
+        (genMode === "perCell" || genMode === "total") &&
+        genAxes.length === 0 &&
+        !filtersSelected
+      ) {
+        throw new ApiError(422, t("personaSetup.errors.pickGenerateFilters"));
+      }
+
+      const needsFilters = genMode === "perCell" || genMode === "total";
+      const overlayFilterMap = Object.fromEntries(
+        genOverlay.map((dim) => [
+          dim.id,
+          genFilters.dimensionFilters[dim.id] ?? dim.values,
+        ]),
+      );
+      const dimensionFilters = {
+        ...(filtersForSampleApi(genFilters) ?? {}),
+        ...(filtersForSampleApi({
+          sources: [],
+          dimensionFilters: overlayFilterMap,
+        }) ?? {}),
+      };
       const result = await api.generatePersonaPool(
         {
-          count: isStratified ? undefined : genCount,
+          count: genMode === "random" ? genCount : undefined,
           seed: genSeed,
-          dimensionFilters,
-          fields: isStratified ? genFields : undefined,
+          dimensionFilters:
+            Object.keys(dimensionFilters).length > 0
+              ? dimensionFilters
+              : undefined,
+          fields: needsFilters ? genAxes : undefined,
           perCell:
-            isStratified && genAllocation === "perCell"
-              ? clampPerCell(genPerCell)
-              : undefined,
-          allocation: isStratified ? genAllocation : undefined,
-          sampleSize:
-            isStratified && genAllocation !== "perCell"
-              ? genSampleSize
-              : undefined,
+            genMode === "perCell" ? clampPerCell(genPerCell) : undefined,
+          allocation:
+            genMode === "perCell"
+              ? "perCell"
+              : genMode === "total"
+                ? "independentMarginal"
+                : undefined,
+          sampleSize: genMode === "total" ? genSampleSize : undefined,
+          marginals: genMode === "total" ? genMarginals : undefined,
+          overlayDimensions: hasOverlay ? genOverlay : undefined,
         },
-        { onProgress: setGenerateProgress },
+        { onProgress: patchTracks },
       );
       await applyGeneratedPool(result, { selectCohort: false });
+      setGenerateTracks((prev) =>
+        prev.map((track) => ({
+          ...track,
+          status: "done",
+          ratio: 1,
+        })),
+      );
     } catch (err) {
       setGenerateError(
         err instanceof ApiError
@@ -1127,15 +1580,19 @@ export function PersonaSamplingRail({
     }
   }, [
     applyGeneratedPool,
-    genAllocation,
+    genAxes,
+    genContractSize,
     genCount,
-    genFields,
     genFilters,
+    genMarginals,
     genMode,
+    genOverlay,
     genPerCell,
     genSampleSize,
     genSeed,
+    isContractSynth,
     t,
+    taskPath,
   ]);
 
   const handleSynthesizeTask = useCallback(async () => {
@@ -1281,7 +1738,6 @@ export function PersonaSamplingRail({
     t,
   ]);
 
-  const filterCount = activeFilterCount(filters);
   const poolCount = catalogQuery.data?.count;
   const showModelSelector =
     taskType === "survey" ||
@@ -1343,14 +1799,67 @@ export function PersonaSamplingRail({
                 </button>
               ))}
             </div>
+          </div>
 
-            {railSegment === "generation" ? (
+          {railSegment === "generation" ? (
+            <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto pr-0.5">
               <div className="mb-2 space-y-1.5">
-                <div className="cockpit-segment cockpit-segment--grid grid-cols-2">
-                  {(["random", "stratified"] as const).map((tab) => (
+                {hasTaskStrategy && taskPersonaStrategy ? (
+                  <div className="cockpit-segment cockpit-segment--grid grid-cols-2">
+                    {(["contract", "custom"] as const).map((m) => (
+                      <button
+                        key={m}
+                        type="button"
+                        disabled={disabled || generating}
+                        onClick={() => {
+                          genSynthTouched.current = true;
+                          setGenSynthMode(m);
+                        }}
+                        className={`cockpit-segment__btn cockpit-segment__btn--compact w-full ${FOCUS_RING} ${
+                          genSynthMode === m
+                            ? "cockpit-segment__btn--active"
+                            : ""
+                        }`}
+                      >
+                        {m === "contract"
+                          ? t("personaSetup.synth.taskPlan")
+                          : t("personaSetup.synth.custom")}
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+                {isContractSynth ? (
+                  <ContractSynthBlock
+                    strategy={taskPersonaStrategy!}
+                    view={contractView}
+                    customDims={contractCustomDims}
+                    contractSize={genContractSize}
+                    onContractSize={setGenContractSize}
+                    contractSizeDraft={genContractSizeDraft}
+                    onContractSizeDraft={setGenContractSizeDraft}
+                    seed={genSeed}
+                    onSeed={setGenSeed}
+                    strategyOpen={genStrategyOpen}
+                    onStrategyOpen={setGenStrategyOpen}
+                    generating={generating}
+                    disabled={!!disabled}
+                    onGenerate={() => void handleGenerate()}
+                    tracks={generateTracks}
+                    progress={generateProgress}
+                    error={generateError}
+                  />
+                ) : (
+                  <>
+                <div className="cockpit-segment cockpit-segment--grid grid-cols-3">
+                  {(["random", "perCell", "total"] as const).map((tab) => (
                     <button
                       key={tab}
                       type="button"
+                      title={t(
+                        GENERATE_HINT_KEYS[
+                          tab === "perCell" || tab === "total" ? tab : "random"
+                        ],
+                      )}
                       disabled={disabled || generating}
                       onClick={() => setGenMode(tab)}
                       className={`cockpit-segment__btn cockpit-segment__btn--compact w-full ${FOCUS_RING} ${
@@ -1359,32 +1868,13 @@ export function PersonaSamplingRail({
                     >
                       {tab === "random"
                         ? t("personaSetup.tabs.random")
-                        : t("personaSetup.tabs.stratified")}
+                        : tab === "perCell"
+                          ? t("personaSetup.tabs.byCombo")
+                          : t("personaSetup.tabs.byShare")}
                     </button>
                   ))}
                 </div>
-                {genMode === "stratified" ? (
-                  <div className="cockpit-segment cockpit-segment--grid grid-cols-3">
-                    {ALLOCATION_ORDER.map((alloc) => (
-                      <button
-                        key={alloc}
-                        type="button"
-                        title={allocationTitle(t, alloc)}
-                        disabled={disabled || generating}
-                        onClick={() => setGenAllocation(alloc)}
-                        className={`cockpit-segment__btn cockpit-segment__btn--compact w-full ${FOCUS_RING} ${
-                          genAllocation === alloc
-                            ? "cockpit-segment__btn--active"
-                            : ""
-                        }`}
-                      >
-                        {allocationLabel(t, alloc)}
-                      </button>
-                    ))}
-                  </div>
-                ) : null}
-                {genMode === "stratified" ? (
-                  <div className="space-y-1.5">
+                <div className="space-y-1.5">
                     <button
                       type="button"
                       disabled={disabled || generating}
@@ -1392,7 +1882,7 @@ export function PersonaSamplingRail({
                         setFilterTarget("generation");
                         setFilterOpen(true);
                       }}
-                      className={`glass-tile glass-tile--hover flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left transition ${FOCUS_RING}`}
+                      className={`glass-tile glass-tile--hover flex w-full cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2 text-left transition ${FOCUS_RING}`}
                     >
                       <Sym
                         name="tune"
@@ -1400,31 +1890,54 @@ export function PersonaSamplingRail({
                         className="shrink-0 text-primary"
                       />
                       <span className="min-w-0 flex-1 text-[13px] font-medium text-text-main">
-                        {t("personaSetup.filters.title")}
+                        {t("personaSetup.filters.mixTitle")}
                       </span>
-                      {activeFilterCount(genFilters) > 0 ? (
-                        <span className="rounded-full bg-primary/15 px-1.5 font-mono text-[11px] text-primary">
-                          {activeFilterCount(genFilters)}
-                        </span>
-                      ) : null}
-                      {genFields.length > 0 ? (
-                        <span className="rounded-full bg-secondary/15 px-1.5 font-mono text-[11px] text-secondary">
-                          {genFields.length}×
-                        </span>
-                      ) : null}
+                      <span className="flex min-w-0 shrink-0 flex-col items-end gap-0.5 text-[11px] text-text-dim">
+                        {filterSelectionCounts(genFilters).attributes > 0 ||
+                        genFilters.sources.length > 0 ? (
+                          <span>
+                            {t(
+                              "personaSetup.filters.filterCount",
+                              filterSelectionCounts(genFilters),
+                            )}
+                          </span>
+                        ) : null}
+                        {filterSelectionCounts(genFilters).attributes === 0 &&
+                        genFilters.sources.length === 0 &&
+                        genOverlay.length > 0 ? (
+                          <span>
+                            {t("personaSetup.filters.overlayCount", {
+                              count: genOverlay.length,
+                            })}
+                          </span>
+                        ) : null}
+                      </span>
                       <Sym
                         name="chevron_right"
                         size={16}
                         className="shrink-0 text-text-dim"
                       />
                     </button>
-                    <PersonaFilterChips
-                      filters={genFilters}
-                      fields={genFields}
-                      showStratify
-                    />
+                    {filterSelectionCounts(genFilters).attributes > 0 ||
+                    genFilters.sources.length > 0 ||
+                    genOverlay.length > 0 ? (
+                      <div className="space-y-1 rounded-lg border border-outline/25 px-2.5 py-2">
+                        {filterSelectionCounts(genFilters).attributes > 0 ||
+                        genOverlay.length > 0 ? (
+                          <PersonaFilterChips
+                            filters={genFilters}
+                            fields={genAxes}
+                            showStratify={false}
+                            overlayLabels={genOverlayLabels}
+                          />
+                        ) : (
+                          <p className="text-[11px] text-text-dim">
+                            {t("personaSetup.filters.noMix")}
+                          </p>
+                        )}
+                      </div>
+                    ) : null}
                   </div>
-                ) : null}
                 <div className="flex items-end gap-2">
                   {genMode === "random" ? (
                     <>
@@ -1477,72 +1990,86 @@ export function PersonaSamplingRail({
                         />
                       </label>
                     </>
-                  ) : genAllocation === "perCell" ? (
-                    <label className="flex w-[4.25rem] shrink-0 flex-col gap-0.5">
-                      <span className="text-[12px] text-text-dim">
-                        {t("personaSetup.perCell")}
-                      </span>
-                      <input
-                        type="number"
-                        inputMode="numeric"
-                        min={1}
-                        max={50}
-                        step={1}
-                        value={genPerCell}
-                        disabled={disabled || generating}
-                        onChange={(e) =>
-                          setGenPerCell(clampPerCell(Number(e.target.value)))
-                        }
-                        className={`h-9 w-full rounded-lg border border-outline/50 bg-surface/60 px-1.5 text-center font-mono text-[15px] text-text-main disabled:opacity-50 ${FOCUS_RING}`}
-                      />
-                    </label>
                   ) : (
-                    <label className="flex w-[4.25rem] shrink-0 flex-col gap-0.5">
-                      <span className="text-[12px] text-text-dim">
-                        {t("personaSetup.strategy.sample")}
-                      </span>
-                      <input
-                        type="number"
-                        inputMode="numeric"
-                        min={2}
-                        max={PERSONA_GENERATE_COUNT_MAX}
-                        step={1}
-                        value={genSampleSize}
-                        disabled={disabled || generating}
-                        onChange={(e) =>
-                          setGenSampleSize(
-                            clampGenerateCount(Number(e.target.value)),
-                          )
-                        }
-                        className={`h-9 w-full rounded-lg border border-outline/50 bg-surface/60 px-1.5 text-center font-mono text-[15px] text-text-main disabled:opacity-50 ${FOCUS_RING}`}
-                      />
-                    </label>
+                    <>
+                      <label className="flex w-[4.25rem] shrink-0 flex-col gap-0.5">
+                        <span className="text-[12px] text-text-dim">
+                          {genMode === "perCell"
+                            ? t("personaSetup.perCell")
+                            : t("personaSetup.strategy.sample")}
+                        </span>
+                        <input
+                          type="number"
+                          inputMode="numeric"
+                          min={genMode === "perCell" ? 1 : 2}
+                          max={
+                            genMode === "perCell"
+                              ? 50
+                              : PERSONA_GENERATE_COUNT_MAX
+                          }
+                          step={1}
+                          value={
+                            genMode === "perCell" ? genPerCell : genSampleSize
+                          }
+                          disabled={disabled || generating}
+                          onChange={(e) => {
+                            const next = Number(e.target.value);
+                            if (genMode === "perCell") {
+                              setGenPerCell(clampPerCell(next));
+                            } else {
+                              setGenSampleSize(clampGenerateCount(next));
+                            }
+                          }}
+                          className={`h-9 w-full rounded-lg border border-outline/50 bg-surface/60 px-1.5 text-center font-mono text-[15px] text-text-main disabled:opacity-50 ${FOCUS_RING}`}
+                        />
+                      </label>
+                      <label className="flex w-[4.25rem] shrink-0 flex-col gap-0.5">
+                        <span className="text-[12px] text-text-dim">
+                          {t("personaSetup.seed")}
+                        </span>
+                        <input
+                          type="number"
+                          inputMode="numeric"
+                          step={1}
+                          value={genSeed}
+                          disabled={disabled || generating}
+                          onChange={(e) =>
+                            setGenSeed(Number(e.target.value) || 0)
+                          }
+                          className={`h-9 w-full rounded-lg border border-outline/50 bg-surface/60 px-1.5 text-center font-mono text-[15px] text-text-main disabled:opacity-50 ${FOCUS_RING}`}
+                        />
+                      </label>
+                    </>
                   )}
                   <button
                     type="button"
                     disabled={disabled || generating}
                     onClick={() => void handleGenerate()}
-                    className={`flex h-9 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-lg bg-surface-high/90 text-[13px] font-medium text-text-main hover:bg-surface-high disabled:opacity-50 ${FOCUS_RING}`}
+                    className={`flex h-9 min-w-0 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg bg-primary text-[13px] font-medium text-on-primary hover:opacity-90 disabled:opacity-50 ${FOCUS_RING}`}
                   >
                     <Sym
                       name={generating ? "autorenew" : "auto_awesome"}
                       size={15}
-                      className={
-                        generating
-                          ? "animate-rb-spin text-primary"
-                          : "text-primary"
-                      }
+                      className={generating ? "animate-rb-spin" : undefined}
                     />
                     {generating
                       ? t("personaSetup.generating")
                       : t("personaSetup.generate")}
                   </button>
                 </div>
-                {generating && generateProgress ? (
+                {generateTracks.length > 0 ? (
+                  <GenerateProgressTracks tracks={generateTracks} />
+                ) : generating && generateProgress ? (
                   <GenerateProgressBar progress={generateProgress} />
                 ) : (
                   <p className="text-[11px] leading-snug text-text-dim">
-                    {t("personaSetup.generateDescription")}
+                    {t(
+                      GENERATE_HINT_KEYS[
+                        genMode === "perCell" || genMode === "total"
+                          ? genMode
+                          : "random"
+                      ],
+                    )}
                   </p>
                 )}
                 {generateError ? (
@@ -1552,9 +2079,16 @@ export function PersonaSamplingRail({
                     </p>
                   </div>
                 ) : null}
+                  </>
+                )}
               </div>
-            ) : (
-              <>
+              <p className="rounded-lg border border-dashed border-outline/40 p-4 text-center text-[13px] leading-snug text-text-dim">
+                {t("personaSetup.generationEmpty")}
+              </p>
+            </div>
+          ) : (
+            <>
+              <div className="shrink-0">
                 <div className="mb-2">
                   <CockpitSelect
                     label={t("personaSetup.dataset")}
@@ -1563,11 +2097,12 @@ export function PersonaSamplingRail({
                     value={sourcePool}
                     options={datasetOptions}
                     disabled={disabled}
-                    showSelectedMeta={false}
+                    showSelectedMeta
+                    wideMenu
+                    wrapOptions
                     onChange={handleDatasetChange}
                   />
                 </div>
-
                 {hasTaskStrategy && taskPersonaStrategy ? (
                   <div
                     className="glass-tile mb-2 rounded-lg px-2.5 py-2"
@@ -1780,14 +2315,12 @@ export function PersonaSamplingRail({
                           <span className="min-w-0 flex-1 text-[13px] font-medium text-text-main">
                             {t("personaSetup.filters.title")}
                           </span>
-                          {filterCount > 0 ? (
-                            <span
-                              className="rounded-full bg-primary/15 px-1.5 font-mono text-[11px] text-primary"
-                              title={t("personaSetup.filterGroupCount", {
-                                count: filterCount,
-                              })}
-                            >
-                              {filterCount}
+                          {filterSelectionCounts(filters).attributes > 0 ? (
+                            <span className="shrink-0 text-[11px] text-text-dim">
+                              {t(
+                                "personaSetup.filters.filterCount",
+                                filterSelectionCounts(filters),
+                              )}
                             </span>
                           ) : null}
                           {panelMode === "stratified" &&
@@ -2056,18 +2589,7 @@ export function PersonaSamplingRail({
                     ) : null}
                   </div>
                 ) : null}
-              </>
-            )}
-          </div>
-
-          {railSegment === "generation" ? (
-            <div className="flex min-h-0 flex-1 items-center justify-center px-2">
-              <p className="rounded-lg border border-dashed border-outline/40 p-4 text-center text-[13px] leading-snug text-text-dim">
-                {t("personaSetup.generationEmpty")}
-              </p>
-            </div>
-          ) : (
-            <>
+              </div>
               <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto pr-0.5">
                 <div className="space-y-2">
                   {panelMode === "single" &&
@@ -2154,19 +2676,29 @@ export function PersonaSamplingRail({
         catalog={catalogQuery.data ?? null}
         filters={filterTarget === "generation" ? genFilters : filters}
         stratifyMode={
-          filterTarget === "generation"
-            ? genMode === "stratified"
-            : panelMode === "stratified"
+          filterTarget === "generation" ? false : panelMode === "stratified"
         }
-        fields={filterTarget === "generation" ? genFields : fields}
+        fields={filterTarget === "generation" ? [] : fields}
         onFieldsChange={
-          filterTarget === "generation" ? setGenFields : onFieldsChange
+          filterTarget === "generation" ? undefined : onFieldsChange
+        }
+        showMarginals={filterTarget === "generation" && genMode === "total"}
+        allowOverlayEdit={filterTarget === "generation"}
+        overlayDimensions={
+          filterTarget === "generation" ? genOverlay : undefined
+        }
+        marginals={
+          filterTarget === "generation" && genMode === "total"
+            ? genMarginals
+            : undefined
         }
         personaModel={personaModel}
         onClose={() => setFilterOpen(false)}
-        onConfirm={(next) => {
+        onConfirm={(next, nextMarginals, nextOverlay) => {
           if (filterTarget === "generation") {
+            if (nextOverlay !== undefined) setGenOverlay(nextOverlay);
             setGenFilters(next);
+            if (nextMarginals) setGenMarginals(nextMarginals);
             return;
           }
           onFiltersChange(next);

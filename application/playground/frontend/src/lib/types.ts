@@ -735,6 +735,8 @@ export interface JobAggregationPersonaDistribution {
   groupByPersonaDimension: string;
   groupByLabel: string;
   lens?: string | null;
+  /** ``study`` = task filters / overlays; ``more`` = other YAML dims that split. */
+  axisGroup?: "study" | "more";
   total: number;
   /** Stable category column order (categorical only). */
   categories?: string[] | null;
@@ -942,6 +944,12 @@ export interface PersonaPoolDimensionGroup {
   subgroups?: PersonaPoolDimensionSubgroup[];
 }
 
+export interface OverlayDimension {
+  id: string;
+  label: string;
+  values: string[];
+}
+
 export interface PersonaPoolCatalog {
   pool: string;
   count: number;
@@ -957,6 +965,7 @@ export interface PersonaPoolCatalog {
       groups?: PersonaPoolDimensionGroup[];
     };
   };
+  overlayDimensions?: OverlayDimension[];
 }
 
 export interface PersonaMatchedAttribute {
@@ -1027,16 +1036,22 @@ export interface PersonaPoolGenerateResult {
   kind: string;
   personaIds: string[];
   seed: number;
+  parentPool?: string;
 }
 
 /** NDJSON progress line from ``POST /api/persona-pool/generate?stream=1``. */
 export interface PersonaPoolGenerateProgress {
   type: "progress";
   stage: "prepare" | "sample" | "write" | "manifest" | "done" | string;
+  /** Progress within the current dataset (0..1). */
   ratio: number;
   label: string;
   done?: number;
   total?: number;
+  /** 0-based index of the dataset being written in this generate call. */
+  datasetIndex?: number;
+  datasetTotal?: number;
+  datasetLabel?: string;
 }
 
 export interface PersonaPoolSampleResult {
@@ -1111,6 +1126,8 @@ export interface TaskPersonaSampling {
   fields?: string[];
   allocation?: "perCell" | "proportional" | "equalTotal" | string | null;
   perCell?: number | null;
+  /** Declared target shares `{ dim: { value: weight } }` for a proportional mix. */
+  portions?: Record<string, Record<string, number>> | null;
 }
 
 export interface TaskPersonaStrategy {

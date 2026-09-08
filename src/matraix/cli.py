@@ -1,7 +1,9 @@
 """Product-facing ``matraix`` CLI.
 
-``matraix run`` wraps ``harbor run`` with the complete launch environment so
-commands printed by the job generator work from a clean documented setup.
+``matraix run -c`` is the only job executor. Local recipes wrap Harbor with
+the same PYTHONPATH and MATRIX_* exports Playground injects. A non-local
+sidecar ``computeFamily`` (or ``--compute-family``) uses HarborJobService —
+the same path as Playground / ``POST /api/harbor/jobs``.
 Harbor remains available directly as the underlying runtime.
 """
 
@@ -124,11 +126,53 @@ def _cmd_run(args: argparse.Namespace, passthrough: list[str]) -> None:
         if not config_path.is_file():
             sys.exit(f"matraix run: job config not found: {config_path}")
 
+    if args.compute_family and config_path is None:
+        sys.exit("matraix run: --compute-family requires -c <job.yaml>")
+    if args.plane and config_path is None:
+        sys.exit("matraix run: --plane requires -c <job.yaml>")
+
     repo_root = (
         Path(args.repo_root).resolve()
         if args.repo_root
         else find_repo_root(config_path.parent if config_path else None)
     )
+
+    if config_path is not None:
+        from matraix.job_run import run_via_harbor_job_service, should_dispatch_via_playground
+
+        try:
+            dispatch, family = should_dispatch_via_playground(
+                config_path=config_path,
+                cli_family=args.compute_family,
+            )
+        except ValueError as exc:
+            sys.exit(f"matraix run: {exc}")
+        if dispatch:
+            if passthrough:
+                print(
+                    "matraix run: ignoring extra harbor args on Playground dispatch: {}".format(
+                        " ".join(passthrough)
+                    ),
+                    file=sys.stderr,
+                )
+            extra_env: dict[str, str] = {}
+            if args.max_cost_usd is not None:
+                if args.max_cost_usd < 0:
+                    sys.exit("matraix run: --max-cost-usd must be >= 0")
+                extra_env["MATRIX_MAX_COST_USD"] = f"{args.max_cost_usd:g}"
+            os.chdir(repo_root)
+            try:
+                code = run_via_harbor_job_service(
+                    config_path=config_path,
+                    repo_root=repo_root,
+                    compute_family=args.compute_family or family,
+                    execution_plane=args.plane,
+                    extra_launch_env=extra_env or None,
+                )
+            except ValueError as exc:
+                sys.exit(f"matraix run: {exc}")
+            sys.exit(code)
+
     argv, env_updates = resolve_run_invocation(config_path, repo_root, passthrough)
     if args.max_cost_usd is not None:
         if args.max_cost_usd < 0:
@@ -247,9 +291,11 @@ def main(argv: list[str] | None = None) -> None:
         "run",
         help="Run a job with the complete MatrAIx launch environment.",
         description=(
-            "Runs `harbor run` with the same PYTHONPATH and MATRIX_* task exports "
-            "the Playground injects. All other arguments (e.g. -p/-a for ad-hoc "
-            "task runs) are passed through to harbor run."
+            "Runs a generated job YAML. Local recipes wrap Harbor with the same "
+            "PYTHONPATH and MATRIX_* exports Playground injects. A non-local "
+            "sidecar computeFamily (or --compute-family) uses HarborJobService — "
+            "the same path as Playground / POST /api/harbor/jobs. Ad-hoc "
+            "arguments (e.g. -p/-a) still pass through to Harbor."
         ),
     )
     run_parser.add_argument(
@@ -274,6 +320,25 @@ def main(argv: list[str] | None = None) -> None:
             "recorded spend meets this limit. Web/OS agents already report "
             "tokens/cost via their runtimes; this gate applies to host-native "
             "Survey/Chat today."
+        ),
+    )
+    run_parser.add_argument(
+        "--compute-family",
+        default=None,
+        metavar="FAMILY",
+        help=(
+            "Execution family for this job (same field as Playground computeFamily). "
+            "Default: sidecar computeFamily, else local. local wraps Harbor; "
+            "any other value uses HarborJobService."
+        ),
+    )
+    run_parser.add_argument(
+        "--plane",
+        choices=("harbor", "remote"),
+        default=None,
+        help=(
+            "Who starts Harbor on HarborJobService dispatch (same as Playground plane). "
+            "Default: MATRIX_EXECUTION_PLANE or harbor. Ignored for local recipes."
         ),
     )
 

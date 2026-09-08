@@ -230,46 +230,103 @@ and job launches that need real coverage. This is the canonical public coreset;
 prefer it over the ~200-persona smoke fixture.
 
 ### Local synthetic pools
-Sample Full-DAG personas for Playground experiments. Output is listed in the Dataset picker and is **gitignored**:
+
+Sample Full-DAG personas for Playground experiments. Output appears in the
+Dataset picker and is **gitignored**. Playground **Generation** and
+`generate_dev_personas.py` share the same path.
 
 ```bash
 uv run python persona/scripts/generate_dev_personas.py
-# staged progress: [prepare] → [sample] → [write] → [manifest] → [done]
 # → persona/datasets/generated-persona-dev-2000/
 ```
 
-Each YAML is labeled `source: synthetic`. This is a raw Full-DAG sample from
-`persona/synthesis/graph/full_dag.json`. It does **not** run quality filter,
-dedup, or calibration — those steps belong to the published
-[`matraix-persona-1m`](pipeline.md#1m-coreset) coreset.
+Each YAML is `source: synthetic` from `persona/synthesis/graph/full_dag.json`.
+This is a raw Full-DAG sample — it does **not** run quality filter, dedup, or
+calibration (those belong to the published
+[`matraix-persona-1m`](pipeline.md#1m-coreset) coreset).
 
-Playground **Generation** writes the same pools (Random count, or Stratified
-cells) and switches **Dataset** to the new folder (it does **not** auto-select
-the whole draw as the launch cohort). If **Task default** is on and Pull cannot
-cover `persona_strategy.json`, **Synthesize to fill this task** does the
-`--strategy` equivalent and selects that fill cohort.
+Custom dimensions (not in the persona schema) use
+`--overlay id[:label]=v1,v2`. IDs must start with a letter, use only letters /
+numbers / underscores, and must not collide with an existing schema dimension.
+Schema `--filter` values pin the DAG; overlay values are applied after sampling.
 
-`--strategy` reads the task `persona_strategy.json` and fills the same cells
-Playground will draw from:
+After Generate, Dataset switches to the new pool (it does **not** auto-select
+the draw as the launch cohort). If **Task default** is on and Pull cannot cover
+`persona_strategy.json`, **Synthesize to fill this task** (CLI: `--strategy`)
+fills those cells, including any declared mix (`sampling.portions` or weighted
+`dimensionFilters`). `--task … --per-cell` is a different path: grounding.toml
+probe cells only.
 
-- **perCell** — `N` rows in every `sampling.fields` cell
-- **equalTotal** — `ceil(sampleSize / #cells)` per cell (then the draw clips to `sampleSize`)
-- **proportional** — same floor so every cell exists and the pool is ≥ `sampleSize`
+### Playground Generation (Independent / Contrast)
 
-Other `dimensionFilters` are pinned to an allowed value so generated rows still
-match the task filters. Cells the DAG cannot pin are dropped.
+Three sampling modes (hover the UI tabs for tooltips):
 
-Optional flags:
-- `--count N` — how many personas to sample (default 2000)
-- `--strategy <path>` — fill the task's stratified cells (perCell / equalTotal / proportional)
-- `--task <path> --stratum-min N` — fill grounding probe cells
+| UI | CLI | Meaning |
+|----|-----|---------|
+| **Random** | `--count N` | N personas per written dataset (uniform over selected filter cells when filters are set) |
+| **By combo** | `--per-cell N` | N personas per selected filter combination |
+| **By share** | `--sample-size N` | Allocate N from per-dimension shares (equal unless you set weights) |
+
+**N is per dataset.** Contrast copies reuse one shared draw, so every contrast
+dataset has the same size. UI and CLI show **one progress bar per dataset**.
+
+Two mix workspaces:
+
+- **Independent** — one mix (`--filter`; By share weights via `--marginal`).
+- **Contrast** — optional shared mix (`--contrast-filter` /
+  `--contrast-marginal`) plus **contrast attributes** (`--contrast`). Writes the
+  complementary **base-value** pool plus one dataset per selected value
+  combination. Labels look like `Contrast · Brand=Low`. After Generate, Dataset
+  selects the base-value pool first.
+
+Invalid schema contrast stamps (Full-DAG) error out without resampling; custom
+overlay stamps skip the DAG check.
+
+```bash
+# Independent
+uv run python persona/scripts/generate_dev_personas.py \
+  --count 100 \
+  --filter age_bracket=25-34
+
+# Contrast (shared filters optional)
+uv run python persona/scripts/generate_dev_personas.py \
+  --count 100 \
+  --overlay brand_trust:Brand=High,Low \
+  --contrast brand_trust=High
+
+# Independent + Contrast (By share with weights)
+uv run python persona/scripts/generate_dev_personas.py \
+  --sample-size 100 \
+  --filter gender_identity=Man,Woman \
+  --marginal gender_identity=Man:70,Woman:30 \
+  --contrast-filter age_bracket=25-34 \
+  --overlay brand_trust:Brand=High,Low \
+  --contrast brand_trust=High
+
+# Clone an existing pool into contrast copies
+uv run python persona/scripts/generate_dev_personas.py \
+  --contrast-from persona/datasets/generated-persona-dev-200 \
+  --contrast brand_trust=High
+```
+
+Also useful: `--strategy` (task `persona_strategy.json`, including target mix),
+`--task … --per-cell` (grounding.toml cells), `--stratify`,
+`--contrast-dim` / `--contrast-value` (single-arm shorthand). Defaults:
+`--count` 2000 (max 5000).
+
+```bash
+# Task-plan fill (honors persona_strategy.json mix)
+uv run python persona/scripts/generate_dev_personas.py \
+  --strategy application/tasks/example-survey_product-feedback
+```
 
 ### Job Generation
 Create a Matraix Playground job YAML from a task and persona pool by passing an
 application or validation task path to `persona/scripts/generate_persona_job.py`.
-The CLI prints staged progress (`[prepare]` → `[load]` → `[sample]` → `[write]` → `[done]`).
 
-This reads `grounding.toml` to sample stratified cohorts and filter on confounders when present. Use `--controlled-probe` for anchor-based cohorts (default for catalog tasks); `--no-controlled-probe` to disable.
+This reads `grounding.toml` to sample stratified cohorts and filter on
+confounders when present. Use `--controlled-probe` for anchor-based cohorts
+(default for catalog tasks); `--no-controlled-probe` to disable.
 
 See scripts under `../../persona/scripts/` for full options.
 
@@ -306,7 +363,7 @@ persona/
 │   ├── tasks/                       # Probe tasks
 │   └── scripts/                     # Matrix runners and reporting helpers
 ├── scripts/                         # Job generation and persona sampling
-│   ├── generate_dev_personas.py     # Synthetic YAML pool for Playground Dataset
+│   ├── generate_dev_personas.py     # Synthetic YAML pool (same generate path as Playground)
 │   └── generate_persona_job.py      # Matraix Playground job YAML from task + pool
 ├── reporting/                       # Grounding evaluation
 │   └── eval_grounding_job.py        # Aggregate job-level metrics
@@ -334,8 +391,10 @@ result = t.match("senior software engineer in Silicon Valley with ML expertise")
 
 **Sample synthetic personas for Playground:**
 ```bash
-uv run python persona/scripts/generate_dev_personas.py
-# pick persona/datasets/generated-persona-dev-2000 in Dataset
+uv run python persona/scripts/generate_dev_personas.py \
+  --overlay brand_trust:Brand=High,Low \
+  --contrast brand_trust=High
+# Dataset picks the base-value pool (Contrast · Brand=Low)
 ```
 
 **Launch a grounding evaluation:**

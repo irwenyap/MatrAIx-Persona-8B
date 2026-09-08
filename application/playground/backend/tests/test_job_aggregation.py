@@ -1664,3 +1664,242 @@ def test_job_aggregation_artifact_is_fresh_rejects_bad_payload(tmp_path: Path) -
     assert not job_aggregation_artifact_is_fresh(
         job_dir, read_job_aggregation_artifact(job_dir)
     )
+
+
+def _write_overlay_pool(repo_root: Path, *, dim_id: str = "study_trust") -> Path:
+    pool = repo_root / "persona" / "datasets" / "overlay-pool"
+    pool.mkdir(parents=True)
+    (pool / "manifest.json").write_text(
+        json.dumps(
+            {
+                "overlay_dimensions": [
+                    {
+                        "id": dim_id,
+                        "label": "品牌信任",
+                        "values": ["Low", "High"],
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+    return pool
+
+
+def _write_pool_persona_trial(
+    job_dir: Path,
+    repo_root: Path,
+    *,
+    task: str,
+    trial: str,
+    persona_id: str,
+    pool: Path,
+    dimensions: dict,
+    contexts: list,
+) -> None:
+    """Like ``_write_persona_trial``, but the YAML lives in a pool (for overlay labels)."""
+    persona_rel = f"{pool.relative_to(repo_root)}/persona_{persona_id}.yaml"
+    persona_abs = repo_root / persona_rel
+    persona_abs.parent.mkdir(parents=True, exist_ok=True)
+    dim_lines = "\n".join(f"  {key}: {value}" for key, value in dimensions.items())
+    persona_abs.write_text(f"dimensions:\n{dim_lines}\n", encoding="utf-8")
+    trial_dir = job_dir / trial
+    (trial_dir / "verifier").mkdir(parents=True, exist_ok=True)
+    (trial_dir / "result.json").write_text("{}", encoding="utf-8")
+    (trial_dir / "config.json").write_text(
+        json.dumps(
+            {
+                "task": {"path": f"application/tasks/{task}"},
+                "agent": {"kwargs": {"persona_path": persona_rel}},
+            }
+        ),
+        encoding="utf-8",
+    )
+    (trial_dir / "verifier" / "structured_output.json").write_text(
+        json.dumps({"presenceCheck": {"passed": True}, "contexts": contexts}),
+        encoding="utf-8",
+    )
+
+
+def test_overlay_dimension_labels_from_pool_manifest(tmp_path: Path) -> None:
+    from backend.service.job_aggregation import (
+        _humanize_persona_dimension,
+        _overlay_labels_from_persona_cache,
+    )
+
+    _write_overlay_pool(tmp_path)
+    rel = "persona/datasets/overlay-pool/persona_0001.yaml"
+    labels = _overlay_labels_from_persona_cache(
+        repo_root=tmp_path, persona_paths=[rel]
+    )
+    assert labels["study_trust"] == "品牌信任"
+    assert (
+        _humanize_persona_dimension("study_trust", labels=labels) == "品牌信任"
+    )
+
+
+def test_overlay_dimension_is_explorer_axis_when_it_varies(tmp_path: Path) -> None:
+    """Custom overlay dims that actually split the cohort must appear in the picker.
+
+    Default cards also prepend overlay ids ahead of sampling.fields. A schema
+    dimension that is constant across the job is not an explorer axis.
+    """
+    repo_root = tmp_path
+    task = "example-overlay-explorer"
+    task_dir = repo_root / "application" / "tasks" / task
+    task_dir.mkdir(parents=True, exist_ok=True)
+    (task_dir / "persona_strategy.json").write_text(
+        json.dumps(
+            {
+                "dimensionFilters": {
+                    "age_bracket": ["25-34", "35-44"],
+                },
+                "sampling": {
+                    "mode": "stratified",
+                    "fields": ["age_bracket"],
+                    "allocation": "perCell",
+                    "perCell": 1,
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    (task_dir / "reporting.json").write_text(
+        json.dumps(
+            {
+                "contextRules": [
+                    {
+                        "match": {"contextType": "user_feedback"},
+                        "distributions": [{"facetKey": "overall_experience_rating"}],
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+    pool = _write_overlay_pool(repo_root)
+    job_dir = repo_root / "jobs" / "job"
+    rows = [
+        ("p1", "Low", "25-34", 6),
+        ("p2", "Low", "35-44", 7),
+        ("p3", "High", "25-34", 8),
+        ("p4", "High", "35-44", 9),
+    ]
+    for persona_id, trust, age, rating in rows:
+        _write_pool_persona_trial(
+            job_dir,
+            repo_root,
+            task=task,
+            trial=f"trial-{persona_id}",
+            persona_id=persona_id,
+            pool=pool,
+            dimensions={
+                "study_trust": trust,
+                "age_bracket": age,
+                "region": "North America",
+                "occupation": "Engineer" if persona_id in {"p1", "p2"} else "Teacher",
+            },
+            contexts=_persona_feedback_contexts(rating, "yes", "partially", "ok"),
+        )
+
+    aggregation = build_job_aggregation(job_dir, repo_root=repo_root, enable_llm=False)
+    assert aggregation is not None
+    feedback = next(
+        context
+        for context in aggregation["contexts"]
+        if context.get("contextType") == "user_feedback"
+    )
+    option_by_dim = {
+        opt["groupByPersonaDimension"]: opt
+        for opt in feedback.get("personaDistributionOptions") or []
+        if opt.get("facetKey") == "overall_experience_rating"
+    }
+    assert option_by_dim["study_trust"].get("groupByLabel") == "品牌信任"
+    assert option_by_dim["study_trust"].get("axisGroup") == "study"
+    assert option_by_dim["age_bracket"].get("axisGroup") == "study"
+    assert option_by_dim["occupation"].get("axisGroup") == "more"
+    assert "region" not in option_by_dim
+
+    default_dims = {
+        dist["groupByPersonaDimension"]
+        for dist in feedback.get("personaDistributions") or []
+        if dist.get("facetKey") == "overall_experience_rating"
+    }
+    assert "study_trust" in default_dims
+
+
+def test_constant_overlay_dimension_stays_on_study_picker(tmp_path: Path) -> None:
+    """A custom dim stamped to a single value is still a study axis.
+
+    Default insight cards stay contrast-only (>=2 segments); the explorer
+    picker keeps the axis so a one-arm job can still select it.
+    """
+    repo_root = tmp_path
+    task = "example-overlay-constant"
+    task_dir = repo_root / "application" / "tasks" / task
+    task_dir.mkdir(parents=True, exist_ok=True)
+    (task_dir / "persona_strategy.json").write_text(
+        json.dumps(
+            {
+                "dimensionFilters": {"age_bracket": ["25-34", "35-44"]},
+                "sampling": {
+                    "mode": "stratified",
+                    "fields": ["age_bracket"],
+                    "allocation": "perCell",
+                    "perCell": 1,
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    (task_dir / "reporting.json").write_text(
+        json.dumps(
+            {
+                "contextRules": [
+                    {
+                        "match": {"contextType": "user_feedback"},
+                        "distributions": [{"facetKey": "overall_experience_rating"}],
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+    pool = _write_overlay_pool(repo_root)
+    job_dir = repo_root / "jobs" / "job"
+    for persona_id, age, rating in [("p1", "25-34", 6), ("p2", "35-44", 9)]:
+        _write_pool_persona_trial(
+            job_dir,
+            repo_root,
+            task=task,
+            trial=f"trial-{persona_id}",
+            persona_id=persona_id,
+            pool=pool,
+            dimensions={"study_trust": "Low", "age_bracket": age},
+            contexts=_persona_feedback_contexts(rating, "yes", "partially", "ok"),
+        )
+
+    aggregation = build_job_aggregation(job_dir, repo_root=repo_root, enable_llm=False)
+    assert aggregation is not None
+    feedback = next(
+        context
+        for context in aggregation["contexts"]
+        if context.get("contextType") == "user_feedback"
+    )
+    option_by_dim = {
+        opt["groupByPersonaDimension"]: opt
+        for opt in feedback.get("personaDistributionOptions") or []
+        if opt.get("facetKey") == "overall_experience_rating"
+    }
+    overlay = option_by_dim["study_trust"]
+    assert overlay.get("axisGroup") == "study"
+    assert overlay.get("groupByLabel") == "品牌信任"
+    assert [bucket["bucket"] for bucket in overlay["buckets"]] == ["Low"]
+    assert "age_bracket" in option_by_dim
+    default_dims = {
+        dist["groupByPersonaDimension"]
+        for dist in feedback.get("personaDistributions") or []
+        if dist.get("facetKey") == "overall_experience_rating"
+    }
+    assert "study_trust" not in default_dims
+    assert "age_bracket" in default_dims

@@ -110,14 +110,84 @@ def _api_key(model: str) -> str:
         value = os.environ.get("DASHSCOPE_API_KEY", "").strip()
         if value:
             return value
-    for name in ("ANTHROPIC_API_KEY", "OPENAI_API_KEY", "LLM_API_KEY", "DASHSCOPE_API_KEY"):
+    if model.startswith("gemini/") or model.startswith("google/"):
+        value = (
+            os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY") or ""
+        ).strip()
+        if value:
+            return value
+    if model.startswith("openrouter/"):
+        value = os.environ.get("OPENROUTER_API_KEY", "").strip()
+        if value:
+            return value
+    if model.startswith("xai/"):
+        value = os.environ.get("XAI_API_KEY", "").strip()
+        if value:
+            return value
+    if model.startswith("deepseek/"):
+        value = os.environ.get("DEEPSEEK_API_KEY", "").strip()
+        if value:
+            return value
+    if model.startswith("zai/"):
+        value = os.environ.get("ZAI_API_KEY", "").strip()
+        if value:
+            return value
+    for name in (
+        "ANTHROPIC_API_KEY",
+        "OPENAI_API_KEY",
+        "LLM_API_KEY",
+        "DASHSCOPE_API_KEY",
+        "GEMINI_API_KEY",
+        "GOOGLE_API_KEY",
+        "OPENROUTER_API_KEY",
+        "XAI_API_KEY",
+        "DEEPSEEK_API_KEY",
+        "ZAI_API_KEY",
+    ):
         value = os.environ.get(name, "").strip()
         if value:
             return value
     raise RuntimeError(
-        "Set DASHSCOPE_API_KEY (for dashscope/*), or ANTHROPIC_API_KEY, OPENAI_API_KEY, "
-        "or LLM_API_KEY for persona-cocoa"
+        "Set DASHSCOPE_API_KEY (for dashscope/*), GEMINI_API_KEY (for gemini/*), "
+        "OPENROUTER_API_KEY (for openrouter/*), XAI_API_KEY (for xai/*), "
+        "DEEPSEEK_API_KEY (for deepseek/*), ZAI_API_KEY (for zai/*), "
+        "or ANTHROPIC_API_KEY, OPENAI_API_KEY, or LLM_API_KEY for persona-cocoa"
     )
+
+
+def _llm_base_url(model: str) -> str:
+    if model.startswith("dashscope/"):
+        return (
+            os.environ.get("LLM_BASE_URL")
+            or os.environ.get("DASHSCOPE_API_BASE")
+            or "https://dashscope.aliyuncs.com/compatible-mode/v1"
+        )
+    if model.startswith("openrouter/"):
+        return (
+            os.environ.get("LLM_BASE_URL")
+            or os.environ.get("OPENROUTER_API_BASE")
+            or os.environ.get("OPENROUTER_BASE_URL")
+            or "https://openrouter.ai/api/v1"
+        )
+    if model.startswith("xai/"):
+        return (
+            os.environ.get("LLM_BASE_URL")
+            or os.environ.get("XAI_API_BASE")
+            or "https://api.x.ai/v1"
+        )
+    if model.startswith("deepseek/"):
+        return (
+            os.environ.get("LLM_BASE_URL")
+            or os.environ.get("DEEPSEEK_API_BASE")
+            or "https://api.deepseek.com"
+        )
+    if model.startswith("zai/"):
+        return (
+            os.environ.get("LLM_BASE_URL")
+            or os.environ.get("ZAI_API_BASE")
+            or "https://api.z.ai/api/paas/v4"
+        )
+    return os.environ.get("LLM_BASE_URL") or ""
 
 
 def _skip_docker() -> bool:
@@ -591,13 +661,7 @@ def main() -> int:
             "args": {
                 "model": bare_model,
                 "api_key": _api_key(args.model),
-                "base_url": os.environ.get("LLM_BASE_URL")
-                or os.environ.get("DASHSCOPE_API_BASE")
-                or (
-                    "https://dashscope.aliyuncs.com/compatible-mode/v1"
-                    if args.model.startswith("dashscope/")
-                    else ""
-                ),
+                "base_url": _llm_base_url(args.model),
             },
         },
         "sandbox": {

@@ -281,8 +281,11 @@ than 100 IDs return a truncated `personaIds` list plus `selectedCount` /
 
 ### `POST /api/persona-pool/generate`
 
-Writes a Full-DAG synthetic pool under `persona/datasets/generated-persona-dev-*`
-(gitignored). Optional `?stream=1` returns NDJSON progress stages.
+Writes Full-DAG synthetic pool(s) under `persona/datasets/generated-persona-dev-*`
+(gitignored). Supports Independent / Contrast the same way as Playground
+Generation. Optional `?stream=1` returns NDJSON progress (one logical track per
+dataset: `datasetIndex` / `datasetLabel` / `ratio`). Details:
+[Playground Generation](../persona/README.md#playground-generation-independent--contrast).
 
 ### `GET /api/persona-pool/personas`
 

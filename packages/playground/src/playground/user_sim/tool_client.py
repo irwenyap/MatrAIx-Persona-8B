@@ -215,7 +215,11 @@ def build_tool_step_client(
 ) -> ToolStepClient:
     from playground.model_client import (
         dashscope_openai_client_kwargs,
+        deepseek_openai_client_kwargs,
+        gemini_openai_client_kwargs,
         openrouter_openai_client_kwargs,
+        xai_openai_client_kwargs,
+        zai_openai_client_kwargs,
     )
 
     value = (model or "openai/gpt-4o-mini").strip()
@@ -248,6 +252,16 @@ def build_tool_step_client(
             capabilities=capabilities,
             provider="dashscope",
         )
+    if value.startswith("gemini/") or value.startswith("google/"):
+        kwargs = gemini_openai_client_kwargs(value)
+        return OpenAIToolStepClient(
+            kwargs["model"],
+            api_key=kwargs["api_key"],
+            base_url=kwargs["base_url"],
+            temperature=temperature,
+            capabilities=capabilities,
+            provider="gemini",
+        )
     if value.startswith("openrouter/"):
         kwargs = openrouter_openai_client_kwargs(value)
         return OpenAIToolStepClient(
@@ -257,6 +271,36 @@ def build_tool_step_client(
             temperature=temperature,
             capabilities=capabilities,
             provider="openrouter",
+        )
+    if value.startswith("xai/"):
+        kwargs = xai_openai_client_kwargs(value)
+        return OpenAIToolStepClient(
+            kwargs["model"],
+            api_key=kwargs["api_key"],
+            base_url=kwargs["base_url"],
+            temperature=temperature,
+            capabilities=capabilities,
+            provider="xai",
+        )
+    if value.startswith("deepseek/"):
+        kwargs = deepseek_openai_client_kwargs(value)
+        return OpenAIToolStepClient(
+            kwargs["model"],
+            api_key=kwargs["api_key"],
+            base_url=kwargs["base_url"],
+            temperature=temperature,
+            capabilities=capabilities,
+            provider="deepseek",
+        )
+    if value.startswith("zai/"):
+        kwargs = zai_openai_client_kwargs(value)
+        return OpenAIToolStepClient(
+            kwargs["model"],
+            api_key=kwargs["api_key"],
+            base_url=kwargs["base_url"],
+            temperature=temperature,
+            capabilities=capabilities,
+            provider="zai",
         )
     if value.startswith("openai/"):
         return OpenAIToolStepClient(

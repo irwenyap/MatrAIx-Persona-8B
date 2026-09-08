@@ -137,6 +137,18 @@ class CocoaHarborAgent(BaseInstalledAgent):
             "ANTHROPIC_API_KEY",
             "OPENAI_API_KEY",
             "DASHSCOPE_API_KEY",
+            "GEMINI_API_KEY",
+            "GOOGLE_API_KEY",
+            "GEMINI_API_BASE",
+            "OPENROUTER_API_KEY",
+            "OPENROUTER_API_BASE",
+            "OPENROUTER_BASE_URL",
+            "XAI_API_KEY",
+            "XAI_API_BASE",
+            "DEEPSEEK_API_KEY",
+            "DEEPSEEK_API_BASE",
+            "ZAI_API_KEY",
+            "ZAI_API_BASE",
             "LLM_API_KEY",
             "LLM_BASE_URL",
             "DASHSCOPE_API_BASE",
@@ -157,13 +169,49 @@ class CocoaHarborAgent(BaseInstalledAgent):
                 and self._get_env("DASHSCOPE_API_KEY")
             ):
                 env["LLM_API_KEY"] = self._get_env("DASHSCOPE_API_KEY")  # type: ignore[assignment]
+        elif (
+            self.model_name.startswith("gemini/") or self.model_name.startswith("google/")
+        ) and "LLM_API_KEY" not in env:
+            gemini_key = self._get_env("GEMINI_API_KEY") or self._get_env("GOOGLE_API_KEY")
+            if gemini_key:
+                env["LLM_API_KEY"] = gemini_key
+        elif self.model_name.startswith("openrouter/") and "LLM_API_KEY" not in env:
+            openrouter_key = self._get_env("OPENROUTER_API_KEY")
+            if openrouter_key:
+                env["LLM_API_KEY"] = openrouter_key
+        elif self.model_name.startswith("xai/") and "LLM_API_KEY" not in env:
+            xai_key = self._get_env("XAI_API_KEY")
+            if xai_key:
+                env["LLM_API_KEY"] = xai_key
+        elif self.model_name.startswith("deepseek/") and "LLM_API_KEY" not in env:
+            deepseek_key = self._get_env("DEEPSEEK_API_KEY")
+            if deepseek_key:
+                env["LLM_API_KEY"] = deepseek_key
+        elif self.model_name.startswith("zai/") and "LLM_API_KEY" not in env:
+            zai_key = self._get_env("ZAI_API_KEY")
+            if zai_key:
+                env["LLM_API_KEY"] = zai_key
 
         if not any(
             self._get_env(k)
-            for k in ("ANTHROPIC_API_KEY", "OPENAI_API_KEY", "LLM_API_KEY", "DASHSCOPE_API_KEY")
+            for k in (
+                "ANTHROPIC_API_KEY",
+                "OPENAI_API_KEY",
+                "LLM_API_KEY",
+                "DASHSCOPE_API_KEY",
+                "GEMINI_API_KEY",
+                "GOOGLE_API_KEY",
+                "OPENROUTER_API_KEY",
+                "XAI_API_KEY",
+                "DEEPSEEK_API_KEY",
+                "ZAI_API_KEY",
+            )
         ):
             raise ValueError(
-                "Set ANTHROPIC_API_KEY, OPENAI_API_KEY, or LLM_API_KEY for cocoa"
+                "Set ANTHROPIC_API_KEY, OPENAI_API_KEY, DASHSCOPE_API_KEY, "
+                "GEMINI_API_KEY, OPENROUTER_API_KEY, XAI_API_KEY, "
+                "DEEPSEEK_API_KEY, ZAI_API_KEY, or LLM_API_KEY "
+                "for cocoa"
             )
 
         env["AGENT_LOGS_DIR"] = "/logs/agent"

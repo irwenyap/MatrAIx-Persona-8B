@@ -156,6 +156,110 @@ def test_build_filter_strata_cartesian() -> None:
     assert {"age_bracket": "35-44", "life_stage": "Early career"} in strata
 
 
+def test_independent_marginal_quotas_equal_and_weighted() -> None:
+    from matraix.persona_generator import independent_marginal_cell_quotas
+
+    filters = {
+        "age_bracket": ["18-24", "25-34", "35-44", "45-54"],
+        "gender_identity": ["Man", "Woman"],
+    }
+    cells = [
+        {"age_bracket": age, "gender_identity": gender}
+        for age in filters["age_bracket"]
+        for gender in filters["gender_identity"]
+    ]
+    equal = independent_marginal_cell_quotas(cells, 32, dimension_filters=filters)
+    assert sum(equal) == 32
+    assert equal == [4] * 8
+
+    weighted = independent_marginal_cell_quotas(
+        cells,
+        32,
+        dimension_filters=filters,
+        marginals={"gender_identity": {"Man": 3, "Woman": 1}},
+    )
+    assert sum(weighted) == 32
+    man = sum(
+        quota
+        for cell, quota in zip(cells, weighted, strict=True)
+        if cell["gender_identity"] == "Man"
+    )
+    woman = 32 - man
+    assert man == 24
+    assert woman == 8
+
+
+def test_normalize_and_stamp_study_overlay() -> None:
+    from matraix.persona_generator import (
+        fill_overlay_filters,
+        normalize_overlay_dimensions,
+        split_overlay_filters,
+        stamp_overlay_from_cells,
+        stamp_overlay_independent,
+    )
+
+    overlay = normalize_overlay_dimensions(
+        [{"id": "study_trust", "label": "Trust", "values": ["Low", "High"]}]
+    )
+    catalog, overlay_filters = split_overlay_filters(
+        {"age_bracket": ["25-34"], "study_trust": ["Low"]},
+        {"study_trust"},
+    )
+    assert catalog == {"age_bracket": ["25-34"]}
+    assert overlay_filters == {"study_trust": ["Low"]}
+    filled = fill_overlay_filters(overlay, {})
+    assert filled["study_trust"] == ["Low", "High"]
+
+    personas = [
+        {"persona_id": "0001", "dimensions": {"age_bracket": "25-34"}},
+        {"persona_id": "0002", "dimensions": {"age_bracket": "25-34"}},
+    ]
+    stamp_overlay_from_cells(
+        personas,
+        [
+            {"age_bracket": "25-34", "study_trust": "Low"},
+            {"age_bracket": "25-34", "study_trust": "High"},
+        ],
+        [1, 1],
+        {"study_trust"},
+    )
+    values = {entry["dimensions"]["study_trust"] for entry in personas}
+    assert values == {"Low", "High"}
+
+    independent = [{"persona_id": "0003", "dimensions": {}}]
+    stamp_overlay_independent(independent, overlay, filled, seed=1)
+    assert independent[0]["dimensions"]["study_trust"] in {"Low", "High"}
+
+
+def test_generate_persona_pool_extra_filters_pin_catalog_dims() -> None:
+    from matraix import persona_generator as gen
+
+    class FakeDag:
+        def assignment_supported(self, pinned: dict[str, str]) -> bool:
+            return True
+
+        def sample(self, n: int, *, fixed: dict[str, str] | None = None):
+            base = {"age_bracket": "18-24", "region": "US"}
+            if fixed:
+                base.update(fixed)
+            return [dict(base) for _ in range(n)]
+
+    original = gen._dag_sampler
+    gen._dag_sampler = lambda **kwargs: FakeDag()
+    try:
+        personas = gen.generate_persona_pool(
+            count=3,
+            seed=1,
+            extra_filters={"age_bracket": ["25-34"]},
+            include_smoke=False,
+        )
+    finally:
+        gen._dag_sampler = original
+
+    assert len(personas) == 3
+    assert {row["dimensions"]["age_bracket"] for row in personas} == {"25-34"}
+
+
 def test_stratified_cell_quota_matches_playground_allocations() -> None:
     import pytest
 
@@ -185,7 +289,7 @@ def test_stratified_cell_quota_matches_playground_allocations() -> None:
         )
 
 
-def test_strategy_pin_cells_pins_extra_filters() -> None:
+def test_strategy_pin_cells_keeps_stratify_axes_only() -> None:
     from matraix.persona_generator import strategy_pin_cells
 
     cells, _dropped = strategy_pin_cells(
@@ -199,7 +303,28 @@ def test_strategy_pin_cells_pins_extra_filters() -> None:
     assert cells
     for cell in cells:
         assert cell["life_stage"] in {"Early career", "Mid-life"}
-        assert cell["age_bracket"] in {"25-34", "35-44"}
+        assert "age_bracket" not in cell
+
+
+def test_top_up_randomizes_non_stratify_filters() -> None:
+    from matraix.persona_generator import generate_persona_pool
+
+    ages = ["18-24", "25-34", "35-44", "45-54"]
+    personas = generate_persona_pool(
+        count=0,
+        seed=7,
+        stratum_top_up=[{"age_bracket": age} for age in ages],
+        min_per_stratum=4,
+        extra_filters={"gender_identity": ["Man", "Woman"]},
+        include_smoke=False,
+    )
+    seen_ages = {entry["dimensions"]["age_bracket"] for entry in personas}
+    seen_genders = {entry["dimensions"]["gender_identity"] for entry in personas}
+    assert seen_ages <= set(ages)
+    assert "13-17" not in seen_ages
+    assert "55-64" not in seen_ages
+    assert seen_genders <= {"Man", "Woman"}
+    assert seen_genders == {"Man", "Woman"}
 
 
 def test_generate_pool_strategy_top_up_only() -> None:
@@ -267,3 +392,269 @@ def test_checked_in_sample_manifest_is_consistent() -> None:
         assert payload.get("source") in sources
         assert payload["dimensions"]
         assert set(payload["dimensions"]) <= catalog_ids
+
+
+def test_parse_overlay_and_filter_cli() -> None:
+    from matraix.persona_generator import (
+        normalize_overlay_dimensions,
+        parse_filter_cli,
+        parse_marginal_cli,
+        parse_overlay_cli,
+    )
+
+    row = normalize_overlay_dimensions(
+        [parse_overlay_cli("brand_trust:Brand trust=Low,High")]
+    )[0]
+    assert row["id"] == "brand_trust"
+    assert row["label"] == "Brand trust"
+    assert row["values"] == ["Low", "High"]
+    dim, values = parse_filter_cli("age_bracket=25-34,35-44")
+    assert dim == "age_bracket"
+    assert values == ["25-34", "35-44"]
+    mdim, weights = parse_marginal_cli("gender_identity=Man:70,Woman:30")
+    assert mdim == "gender_identity"
+    assert weights == {"Man": 70.0, "Woman": 30.0}
+
+
+def test_overlay_manifest_uses_snake_case_only() -> None:
+    from matraix.persona_generator import overlay_dimensions_from_manifest
+
+    assert overlay_dimensions_from_manifest(
+        {"overlayDimensions": [{"id": "x", "values": ["a"]}]}
+    ) == []
+    parsed = overlay_dimensions_from_manifest(
+        {"overlay_dimensions": [{"id": "x", "label": "X", "values": ["a"]}]}
+    )
+    assert parsed == [{"id": "x", "label": "X", "values": ["a"]}]
+
+
+def test_generate_synthetic_personas_stamps_overlay() -> None:
+    from matraix import persona_generator as gen
+
+    class FakeDag:
+        def assignment_supported(self, pinned: dict[str, str]) -> bool:
+            return True
+
+        def sample(self, n: int, *, fixed: dict[str, str] | None = None):
+            base = {"age_bracket": "18-24"}
+            if fixed:
+                base.update(fixed)
+            return [dict(base) for _ in range(n)]
+
+    original = gen._dag_sampler
+    gen._dag_sampler = lambda **kwargs: FakeDag()
+    try:
+        result = gen.generate_synthetic_personas(
+            count=2,
+            seed=1,
+            dimension_filters={"age_bracket": ["25-34"]},
+            overlay_dimensions=[
+                {"id": "study_trust", "label": "Trust", "values": ["Low", "High"]}
+            ],
+        )
+    finally:
+        gen._dag_sampler = original
+
+    assert result.folder_count == 2
+    assert result.overlay[0]["id"] == "study_trust"
+    for row in result.personas:
+        assert row["dimensions"]["age_bracket"] == "25-34"
+        assert row["dimensions"]["study_trust"] in {"Low", "High"}
+
+
+def test_generate_synthetic_personas_overlay_per_cell() -> None:
+    from collections import Counter
+
+    from matraix import persona_generator as gen
+
+    class FakeDag:
+        def assignment_supported(self, pinned: dict[str, str]) -> bool:
+            return True
+
+        def sample(self, n: int, *, fixed: dict[str, str] | None = None):
+            base = {"age_bracket": "25-34"}
+            if fixed:
+                base.update(fixed)
+            return [dict(base) for _ in range(n)]
+
+    original = gen._dag_sampler
+    gen._dag_sampler = lambda **kwargs: FakeDag()
+    try:
+        result = gen.generate_synthetic_personas(
+            seed=1,
+            overlay_dimensions=[
+                {"id": "study_trust", "label": "Trust", "values": ["Low", "High"]}
+            ],
+            dimension_filters={"study_trust": ["Low", "High"]},
+            stratify_fields=["study_trust"],
+            allocation="perCell",
+            per_cell=2,
+        )
+    finally:
+        gen._dag_sampler = original
+
+    assert result.folder_count == 4
+    counts = Counter(row["dimensions"]["study_trust"] for row in result.personas)
+    assert counts["Low"] == 2
+    assert counts["High"] == 2
+
+
+def test_clone_contrast_personas_flips_only_overlay() -> None:
+    from matraix.persona_generator import clone_contrast_personas
+
+    cloned = clone_contrast_personas(
+        [
+            {
+                "persona_id": "0001",
+                "version": "1.0",
+                "source": "synthetic",
+                "dimensions": {"age_bracket": "25-34", "study_trust": "High"},
+            }
+        ],
+        overlay_id="study_trust",
+        value="Low",
+    )
+    assert cloned[0]["persona_id"] == "0001-c-low"
+    assert cloned[0]["pair_id"] == "0001"
+    assert cloned[0]["dimensions"]["age_bracket"] == "25-34"
+    assert cloned[0]["dimensions"]["study_trust"] == "Low"
+
+
+def test_contrast_stamp_combinations_cartesian() -> None:
+    from matraix.persona_generator import contrast_stamp_combinations
+
+    combos = contrast_stamp_combinations(
+        [
+            {"id": "study_trust", "values": ["Low", "High"]},
+            {"id": "ad_arm", "values": ["Banner"]},
+        ]
+    )
+    assert combos == [
+        {"study_trust": "Low", "ad_arm": "Banner"},
+        {"study_trust": "High", "ad_arm": "Banner"},
+    ]
+
+
+def test_normalize_generate_contrast_independent_arms() -> None:
+    from matraix.persona_generator import normalize_generate_contrast
+
+    overlay = [
+        {"id": "study_trust", "label": "Trust", "values": ["Low", "High"]},
+        {"id": "ad_arm", "label": "Ad", "values": ["None", "Banner", "Video"]},
+    ]
+    plan = normalize_generate_contrast(
+        overlay,
+        [
+            {
+                "overlayId": "study_trust",
+                "baseValue": "High",
+                "values": ["Low", "High"],
+            },
+            {"overlayId": "ad_arm", "baseValue": "None", "values": ["Banner"]},
+        ],
+    )
+    assert [(arm["id"], arm["base"], arm["values"]) for arm in plan] == [
+        ("study_trust", "High", ["Low", "High"]),
+        ("ad_arm", "None", ["Banner"]),
+    ]
+
+
+def test_normalize_generate_contrast_requires_overlay() -> None:
+    import pytest
+
+    from matraix.persona_generator import normalize_generate_contrast
+
+    with pytest.raises(ValueError, match="custom dimension"):
+        normalize_generate_contrast(
+            [],
+            [{"overlayId": "study_trust", "baseValue": "High", "values": ["Low"]}],
+        )
+
+
+def test_resolve_contrast_overlay_allows_schema_id() -> None:
+    from matraix.persona_generator import resolve_contrast_overlay
+
+    row = resolve_contrast_overlay(
+        [],
+        "age_bracket",
+        "25-34",
+        schema_ids={"age_bracket"},
+    )
+    assert row["id"] == "age_bracket"
+    assert row["values"] == ["25-34"]
+
+
+def test_validate_contrast_stamps_against_dag_passes_when_supported() -> None:
+    from matraix.persona_generator import validate_contrast_stamps_against_dag
+
+    class FakeDag:
+        def assignment_supported(self, pinned: dict[str, str]) -> bool:
+            return pinned.get("age_bracket") != "13-17"
+
+    personas = [
+        {
+            "persona_id": "p1",
+            "dimensions": {"age_bracket": "25-34", "region": "US"},
+        }
+    ]
+    validate_contrast_stamps_against_dag(
+        personas,
+        {"age_bracket": "18-24"},
+        schema_ids={"age_bracket", "region"},
+        sampler=FakeDag(),
+    )
+
+
+def test_validate_contrast_stamps_against_dag_rejects_hard_mask() -> None:
+    import pytest
+
+    from matraix.persona_generator import validate_contrast_stamps_against_dag
+
+    class FakeDag:
+        def assignment_supported(self, pinned: dict[str, str]) -> bool:
+            return not (
+                pinned.get("age_bracket") == "13-17"
+                and pinned.get("tool_python") == "Power user"
+            )
+
+    personas = [
+        {
+            "persona_id": "p1",
+            "dimensions": {"age_bracket": "13-17", "tool_python": "Never used"},
+        }
+    ]
+    with pytest.raises(ValueError, match="not Full-DAG-supported"):
+        validate_contrast_stamps_against_dag(
+            personas,
+            {"tool_python": "Power user"},
+            schema_ids={"age_bracket", "tool_python"},
+            sampler=FakeDag(),
+        )
+
+
+def test_validate_contrast_stamps_skips_custom_overlay_dims() -> None:
+    from matraix.persona_generator import validate_contrast_stamps_against_dag
+
+    class FakeDag:
+        def assignment_supported(self, pinned: dict[str, str]) -> bool:
+            raise AssertionError("custom stamps should not hit the DAG")
+
+    personas = [{"persona_id": "p1", "dimensions": {"age_bracket": "25-34"}}]
+    validate_contrast_stamps_against_dag(
+        personas,
+        {"study_trust": "Low"},
+        schema_ids={"age_bracket"},
+        sampler=FakeDag(),
+    )
+
+
+def test_generate_synthetic_personas_rejects_catalog_id() -> None:
+    import pytest
+
+    from matraix.persona_generator import generate_synthetic_personas
+
+    with pytest.raises(ValueError, match="collides"):
+        generate_synthetic_personas(
+            count=1,
+            overlay_dimensions=[{"id": "age_bracket", "label": "Age", "values": ["x"]}],
+        )

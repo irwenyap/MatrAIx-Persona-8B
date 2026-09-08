@@ -163,7 +163,9 @@ def resolve_persona_entries(
             if pool_path.is_file():
                 entry = _persona_entry_from_path(pool_path, repo_root=repo_root)
             else:
-                raise ValueError("unknown persona: {}".format(persona_id))
+                raise ValueError(
+                    "unknown persona {} in pool {}".format(persona_id, persona_pool)
+                )
 
         path = str(entry.get("path") or "")
         if path in seen_paths:

@@ -33,6 +33,10 @@ def test_preflight_shape(client):
         "Anthropic credentials",
         "DashScope (Qwen / DeepSeek)",
         "OpenRouter",
+        "Gemini credentials",
+        "xAI credentials",
+        "DeepSeek credentials",
+        "Z.ai credentials",
         "OpenBB (finance)",
         "Meal planning",
         "Acme support API",
@@ -63,6 +67,10 @@ def test_preflight_required_vs_optional_contract(client):
         "Anthropic credentials",
         "DashScope (Qwen / DeepSeek)",
         "OpenRouter",
+        "Gemini credentials",
+        "xAI credentials",
+        "DeepSeek credentials",
+        "Z.ai credentials",
         "OpenBB (finance)",
         "Meal planning",
         "Acme support API",
@@ -82,6 +90,11 @@ def test_preflight_does_not_leak_env_var_names(client):
         "CLAUDE_API_KEY",
         "DASHSCOPE_API_KEY",
         "OPENROUTER_API_KEY",
+        "GEMINI_API_KEY",
+        "GOOGLE_API_KEY",
+        "XAI_API_KEY",
+        "DEEPSEEK_API_KEY",
+        "ZAI_API_KEY",
         "USE_COMPUTER_API_KEY",
         "INTERECAGENT_ROOT",
         "INTERECAGENT_CATALOG_PATH",
@@ -98,6 +111,11 @@ def test_preflight_model_credentials_any_provider(client, monkeypatch):
     monkeypatch.delenv("CLAUDE_API_KEY", raising=False)
     monkeypatch.delenv("DASHSCOPE_API_KEY", raising=False)
     monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+    monkeypatch.delenv("GOOGLE_API_KEY", raising=False)
+    monkeypatch.delenv("XAI_API_KEY", raising=False)
+    monkeypatch.delenv("DEEPSEEK_API_KEY", raising=False)
+    monkeypatch.delenv("ZAI_API_KEY", raising=False)
     body = client.get("/api/preflight").json()
     model = next(c for c in body["checks"] if c["name"] == "Model credentials")
     assert model["ok"] is False
@@ -136,6 +154,59 @@ def test_preflight_openrouter_check_optional(client, monkeypatch):
     body = client.get("/api/preflight").json()
     openrouter = next(c for c in body["checks"] if c["name"] == "OpenRouter")
     assert openrouter["ok"] is True
+
+
+def test_preflight_gemini_check_optional(client, monkeypatch):
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+    monkeypatch.delenv("GOOGLE_API_KEY", raising=False)
+    body = client.get("/api/preflight").json()
+    gemini = next(c for c in body["checks"] if c["name"] == "Gemini credentials")
+    assert gemini["ok"] is False
+    assert gemini.get("optional") is True
+
+    monkeypatch.setenv("GEMINI_API_KEY", "sk-test")
+    body = client.get("/api/preflight").json()
+    gemini = next(c for c in body["checks"] if c["name"] == "Gemini credentials")
+    assert gemini["ok"] is True
+
+
+def test_preflight_xai_check_optional(client, monkeypatch):
+    monkeypatch.delenv("XAI_API_KEY", raising=False)
+    body = client.get("/api/preflight").json()
+    xai = next(c for c in body["checks"] if c["name"] == "xAI credentials")
+    assert xai["ok"] is False
+    assert xai.get("optional") is True
+
+    monkeypatch.setenv("XAI_API_KEY", "sk-test")
+    body = client.get("/api/preflight").json()
+    xai = next(c for c in body["checks"] if c["name"] == "xAI credentials")
+    assert xai["ok"] is True
+
+
+def test_preflight_deepseek_check_optional(client, monkeypatch):
+    monkeypatch.delenv("DEEPSEEK_API_KEY", raising=False)
+    body = client.get("/api/preflight").json()
+    deepseek = next(c for c in body["checks"] if c["name"] == "DeepSeek credentials")
+    assert deepseek["ok"] is False
+    assert deepseek.get("optional") is True
+
+    monkeypatch.setenv("DEEPSEEK_API_KEY", "sk-test")
+    body = client.get("/api/preflight").json()
+    deepseek = next(c for c in body["checks"] if c["name"] == "DeepSeek credentials")
+    assert deepseek["ok"] is True
+
+
+def test_preflight_zai_check_optional(client, monkeypatch):
+    monkeypatch.delenv("ZAI_API_KEY", raising=False)
+    body = client.get("/api/preflight").json()
+    zai = next(c for c in body["checks"] if c["name"] == "Z.ai credentials")
+    assert zai["ok"] is False
+    assert zai.get("optional") is True
+
+    monkeypatch.setenv("ZAI_API_KEY", "sk-test")
+    body = client.get("/api/preflight").json()
+    zai = next(c for c in body["checks"] if c["name"] == "Z.ai credentials")
+    assert zai["ok"] is True
 
 
 def test_preflight_anthropic_check_optional(client, monkeypatch):

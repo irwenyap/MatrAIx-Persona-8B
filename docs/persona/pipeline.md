@@ -178,10 +178,11 @@ uv run python persona/scripts/generate_dev_personas.py
 ```
 
 Large jobs use `persona/synthesis/scripts/sample_personas.py` (compact `codes.gz`)
-and `render_personas.py`. `generate_dev_personas.py` writes YAML for Dataset
-experiments: same Full-DAG sampler, **no** quality filter, dedup, or calibration.
-It is not the published 1M coreset. Operator-facing pool/cohort paths:
-[Playground pools & cohorts](README.md#playground-pools--cohorts).
+and `render_personas.py`. `generate_dev_personas.py` is the same generate path as
+Playground. It does **not** run quality filter, dedup, or calibration, and it is
+not the published 1M coreset. Operator-facing Generation / Independent /
+Contrast usage: [Playground Generation](README.md#playground-generation-independent--contrast).
+Pool vs cohort paths: [Playground pools & cohorts](README.md#playground-pools--cohorts).
 
 ### Full-DAG 10B generation
 

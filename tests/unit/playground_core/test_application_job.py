@@ -50,6 +50,26 @@ def test_resolve_persona_entries_accepts_persona_prefixed_ids(tmp_path: Path) ->
     assert chosen[0]["path"] == "persona/datasets/matraix-persona-dev-sample/persona_0042.yaml"
 
 
+def test_resolve_persona_entries_unknown_includes_pool(tmp_path: Path) -> None:
+    repo = tmp_path
+    pool = repo / "persona" / "datasets" / "matraix-persona-dev-sample"
+    pool.mkdir(parents=True)
+    (pool / "persona_0042.yaml").write_text(
+        "persona_id: '0042'\nversion: '1.0'\nsource: Nemotron\ndimensions: {}\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(
+        ValueError,
+        match=r"unknown persona wiki-e690edb701e2 in pool persona/datasets/matraix-persona-dev-sample",
+    ):
+        resolve_persona_entries(
+            ["wiki-e690edb701e2"],
+            persona_pool="persona/datasets/matraix-persona-dev-sample",
+            repo_root=repo,
+        )
+
+
 def test_build_application_job_config_with_explicit_persona_ids(tmp_path: Path) -> None:
     repo = tmp_path
     pool = repo / "persona" / "datasets" / "matraix-persona-dev-sample"

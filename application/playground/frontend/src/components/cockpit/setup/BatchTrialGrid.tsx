@@ -1,4 +1,5 @@
 import { useVirtualizer } from "@tanstack/react-virtual";
+import type { ReactNode } from "react";
 
 import { useI18n } from "@/i18n/I18nProvider";
 import {
@@ -9,6 +10,7 @@ import {
 import { formatBatchCellStatusLabel } from "@/lib/trialStatus";
 import type { PersonaPoolPersonaCard } from "@/lib/types";
 
+import { FOCUS_RING } from "../cockpitShared";
 import { BatchMosaicCanvas, MOSAIC_STATUS_COLORS } from "./BatchMosaicCanvas";
 import { PersonaAvatar } from "./PersonaAvatar";
 import { useBatchGridLayout, type BatchGridLayout } from "./useBatchGridLayout";
@@ -63,6 +65,8 @@ export interface BatchTrialGridProps {
   trials: BatchTrialCell[];
   jobLabel?: string;
   className?: string;
+  /** Cards/chips only — mosaic stays an overview, not a picker. */
+  onSelectTrial?: (trialName: string) => void;
 }
 
 function statusBadgeLabel(
@@ -207,6 +211,29 @@ function chipDotClass(status: BatchTrialStatus): string {
 }
 
 /** Compact fixed-height chip — used for mid-size cohorts (virtualized rows). */
+function SelectableTrial({
+  trial,
+  onSelectTrial,
+  children,
+}: {
+  trial: BatchTrialCell;
+  onSelectTrial?: (trialName: string) => void;
+  children: ReactNode;
+}) {
+  if (!onSelectTrial || trial.status === "pending") {
+    return children;
+  }
+  return (
+    <button
+      type="button"
+      onClick={() => onSelectTrial(trial.id)}
+      className={`h-full min-h-0 w-full text-left ${FOCUS_RING}`}
+    >
+      {children}
+    </button>
+  );
+}
+
 function BatchTrialChipView({ trial }: { trial: BatchTrialCell }) {
   const { t } = useI18n();
   const style = STATUS_STYLES[trial.status];
@@ -304,10 +331,12 @@ function BatchChipGrid({
   trials,
   layout,
   scrollRef,
+  onSelectTrial,
 }: {
   trials: BatchTrialCell[];
   layout: BatchGridLayout;
   scrollRef: HTMLDivElement | null;
+  onSelectTrial?: (trialName: string) => void;
 }) {
   const cols = Math.max(1, layout.cols);
   const rowCount = Math.ceil(trials.length / cols);
@@ -343,7 +372,13 @@ function BatchChipGrid({
             }}
           >
             {rowTrials.map((trial) => (
-              <BatchTrialChipView key={trial.id} trial={trial} />
+              <SelectableTrial
+                key={trial.id}
+                trial={trial}
+                onSelectTrial={onSelectTrial}
+              >
+                <BatchTrialChipView trial={trial} />
+              </SelectableTrial>
             ))}
           </div>
         );
@@ -357,6 +392,7 @@ export function BatchTrialGrid({
   trials,
   jobLabel,
   className = "",
+  onSelectTrial,
 }: BatchTrialGridProps) {
   const { t } = useI18n();
   const counts: CohortCounts = {
@@ -442,6 +478,7 @@ export function BatchTrialGrid({
               trials={trials}
               layout={layout}
               scrollRef={container}
+              onSelectTrial={onSelectTrial}
             />
           ) : (
             <div
@@ -458,13 +495,24 @@ export function BatchTrialGrid({
             >
               {trials.map((trial) =>
                 layout.mode === "chips" ? (
-                  <BatchTrialChipView key={trial.id} trial={trial} />
-                ) : (
-                  <BatchTrialCellView
+                  <SelectableTrial
                     key={trial.id}
                     trial={trial}
-                    rowHeight={layout.rowHeight}
-                  />
+                    onSelectTrial={onSelectTrial}
+                  >
+                    <BatchTrialChipView trial={trial} />
+                  </SelectableTrial>
+                ) : (
+                  <SelectableTrial
+                    key={trial.id}
+                    trial={trial}
+                    onSelectTrial={onSelectTrial}
+                  >
+                    <BatchTrialCellView
+                      trial={trial}
+                      rowHeight={layout.rowHeight}
+                    />
+                  </SelectableTrial>
                 ),
               )}
             </div>

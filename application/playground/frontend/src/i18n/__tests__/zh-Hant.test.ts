@@ -334,7 +334,7 @@ describe("zh-Hant locale pack", () => {
 
     expect(pack["reports.report.allPersonasAgreed"]).toBe("{count} 個情境 · 所有數位人意見一致");
     expect(pack["reports.report.answer"]).toBe("答案");
-    expect(pack["reports.report.breakDownByHint"]).toBe("用於產生列的數位人屬性。");
+    expect(pack["reports.report.breakDownByHint"]).toBe("本任務的篩選維與自訂維。");
     expect(pack["reports.report.resultFieldHint"]).toBe("選擇要放在欄上的測量結果。");
     expect(pack["reports.report.rowsFixedTo"]).toBe("列固定為 {label}。");
     expect(pack["reports.report.multiChoice"]).toBe("多選題");

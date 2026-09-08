@@ -71,6 +71,15 @@ def test_options_knob_values_match_allowed(config_manager):
     assert "openrouter/anthropic/claude-haiku-4.5" in PERSONA_MODEL_OPTIONS
     assert "openai/gpt-5.4" in PERSONA_MODEL_OPTIONS
     assert "openai/gpt-5.5" in PERSONA_MODEL_OPTIONS
+    assert "gemini/gemini-2.5-flash" in PERSONA_MODEL_OPTIONS
+    assert "gemini/gemini-2.5-pro" in PERSONA_MODEL_OPTIONS
+    assert "gemini/gemini-2.5-computer-use-preview-10-2025" in PERSONA_MODEL_OPTIONS
+    assert "xai/grok-4.5" in PERSONA_MODEL_OPTIONS
+    assert "xai/grok-3-mini" in PERSONA_MODEL_OPTIONS
+    assert "deepseek/deepseek-v4-pro" in PERSONA_MODEL_OPTIONS
+    assert "deepseek/deepseek-chat" in PERSONA_MODEL_OPTIONS
+    assert "zai/glm-5" in PERSONA_MODEL_OPTIONS
+    assert "zai/glm-4.7" in PERSONA_MODEL_OPTIONS
 
 
 def test_preflight_recognizes_openrouter_credentials(client, monkeypatch):
@@ -79,6 +88,11 @@ def test_preflight_recognizes_openrouter_credentials(client, monkeypatch):
     monkeypatch.delenv("CLAUDE_API_KEY", raising=False)
     monkeypatch.delenv("DASHSCOPE_API_KEY", raising=False)
     monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+    monkeypatch.delenv("GOOGLE_API_KEY", raising=False)
+    monkeypatch.delenv("XAI_API_KEY", raising=False)
+    monkeypatch.delenv("DEEPSEEK_API_KEY", raising=False)
+    monkeypatch.delenv("ZAI_API_KEY", raising=False)
 
     body = client.get("/api/preflight").json()
     model = next(c for c in body["checks"] if c["name"] == "Model credentials")

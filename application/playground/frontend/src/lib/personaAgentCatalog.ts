@@ -335,12 +335,25 @@ const OPENAI_CUA_MODELS = new Set(["openai/gpt-5.4", "openai/gpt-5.5"]);
 
 function isCuaCapablePersonaModel(modelId: string, platform: string): boolean {
   if (modelId.startsWith("anthropic/")) return true;
+  const isGeminiChat =
+    modelId.startsWith("gemini/") && !modelId.includes("computer-use");
+  const isGeminiCu =
+    modelId.startsWith("gemini/") && modelId.includes("computer-use");
   if (platform === "ios") {
-    // IOSAgent is litellm-backed and accepts any vision-capable chat model.
-    return modelId.startsWith("openai/") || modelId.startsWith("gemini/");
+    // IOSAgent is litellm-backed and accepts vision-capable chat models.
+    if (isGeminiCu) return false;
+    return (
+      modelId.startsWith("openai/") ||
+      isGeminiChat ||
+      modelId.startsWith("dashscope/") ||
+      modelId.startsWith("openrouter/") ||
+      modelId.startsWith("xai/") ||
+      modelId.startsWith("deepseek/") ||
+      modelId.startsWith("zai/")
+    );
   }
-  // macOS / Linux desktop: native CUA providers only.
-  return OPENAI_CUA_MODELS.has(modelId) || modelId.startsWith("gemini/");
+  // macOS desktop: native CUA providers only (Anthropic / OpenAI CU / Gemini CU).
+  return OPENAI_CUA_MODELS.has(modelId) || isGeminiCu;
 }
 
 /** Platform-aware agent model list for the Persona rail. */
@@ -352,7 +365,11 @@ export function cuaPersonaModelSelectOptions(
   if (normalized === "macos" || normalized === "ios") {
     return options.filter((opt) => isCuaCapablePersonaModel(opt.value, normalized));
   }
-  return options;
+  // Linux desktop: generic JSON harness for most models. Native Gemini CUA
+  // only accepts computer-use models — other gemini/* raise at provider resolve.
+  return options.filter(
+    (opt) => !opt.value.startsWith("gemini/") || opt.value.includes("computer-use"),
+  );
 }
 
 /** Short pipeline subtitle for the Persona node (mirrors the Persona model selector). */
@@ -365,4 +382,21 @@ export function personaModelPipelineLabel(
   if (match) return match.label;
   const slash = modelId.lastIndexOf("/");
   return slash >= 0 ? modelId.slice(slash + 1) : modelId;
+}
+
+const PERSONA_MODEL_PROVIDER_LABELS: Record<string, string> = {
+  anthropic: "Anthropic",
+  dashscope: "DashScope",
+  gemini: "Google",
+  google: "Google",
+  openai: "OpenAI",
+  openrouter: "OpenRouter",
+  xai: "xAI",
+  deepseek: "DeepSeek",
+  zai: "Z.ai",
+};
+
+/** Provider section for the persona-model picker (`anthropic/claude-…` → Anthropic). */
+export function personaModelProviderLabel(modelId: string): string {
+  return PERSONA_MODEL_PROVIDER_LABELS[modelId.split("/", 1)[0]] ?? "Other";
 }

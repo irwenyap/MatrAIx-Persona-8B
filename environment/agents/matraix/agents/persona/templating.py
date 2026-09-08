@@ -7,7 +7,10 @@ from pathlib import Path
 from jinja2 import Environment, FileSystemLoader, StrictUndefined, TemplateNotFound
 
 from matraix.agents.persona.loader import Persona
-from matraix.persona_dimension_catalog import build_template_context_extras
+from matraix.persona_dimension_catalog import (
+    build_template_context_extras,
+    overlay_labels_from_persona_path,
+)
 
 PERSONA_SYSTEM_TEMPLATE = "persona_system.md.j2"
 PERSONA_INSTRUCTION_TEMPLATE = "persona_instruction.md.j2"
@@ -60,5 +63,8 @@ def render_persona_template(
 
     return template.render(
         **persona.template_context(instruction=instruction),
-        **build_template_context_extras(persona.dimensions),
+        **build_template_context_extras(
+            persona.dimensions,
+            dimension_labels=overlay_labels_from_persona_path(persona.persona_path),
+        ),
     ).strip()

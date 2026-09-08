@@ -489,9 +489,13 @@ def _stratified_sample_production(
     sources: list[str] | None,
     dimension_filters: dict[str, list[str]] | None,
     allocation: str | None = None,
+    portions: dict[str, dict[str, float]] | None = None,
 ) -> list[dict[str, Any]]:
     """Fast stratified sample with sequential early-exit when the target is known."""
-    from backend.service.persona_sampling_alloc import sample_proportional_from_buckets
+    from backend.service.persona_sampling_alloc import (
+        sample_by_portions_from_buckets,
+        sample_proportional_from_buckets,
+    )
 
     bare = [str(field).removeprefix("dimensions.").strip() for field in stratify_fields]
     bare = [field for field in bare if field]
@@ -566,6 +570,27 @@ def _stratified_sample_production(
             break
 
     if allocation_norm == "proportional":
+        if portions:
+            if len(bare) != 1:
+                raise ValueError(
+                    "portions currently supports a single stratify field "
+                    f"(got {', '.join(bare)})"
+                )
+            field = bare[0]
+            weights = portions.get(field) if isinstance(portions, dict) else None
+            if not isinstance(weights, dict) or not weights:
+                raise ValueError(
+                    f"portions has no target weights for stratify field {field!r}"
+                )
+            value_buckets = {
+                key[0]: rows for key, rows in buckets.items() if len(key) == 1
+            }
+            return sample_by_portions_from_buckets(
+                value_buckets,
+                weights=weights,
+                sample_size=sample_size,
+                seed=seed,
+            )
         return sample_proportional_from_buckets(
             buckets, sample_size=sample_size, seed=seed
         )
@@ -585,6 +610,7 @@ def sample_production_1m(
     stratify_fields: list[str] | None = None,
     sample_size_per_value_group: int | None = None,
     allocation: str | None = None,
+    portions: dict[str, dict[str, float]] | None = None,
 ) -> dict[str, Any]:
     if sample_size < 1:
         raise ValueError("sample_size must be >= 1")
@@ -605,7 +631,18 @@ def sample_production_1m(
         and sample_size_per_value_group >= 1
     ):
         allocation_norm = "perCell"
-    if (
+    if portions:
+        if allocation_norm and allocation_norm != "proportional":
+            raise ValueError(
+                'portions mix weights are only valid with allocation "proportional"'
+            )
+        allocation_norm = "proportional"
+        if not any(str(field).strip() for field in (stratify_fields or [])):
+            raise ValueError(
+                "portions mix weights require a stratify field "
+                "(pass sampling.fields, or omit portions for a random draw)"
+            )
+    elif (
         stratify_fields
         and not allocation_norm
         and not (
@@ -664,6 +701,7 @@ def sample_production_1m(
                 sources=sources,
                 dimension_filters=dimension_filters,
                 allocation=allocation_norm or None,
+                portions=portions,
             )
         elif has_filters:
             chosen = _random_sample_filtered(
