@@ -4,7 +4,8 @@
   "dimensionFilters": {
     "region": ["Southeast Asia"],
     "age_bracket": ["18-24", "25-34", "35-44", "45-54", "55-64", "65-74"],
-    "urbanicity": ["Dense urban", "Suburban"]
+    "urbanicity": ["Dense urban", "Suburban"],
+    "english_proficiency": ["Intermediate (B1-B2)", "Fluent (C1-C2)"]
   },
   "sampling": {
     "mode": "stratified",
