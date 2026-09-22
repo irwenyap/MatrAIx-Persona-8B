@@ -1,0 +1,26 @@
+# DBS information-findability CocoaAgent task (single-container AIO Sandbox).
+# Cocoa records browser screenshots in each trial's agent/images directory and
+# references them from agent/trajectory.json for display in Playground.
+# Requires the selected model provider's API key in your shell.
+#
+#   uv run harbor run -c configs/jobs/example-job-recipe/appSim-web-dbs-information-findability-cocoa-local.yaml
+
+job_name: appSim-web-dbs-information-findability-cocoa-local
+jobs_dir: jobs
+n_attempts: 1
+timeout_multiplier: 1.5
+n_concurrent_trials: 1
+quiet: false
+
+environment:
+  type: docker
+  delete: true
+
+agents:
+  - name: persona-cocoa
+    model_name: anthropic/claude-sonnet-4-6
+    kwargs:
+      persona_path: persona/datasets/matraix-persona-dev-sample/persona_0042.yaml
+
+tasks:
+  - path: application/tasks/web_dbs-information-findability-cocoa
