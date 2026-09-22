@@ -23,14 +23,16 @@ export const WEB_PERSONA_AGENTS: PersonaAgentOption[] = [
     label: "OpenHands SDK",
     capability: "Playwright + DOM",
     tier: "light",
-    summary: "the agent writes playwright scripts in a terminal — page structure only, no packaged browser product.",
+    summary:
+      "the agent writes playwright scripts in a terminal — page structure only, no packaged browser product.",
   },
   {
     value: "persona-browser-use",
     label: "Browser-use",
     capability: "Browser + DOM + Vision",
     tier: "standard",
-    summary: "a ready-made website agent — browse and save output inside one chromium loop, no shell.",
+    summary:
+      "a ready-made website agent — browse and save output inside one chromium loop, no shell.",
   },
   {
     value: "persona-cocoa",
@@ -45,7 +47,8 @@ export const WEB_PERSONA_AGENTS: PersonaAgentOption[] = [
     label: "Computer-use",
     capability: "Pixel Click full Desktop",
     tier: "full",
-    summary: "sees the whole desktop and clicks screen coordinates — for native apps, not structured page apis.",
+    summary:
+      "sees the whole desktop and clicks screen coordinates — for native apps, not structured page apis.",
   },
 ];
 
@@ -56,7 +59,8 @@ export const CLI_PERSONA_AGENTS: PersonaAgentOption[] = [
     label: "Claude Code",
     capability: "Terminal CLI",
     tier: "standard",
-    summary: "general-purpose terminal agent in docker — same stack as survey/chat.",
+    summary:
+      "general-purpose terminal agent in docker — same stack as survey/chat.",
     badge: "Anthropic",
   },
   {
@@ -64,7 +68,8 @@ export const CLI_PERSONA_AGENTS: PersonaAgentOption[] = [
     label: "Codex",
     capability: "Terminal CLI",
     tier: "standard",
-    summary: "general-purpose terminal agent in docker — same stack as survey/chat.",
+    summary:
+      "general-purpose terminal agent in docker — same stack as survey/chat.",
     badge: "OpenAI",
   },
   {
@@ -72,7 +77,8 @@ export const CLI_PERSONA_AGENTS: PersonaAgentOption[] = [
     label: "Gemini CLI",
     capability: "Terminal CLI",
     tier: "standard",
-    summary: "general-purpose terminal agent in docker — same stack as survey/chat.",
+    summary:
+      "general-purpose terminal agent in docker — same stack as survey/chat.",
     badge: "Google",
   },
 ];
@@ -109,35 +115,57 @@ export const WEB_TASK_SUGGESTED_AGENT: Record<string, string> = {
   "web-browser-use-laptop-choice": "persona-browser-use",
   "web-cocoa-plan-choice": "persona-cocoa",
   "web-cua-bookshop-choice": "persona-computer-1",
+
+  "web-dbs-information-findability-cocoa": "persona-cocoa",
 };
 
 export function webAgentFamily(agentId: string): WebAgentFamily {
-  return CLI_PERSONA_AGENTS.some((opt) => opt.value === agentId) ? "cli" : "browser";
+  return CLI_PERSONA_AGENTS.some((opt) => opt.value === agentId)
+    ? "cli"
+    : "browser";
 }
 
-export function webPersonaAgentsForFamily(family: WebAgentFamily): PersonaAgentOption[] {
+export function webPersonaAgentsForFamily(
+  family: WebAgentFamily,
+): PersonaAgentOption[] {
   return family === "cli" ? CLI_PERSONA_AGENTS : WEB_PERSONA_AGENTS;
 }
 
-export function defaultWebPersonaAgentForFamily(family: WebAgentFamily, taskId?: string): string {
+export function defaultWebPersonaAgentForFamily(
+  family: WebAgentFamily,
+  taskId?: string,
+): string {
   if (family === "browser") {
-    return taskId ? suggestedWebPersonaAgent(taskId) : WEB_PERSONA_AGENTS[0].value;
+    return taskId
+      ? suggestedWebPersonaAgent(taskId)
+      : WEB_PERSONA_AGENTS[0].value;
   }
   return CLI_PERSONA_AGENTS[0].value;
 }
 
-function personaAgentToSelectOption(opt: PersonaAgentOption): CockpitSelectOption {
+function personaAgentToSelectOption(
+  opt: PersonaAgentOption,
+): CockpitSelectOption {
   return {
     value: opt.value,
     label: opt.label,
-    meta: opt.badge ? `${opt.badge} · ${opt.capability}` : `${opt.tier} · ${opt.capability}`,
+    meta: opt.badge
+      ? `${opt.badge} · ${opt.capability}`
+      : `${opt.tier} · ${opt.capability}`,
     summary: opt.summary,
-    group: webAgentFamily(opt.value) === "cli" ? "CLI agents (experimental)" : "Browser agents",
+    group:
+      webAgentFamily(opt.value) === "cli"
+        ? "CLI agents (experimental)"
+        : "Browser agents",
   };
 }
 
-export function webPersonaAgentSelectOptions(family?: WebAgentFamily): CockpitSelectOption[] {
-  const agents = family ? webPersonaAgentsForFamily(family) : [...WEB_PERSONA_AGENTS, ...CLI_PERSONA_AGENTS];
+export function webPersonaAgentSelectOptions(
+  family?: WebAgentFamily,
+): CockpitSelectOption[] {
+  const agents = family
+    ? webPersonaAgentsForFamily(family)
+    : [...WEB_PERSONA_AGENTS, ...CLI_PERSONA_AGENTS];
   return agents.map(personaAgentToSelectOption);
 }
 
@@ -145,7 +173,9 @@ export function webPersonaAgentGroupedSelectOptions(): CockpitSelectOption[] {
   return webPersonaAgentSelectOptions();
 }
 
-export function cuaRuntimeSelectOptions(platform: string): CockpitSelectOption[] {
+export function cuaRuntimeSelectOptions(
+  platform: string,
+): CockpitSelectOption[] {
   return cuaRuntimeOptionsForPlatform(platform).map((opt) => ({
     value: opt.value,
     label: opt.label,
@@ -158,7 +188,10 @@ export function suggestedWebPersonaAgent(taskId: string): string {
   return WEB_TASK_SUGGESTED_AGENT[taskId] ?? "persona-openhands-sdk";
 }
 
-export function resolveWebPersonaAgent(taskId: string, overrides: Record<string, string>): string {
+export function resolveWebPersonaAgent(
+  taskId: string,
+  overrides: Record<string, string>,
+): string {
   return overrides[taskId] ?? suggestedWebPersonaAgent(taskId);
 }
 
@@ -176,7 +209,9 @@ export function resolveCuaBackend(
   return overrides[taskId] ?? suggestedCuaBackend(platform);
 }
 
-export function cuaRuntimeOptionsForPlatform(platform: string): PersonaAgentOption[] {
+export function cuaRuntimeOptionsForPlatform(
+  platform: string,
+): PersonaAgentOption[] {
   if (platform === "macos") {
     return CUA_RUNTIME_OPTIONS.filter((opt) => opt.value === "macos");
   }
@@ -186,12 +221,19 @@ export function cuaRuntimeOptionsForPlatform(platform: string): PersonaAgentOpti
   return CUA_RUNTIME_OPTIONS.filter((opt) => opt.value === "docker");
 }
 
-export function findWebPersonaAgent(agentId: string): PersonaAgentOption | undefined {
+export function findWebPersonaAgent(
+  agentId: string,
+): PersonaAgentOption | undefined {
   return WEB_PERSONA_AGENTS.find((opt) => opt.value === agentId);
 }
 
-export function findPersonaAgent(agentId: string): PersonaAgentOption | undefined {
-  return findWebPersonaAgent(agentId) ?? CLI_PERSONA_AGENTS.find((opt) => opt.value === agentId);
+export function findPersonaAgent(
+  agentId: string,
+): PersonaAgentOption | undefined {
+  return (
+    findWebPersonaAgent(agentId) ??
+    CLI_PERSONA_AGENTS.find((opt) => opt.value === agentId)
+  );
 }
 
 export function webPersonaAgentLabel(agentId: string): string {
@@ -214,7 +256,8 @@ export function webPersonaModelSelectOptions(
   }
   if (agentId === "persona-gemini-cli") {
     const google = options.filter(
-      (opt) => opt.value.startsWith("google/") || opt.value.startsWith("gemini/"),
+      (opt) =>
+        opt.value.startsWith("google/") || opt.value.startsWith("gemini/"),
     );
     if (google.length > 0) return google;
     return [
@@ -271,7 +314,9 @@ export function webCapabilityTierIcon(agentId: string): string {
   return webCapabilityTierIconForTier(tier);
 }
 
-export function webCapabilityTierIconForTier(tier?: AgentCapabilityTier | string | null): string {
+export function webCapabilityTierIconForTier(
+  tier?: AgentCapabilityTier | string | null,
+): string {
   switch (tier) {
     case "light":
       return "code";
@@ -294,19 +339,40 @@ export interface PipelinePathOption {
 }
 
 /** Web access paths — vertical fork before the Website node. */
-export const WEB_ACCESS_PIPELINE_PATHS: PipelinePathOption[] = WEB_PERSONA_AGENTS.map((agent) => ({
-  id: agent.tier,
-  label: CAPABILITY_TIER_LABELS[agent.tier],
-  icon: webCapabilityTierIconForTier(agent.tier),
-  hint: agent.capability,
-}));
+export const WEB_ACCESS_PIPELINE_PATHS: PipelinePathOption[] =
+  WEB_PERSONA_AGENTS.map((agent) => ({
+    id: agent.tier,
+    label: CAPABILITY_TIER_LABELS[agent.tier],
+    icon: webCapabilityTierIconForTier(agent.tier),
+    hint: agent.capability,
+  }));
 
 /** Chatbot connection paths — vertical fork before the Chatbot node. */
 export const CHAT_ACCESS_PIPELINE_PATHS: PipelinePathOption[] = [
-  { id: "api_sidecar", label: "API (sidecar)", icon: "dns", hint: "Local compose" },
-  { id: "api_external", label: "API (endpoint)", icon: "http", hint: "Upstream URL" },
-  { id: "mcp_sidecar", label: "MCP (sidecar)", icon: "hub", hint: "Local compose" },
-  { id: "mcp_external", label: "MCP (endpoint)", icon: "hub", hint: "Upstream URL" },
+  {
+    id: "api_sidecar",
+    label: "API (sidecar)",
+    icon: "dns",
+    hint: "Local compose",
+  },
+  {
+    id: "api_external",
+    label: "API (endpoint)",
+    icon: "http",
+    hint: "Upstream URL",
+  },
+  {
+    id: "mcp_sidecar",
+    label: "MCP (sidecar)",
+    icon: "hub",
+    hint: "Local compose",
+  },
+  {
+    id: "mcp_external",
+    label: "MCP (endpoint)",
+    icon: "hub",
+    hint: "Upstream URL",
+  },
 ];
 
 export function personaAgentSelectLabel(opt: PersonaAgentOption): string {
@@ -317,7 +383,12 @@ export const OS_APP_TAB_LABEL = "OS app";
 
 /** OS platform paths — vertical fork before the OS app node. */
 export const OS_PLATFORM_PIPELINE_PATHS: PipelinePathOption[] = [
-  { id: "linux", label: "Linux", icon: "desktop_windows", hint: "Docker · Xvfb" },
+  {
+    id: "linux",
+    label: "Linux",
+    icon: "desktop_windows",
+    hint: "Docker · Xvfb",
+  },
   { id: "macos", label: "macOS", icon: "laptop_mac", hint: "use.computer" },
   { id: "ios", label: "iOS", icon: "phone_iphone", hint: "Simulator" },
 ];
@@ -363,12 +434,15 @@ export function cuaPersonaModelSelectOptions(
 ): CockpitSelectOption[] {
   const normalized = (platform ?? "linux").toLowerCase();
   if (normalized === "macos" || normalized === "ios") {
-    return options.filter((opt) => isCuaCapablePersonaModel(opt.value, normalized));
+    return options.filter((opt) =>
+      isCuaCapablePersonaModel(opt.value, normalized),
+    );
   }
   // Linux desktop: generic JSON harness for most models. Native Gemini CUA
   // only accepts computer-use models — other gemini/* raise at provider resolve.
   return options.filter(
-    (opt) => !opt.value.startsWith("gemini/") || opt.value.includes("computer-use"),
+    (opt) =>
+      !opt.value.startsWith("gemini/") || opt.value.includes("computer-use"),
   );
 }
 

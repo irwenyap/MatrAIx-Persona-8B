@@ -154,6 +154,13 @@ PLAYGROUND_TASK_INDEX: Dict[str, PlaygroundTaskEntry] = {
         output_artifact="book_choice.json",
         submission_profile="book_choice",
     ),
+    "web_dbs-information-findability-cocoa": PlaygroundTaskEntry(
+        application_type="web",
+        site_name="DBS Personal Banking",
+        site_url="https://www.dbs.com.sg/personal/default.page",
+        output_artifact="dbs_information_findability.json",
+        submission_profile="dbs_information_findability",
+    ),
     # Chatbot
     "chat_meal-planning-nutrition": PlaygroundTaskEntry(application_type="chatbot"),
     "chat_openbb-corporate-action-honesty": PlaygroundTaskEntry(
