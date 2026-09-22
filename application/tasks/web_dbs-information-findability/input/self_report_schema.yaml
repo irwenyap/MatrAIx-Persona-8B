@@ -1,0 +1,137 @@
+artifactName: user_feedback.json
+instructions: |
+  Reflect honestly as the persona after completing all eight DBS information-finding goals. Keep subjective judgments here rather than in the navigation artifact.
+fields:
+  - key: fixed_deposit_rates_confidence
+    prompt: Confidence that you found or correctly concluded you could not find fixed-deposit rates (1-5).
+    kind: integer
+    minimum: 1
+    maximum: 5
+  - key: fixed_deposit_rates_initial_expectation
+    prompt: Where did you initially expect to find this information?
+    kind: string
+  - key: fixed_deposit_rates_friction
+    prompt: What friction or confusing terminology did you encounter?
+    kind: string
+  - key: fixed_deposit_rates_completion_rationale
+    prompt: Why did you mark this goal found or not found?
+    kind: string
+  - key: travel_rewards_card_confidence
+    prompt: Confidence for the travel-rewards card goal (1-5).
+    kind: integer
+    minimum: 1
+    maximum: 5
+  - key: travel_rewards_card_initial_expectation
+    prompt: Initial expectation for where travel-rewards cards would be.
+    kind: string
+  - key: travel_rewards_card_friction
+    prompt: Friction or confusing terminology for this goal.
+    kind: string
+  - key: travel_rewards_card_completion_rationale
+    prompt: Completion rationale for this goal.
+    kind: string
+  - key: home_loans_confidence
+    prompt: Confidence for the home-loans goal (1-5).
+    kind: integer
+    minimum: 1
+    maximum: 5
+  - key: home_loans_initial_expectation
+    prompt: Initial expectation for home-loan information.
+    kind: string
+  - key: home_loans_friction
+    prompt: Friction or confusing terminology for this goal.
+    kind: string
+  - key: home_loans_completion_rationale
+    prompt: Completion rationale for this goal.
+    kind: string
+  - key: rates_and_fees_confidence
+    prompt: Confidence for the rates-and-fees goal (1-5).
+    kind: integer
+    minimum: 1
+    maximum: 5
+  - key: rates_and_fees_initial_expectation
+    prompt: Initial expectation for rates and fees.
+    kind: string
+  - key: rates_and_fees_friction
+    prompt: Friction or confusing terminology for this goal.
+    kind: string
+  - key: rates_and_fees_completion_rationale
+    prompt: Completion rationale for this goal.
+    kind: string
+  - key: overseas_transfer_confidence
+    prompt: Confidence for the overseas-transfer goal (1-5).
+    kind: integer
+    minimum: 1
+    maximum: 5
+  - key: overseas_transfer_initial_expectation
+    prompt: Initial expectation for overseas-transfer instructions.
+    kind: string
+  - key: overseas_transfer_friction
+    prompt: Friction or confusing terminology for this goal.
+    kind: string
+  - key: overseas_transfer_completion_rationale
+    prompt: Completion rationale for this goal.
+    kind: string
+  - key: account_help_confidence
+    prompt: Confidence for the account-help goal (1-5).
+    kind: integer
+    minimum: 1
+    maximum: 5
+  - key: account_help_initial_expectation
+    prompt: Initial expectation for account help.
+    kind: string
+  - key: account_help_friction
+    prompt: Friction or confusing terminology for this goal.
+    kind: string
+  - key: account_help_completion_rationale
+    prompt: Completion rationale for this goal.
+    kind: string
+  - key: deposit_accounts_confidence
+    prompt: Confidence for the deposit-accounts goal (1-5).
+    kind: integer
+    minimum: 1
+    maximum: 5
+  - key: deposit_accounts_initial_expectation
+    prompt: Initial expectation for deposit-account options.
+    kind: string
+  - key: deposit_accounts_friction
+    prompt: Friction or confusing terminology for this goal.
+    kind: string
+  - key: deposit_accounts_completion_rationale
+    prompt: Completion rationale for this goal.
+    kind: string
+  - key: investing_getting_started_confidence
+    prompt: Confidence for getting started with investing (1-5).
+    kind: integer
+    minimum: 1
+    maximum: 5
+  - key: investing_getting_started_initial_expectation
+    prompt: Initial expectation for getting-started investing guidance.
+    kind: string
+  - key: investing_getting_started_friction
+    prompt: Friction or confusing terminology for this goal.
+    kind: string
+  - key: investing_getting_started_completion_rationale
+    prompt: Completion rationale for this goal.
+    kind: string
+  - key: overall_ease
+    prompt: Overall ease of finding the information (1-5).
+    kind: integer
+    minimum: 1
+    maximum: 5
+  - key: navigation_consistency
+    prompt: How consistent did navigation feel (1-5)?
+    kind: integer
+    minimum: 1
+    maximum: 5
+  - key: recurring_friction
+    prompt: Describe recurring friction across the journey.
+    kind: string
+  - key: confusing_labels_information_architecture
+    prompt: Describe confusing labels or information architecture.
+    kind: string
+  - key: confidence_finding_similar_information_later
+    prompt: Confidence finding similar information later (1-5).
+    kind: integer
+    minimum: 1
+    maximum: 5

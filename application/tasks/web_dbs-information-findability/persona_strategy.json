@@ -1,0 +1,28 @@
+{
+  "schemaVersion": "1.0",
+  "pool": "persona/datasets/matraix-persona-1m",
+  "dimensionFilters": {
+    "age_bracket": [
+      "18-24",
+      "25-34",
+      "35-44",
+      "45-54",
+      "55-64",
+      "65-74",
+      "75-84"
+    ],
+    "tech_savviness": [
+      "Digital native",
+      "Comfortable",
+      "Cautious adopter",
+      "Reluctant",
+      "Avoidant"
+    ]
+  },
+  "sampling": {
+    "mode": "stratified",
+    "fields": ["age_bracket", "tech_savviness"],
+    "allocation": "equalTotal",
+    "sampleSize": 18
+  }
+}

@@ -214,6 +214,17 @@ APPLICATION_TASK_METADATA: dict[str, dict[str, object]] = {
             "playwright dom browsing",
         ],
     },
+    "web_dbs-information-findability": {
+        "type": "web",
+        "domain": DOMAIN_FINANCE,
+        "tags": [
+            "DBS personal banking",
+            "information findability",
+            "retail banking navigation",
+            "multi-step journey",
+            "playwright dom browsing",
+        ],
+    },
     "web_notion-plan-comparison": {
         "type": "web",
         "domain": DOMAIN_SOFTWARE,

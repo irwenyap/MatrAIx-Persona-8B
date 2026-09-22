@@ -1,0 +1,10 @@
+{
+  "schemaVersion": "1.0",
+  "contextRules": [
+    {"match": {"contextType": "task_outcome"}, "distributions": [{"id": "dbs.success_rate", "facetKey": "goal_completion_ratio", "title": "Goal completion ratio"}]},
+    {"match": {"contextType": "goal_component"}, "distributions": [{"id": "dbs.findability_by_step", "facetKey": "component_found", "title": "Findability by step"}, {"id": "dbs.actions_by_step", "facetKey": "meaningful_action_count", "title": "Meaningful actions by step"}]},
+    {"match": {"contextType": "web_interaction"}, "distributions": [{"id": "dbs.search_use", "facetKey": "steps_using_site_search", "title": "Steps using site search"}, {"id": "dbs.backtracking_use", "facetKey": "steps_using_backtracking", "title": "Steps using backtracking"}]},
+    {"match": {"contextType": "user_feedback"}, "distributions": [{"id": "dbs.overall_ease", "facetKey": "overall_ease", "title": "Overall ease"}, {"id": "dbs.navigation_consistency", "facetKey": "navigation_consistency", "title": "Navigation consistency"}, {"id": "dbs.future_confidence", "facetKey": "confidence_finding_similar_information_later", "title": "Future findability confidence"}]},
+    {"match": {"contextType": "experience"}, "distributions": [{"id": "dbs.recurring_friction", "facetKey": "recurring_friction", "title": "Recurring friction themes"}]}
+  ]
+}
