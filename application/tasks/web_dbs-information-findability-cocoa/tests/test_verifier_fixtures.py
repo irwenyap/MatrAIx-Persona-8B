@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import copy
 import json
 from pathlib import Path
 
@@ -47,6 +46,9 @@ def run(monkeypatch, tmp_path: Path, data: dict, user_feedback: dict | None = No
 
 def test_complete_fixture(monkeypatch, tmp_path):
     run(monkeypatch, tmp_path, artifact(), feedback())
+    payload = json.loads((tmp_path / "verifier/structured_output.json").read_text())
+    assert payload["presenceCheck"]["passed"]
+    assert len([c for c in payload["contexts"] if c["contextType"] == "goal_component"]) == 8
 
 
 def test_session_global_navigation_sequence_is_accepted(monkeypatch, tmp_path):
@@ -102,4 +104,44 @@ def test_boolean_navigation_sequence_is_rejected(monkeypatch, tmp_path):
     data = artifact()
     data["steps"][0]["navigation_path"][0]["sequence"] = True
     with pytest.raises(AssertionError, match="must be an integer"):
+        run(monkeypatch, tmp_path, data, feedback())
+
+
+@pytest.mark.parametrize("failure", ["missing_output", "missing_feedback", "json", "schema", "feedback_json", "feedback_schema", "telemetry", "navigation"])
+def test_failure_report(monkeypatch, tmp_path, failure):
+    output = tmp_path / "dbs_information_findability.json"
+    report = tmp_path / "user_feedback.json"
+    data = artifact()
+    if failure == "telemetry":
+        data["totals"]["meaningful_actions"] = 99
+    if failure == "navigation":
+        data["steps"][0]["navigation_path"][0]["sequence"] = 3
+    if failure != "missing_output":
+        output.write_text("{" if failure == "json" else "[]" if failure == "schema" else json.dumps(data))
+    if failure != "missing_feedback":
+        report.write_text("{" if failure == "feedback_json" else "[]" if failure == "feedback_schema" else json.dumps(feedback()))
+    monkeypatch.setattr(verifier, "OUTPUT", output)
+    monkeypatch.setattr(verifier, "USER_FEEDBACK", report)
+    monkeypatch.setenv("HARBOR_VERIFIER_DIR", str(tmp_path / "verifier"))
+    with pytest.raises((AssertionError, ValueError)):
+        verifier.test_output_schema_and_emit_evaluation()
+    payload = json.loads((tmp_path / "verifier/structured_output.json").read_text())
+    assert payload["presenceCheck"]["passed"] == (not failure.startswith("missing"))
+    outcome = payload["contexts"][0]["facets"]
+    assert outcome[0]["value"] == "failed"
+    assert outcome[1]["value"]
+    assert not any(c["contextType"] == "goal_component" for c in payload["contexts"])
+
+
+def test_all_not_found_is_valid(monkeypatch, tmp_path):
+    run(monkeypatch, tmp_path, artifact(found=False), feedback())
+    payload = json.loads((tmp_path / "verifier/structured_output.json").read_text())
+    assert payload["contexts"][0]["facets"][0]["value"] == "passed"
+    assert payload["contexts"][0]["facets"][1]["value"] == 0
+
+
+def test_non_integer_totals_are_rejected(monkeypatch, tmp_path):
+    data = artifact()
+    data["totals"]["meaningful_actions"] = 8.0
+    with pytest.raises(AssertionError, match="totals.meaningful_actions must be an integer"):
         run(monkeypatch, tmp_path, data, feedback())

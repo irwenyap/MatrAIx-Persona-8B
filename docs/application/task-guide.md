@@ -79,6 +79,17 @@ network_mode = "public"
 network_mode = "public"
 ```
 
+Cocoa tasks can set a positive integer iteration default in `task.toml`:
+
+```toml
+[metadata]
+cocoa_max_iterations = 80
+```
+
+Playground and CLI job generation map this to `kwargs.max_iterations` for
+`cocoa` and `persona-cocoa`. Explicit agent kwargs take precedence. Tasks
+without this field keep the agent's existing default; timeouts are configured separately.
+
 ### `instruction.md`
 
 The **scenario**: what product or surface the agent sees, what to produce, and

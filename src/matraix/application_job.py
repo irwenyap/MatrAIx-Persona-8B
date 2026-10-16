@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+import tomllib
 from pathlib import Path
 from typing import Any
 
@@ -18,6 +19,24 @@ from matraix.persona_job import (
 DEFAULT_APPLICATION_JOBS_DIR = "configs/jobs/application-task-job-recipe"
 _EXECUTION_MODES = frozenset({"auto", "force_docker", "smoke"})
 _NATIVE_TRIAL_PROFILES = frozenset({"json_survey", "user_sim_chat"})
+
+
+def task_agent_kwargs(task_path: str, agent_spec: dict[str, Any], *, repo_root: Path) -> dict[str, Any]:
+    """Apply Cocoa task defaults while preserving explicit agent overrides."""
+    kwargs = dict(agent_spec.get("kwargs") or {})
+    if agent_spec["name"] not in {"cocoa", "persona-cocoa"}:
+        return kwargs
+    path = repo_root / task_path
+    if path.suffix != ".toml":
+        path = path / "task.toml"
+    if path.is_file():
+        metadata = tomllib.loads(path.read_text(encoding="utf-8")).get("metadata", {})
+        budget = metadata.get("cocoa_max_iterations")
+        if budget is not None:
+            if type(budget) is not int or budget <= 0:
+                raise ValueError("metadata.cocoa_max_iterations must be a positive integer")
+            kwargs.setdefault("max_iterations", budget)
+    return kwargs
 
 
 def resolve_harbor_task_path(task_path: str, *, trial_profile: str) -> str:
@@ -229,7 +248,7 @@ def build_application_job_config(
             {
                 "name": agent_spec["name"],
                 "model_name": agent_spec["model_name"],
-                "kwargs": {"persona_path": entry["path"]},
+                "kwargs": {**task_agent_kwargs(spec["task"], agent_spec, repo_root=repo_root), "persona_path": entry["path"]},
             },
             model_name=str(agent_spec.get("model_name") or ""),
         )

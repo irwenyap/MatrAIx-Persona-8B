@@ -84,6 +84,31 @@ def test_output_exists() -> None:
 
 
 def test_output_schema_and_emit_evaluation() -> None:
+    try:
+        _validate_and_emit_evaluation()
+    except (AssertionError, ValueError, TypeError, KeyError, OSError) as exc:
+        missing = [path.name for path in (OUTPUT, USER_FEEDBACK) if not path.is_file()]
+        reason = f"{type(exc).__name__}: {exc}"
+        payload = {
+            "schemaVersion": "1.0", "artifactType": "matraix.trial_evaluation", "taskType": "web",
+            "presenceCheck": {"passed": not missing, "requiredArtifacts": [OUTPUT.name, USER_FEEDBACK.name], "missingArtifacts": missing},
+            "sourceArtifacts": {"taskOutput": str(OUTPUT), "userFeedback": str(USER_FEEDBACK)},
+            "contexts": [
+                {"key": "task_outcome.primary", "label": "Task outcome", "contextType": "task_outcome", "facets": [
+                    _facet("outcome_status", "Outcome status", "primary", "categorical", "failed"),
+                    _facet("completion_evidence", "Failure reason", "evidence", "textual", reason),
+                ]},
+                {"key": "web_artifact.primary", "label": "Web artifact", "contextType": "web_artifact", "facets": [
+                    _facet("artifact_status", "Artifact status", "primary", "categorical", "missing" if missing else "invalid"),
+                    _facet("artifact_evidence", "Artifact evidence", "evidence", "textual", reason),
+                ]},
+            ],
+        }
+        (_verifier_dir() / "structured_output.json").write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+        raise
+
+
+def _validate_and_emit_evaluation() -> None:
     data = _load(OUTPUT, OUTPUT.name)
     feedback = _feedback()
     assert data.get("start_url") == START_URL, f"start_url must be {START_URL}"
@@ -174,6 +199,9 @@ def test_output_schema_and_emit_evaluation() -> None:
 
     totals = data.get("totals")
     assert isinstance(totals, dict), "totals must be an object"
+    _integer(totals.get("meaningful_actions"), "totals.meaningful_actions", high=80000)
+    for field in ("steps_using_site_search", "steps_using_backtracking"):
+        _integer(totals.get(field), f"totals.{field}", high=8)
     assert totals == {"meaningful_actions": total_actions, "steps_using_site_search": total_search, "steps_using_backtracking": total_backtracking}, "totals must be derived exactly from steps"
     ratio = found_count / len(STEP_IDS)
     contexts[:0] = [

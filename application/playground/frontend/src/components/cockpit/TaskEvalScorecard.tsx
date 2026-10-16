@@ -9,7 +9,7 @@ import { useI18n } from "@/i18n/I18nProvider";
 import { SCORE_BAND_CLASS, Sym, scoreBand } from "./cockpitShared";
 import { countSurveyQuestionTypes, surveyQuestionTypeChipClass } from "@/lib/surveyDisplay";
 import type { HarborCockpitPhase } from "@/lib/useHarborCockpitRun";
-import type { OsAppResult, SurveyResult, VerifierSummary, WebResult } from "@/lib/types";
+import type { CustomWebResult, OsAppResult, SurveyResult, UserFeedbackArtifact, VerifierSummary, WebResult } from "@/lib/types";
 
 export type TaskEvalPhase = HarborCockpitPhase;
 
@@ -172,13 +172,50 @@ function MetricTile({ value, caption }: { value: string; caption: string }) {
 
 export interface WebEvalScorecardProps {
   webResult: WebResult | null;
+  customResult?: CustomWebResult | null;
+  userFeedback?: UserFeedbackArtifact | null;
   verifier?: VerifierSummary | null;
   phase: TaskEvalPhase;
 }
 
-export function WebEvalScorecard({ webResult, verifier, phase }: WebEvalScorecardProps) {
+function DbsFindabilityResult({ result, feedback }: { result: CustomWebResult; feedback?: UserFeedbackArtifact | null }) {
+  const payload = result.taskResult ?? {};
+  const steps = Array.isArray(payload.steps) ? payload.steps.filter((step): step is Record<string, unknown> => Boolean(step) && typeof step === "object") : [];
+  const findings = payload.findings && typeof payload.findings === "object" ? payload.findings as Record<string, Record<string, unknown>> : null;
+  const totals = payload.totals && typeof payload.totals === "object" ? payload.totals as Record<string, unknown> : null;
+  const found = steps.filter((step) => step.found === true).length || (findings ? Object.values(findings).filter((entry) => entry?.found === true).length : 0);
+  return (
+    <div className="space-y-3">
+      <div className="grid grid-cols-2 gap-2">
+        <MetricTile value={`${found}/${steps.length || 8}`} caption="Goals found" />
+        <MetricTile value={String(totals?.meaningful_actions ?? "—")} caption="Meaningful actions" />
+      </div>
+      {steps.length > 0 ? <div className="space-y-2">{steps.map((step, index) => (
+        <div key={`${String(step.id ?? index)}`} className="rounded border border-outline bg-surface-low px-3 py-2">
+          <div className="flex gap-2 text-[14px] font-medium text-text-main"><span className={step.found === true ? "text-secondary" : "text-danger"}>{step.found === true ? "✓" : "×"}</span><span>{index + 1}. {String(step.id ?? "Goal")}</span></div>
+          {typeof step.answer === "string" && step.answer ? <p className="mt-1 text-[13px] text-text-variant">{step.answer}</p> : null}
+          {typeof step.final_url === "string" ? <a className="mt-1 block break-all text-[12px] text-primary underline" href={step.final_url} target="_blank" rel="noreferrer">{step.final_url}</a> : null}
+        </div>
+      ))}</div> : findings ? <div className="space-y-2">{Object.entries(findings).map(([id, finding]) => <div key={id} className="rounded border border-outline bg-surface-low px-3 py-2 text-[13px]"><span className={finding?.found === true ? "text-secondary" : "text-danger"}>{finding?.found === true ? "✓" : "×"}</span> <span className="font-medium">{id}</span>{typeof finding?.answer === "string" ? <p className="mt-1 text-text-variant">{finding.answer}</p> : null}{typeof finding?.url === "string" ? <a className="mt-1 block break-all text-primary underline" href={finding.url} target="_blank" rel="noreferrer">{finding.url}</a> : null}</div>)}</div> : <p className="text-[14px] text-text-variant">No recoverable findings were available.</p>}
+      {totals ? <p className="text-[12px] text-text-dim">Site search: {String(totals.steps_using_site_search ?? "—")} · Backtracking: {String(totals.steps_using_backtracking ?? "—")}</p> : null}
+      {feedback ? <div className="rounded border border-outline bg-surface-low px-3 py-2 text-[12px] text-text-variant">Self-report: overall ease {String(feedback.overall_ease ?? "—")} / 5 · navigation consistency {String(feedback.navigation_consistency ?? "—")} / 5 · future confidence {String(feedback.confidence_finding_similar_information_later ?? "—")} / 5</div> : null}
+    </div>
+  );
+}
+
+function CustomWebResultCard({ result, verifier, userFeedback }: { result: CustomWebResult; verifier?: VerifierSummary | null; userFeedback?: UserFeedbackArtifact | null }) {
+  return <ScorecardShell scored={result.authoritative}>
+    <div className="mb-3 text-[13px] text-text-variant"><span className="font-mono text-text-main">{result.artifactName}</span> · {result.authoritative ? "artifact verified" : "recovered agent result"}</div>
+    {!result.authoritative ? <div className="mb-3 rounded border border-warn/50 bg-warn/10 px-3 py-2 text-[13px] font-medium text-warn">{result.missingArtifactWarning ?? "Unverified recovered result — the required artifact is missing."}</div> : null}
+    {result.submissionProfile === "dbs_information_findability" ? <DbsFindabilityResult result={result} feedback={userFeedback} /> : <pre className="custom-scrollbar max-h-96 overflow-auto rounded bg-surface-low p-3 text-[12px] text-text-variant">{JSON.stringify(result.taskResult, null, 2)}</pre>}
+    {verifier ? <VerifierStrip verifier={verifier} /> : null}
+  </ScorecardShell>;
+}
+
+export function WebEvalScorecard({ webResult, customResult, userFeedback, verifier, phase }: WebEvalScorecardProps) {
   const { rich, t } = useI18n();
-  if (runningPhase(phase) && !webResult) return <ScorecardSkeleton />;
+  if (runningPhase(phase) && !webResult && !customResult) return <ScorecardSkeleton />;
+  if (customResult) return <CustomWebResultCard result={customResult} userFeedback={userFeedback} verifier={verifier} />;
   if (!webResult) return <EmptyScorecard phase={phase} />;
 
   const overall = clamp(webResult.overallExperienceRating, 10);

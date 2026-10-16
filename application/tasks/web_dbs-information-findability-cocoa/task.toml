@@ -5,6 +5,7 @@ artifacts = [ "/app/output",]
 name = "application/dbs-information-findability-cocoa"
 
 [metadata]
+cocoa_max_iterations = 80
 difficulty = "hard"
 type = "web"
 domain = "finance"

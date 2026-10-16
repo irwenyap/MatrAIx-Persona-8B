@@ -24,3 +24,5 @@ Save objective evidence to `/app/output/dbs_information_findability.json`. It mu
 For a goal you cannot find, set `found` to `false`, keep `answer` empty, and record what happened in the navigation evidence. Do not invent an answer.
 
 Afterward, complete the persona reflection described by `input/self_report_schema.yaml` and save it as `/app/output/user_feedback.json`. Keep expectations, confidence, perceived friction, and completion judgments only in that reflection—not in the objective artifact.
+
+Save the accumulated navigation evidence after each goal so it survives interruption. After goal eight, finalize all eight ordered records, the derived totals, and the completion timestamp, then write the feedback file. Read both saved files back and check that they contain valid JSON and all required fields before declaring completion. If either file cannot be saved or read back, report a submission failure and the concrete error; browsing alone does not complete the submission.

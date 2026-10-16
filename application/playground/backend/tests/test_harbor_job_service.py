@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import yaml
 
 from backend.service.harbor_job_service import (
     EXTERNAL_RUN_STALE_AFTER_SEC,
@@ -10,6 +11,20 @@ from backend.service.harbor_job_service import (
     HarborLaunchRecord,
     _job_list_status,
 )
+
+
+def test_cocoa_launch_reads_task_iteration_budget(tmp_path):
+    pool = tmp_path / "persona/datasets/matraix-persona-dev-sample"
+    pool.mkdir(parents=True)
+    (pool / "persona_0042.yaml").write_text("persona_id: '0042'\nversion: '1.0'\nsource: Nemotron\ndimensions: {}\n")
+    task = tmp_path / "application/tasks/web_dbs-information-findability-cocoa"
+    task.mkdir(parents=True)
+    (task / "task.toml").write_text('[metadata]\ntype = "web"\ncocoa_max_iterations = 80\n')
+    service = HarborJobService(repo_root=tmp_path, jobs_dir=tmp_path / "jobs", generated_configs_dir=tmp_path / "configs", harbor_command=("echo", "harbor"))
+    service._executor = _FakeExecutor()
+    service.launch(task_path="application/tasks/web_dbs-information-findability-cocoa", persona_ids=["0042"], persona_model="anthropic/claude-haiku-4-5", agent_name="persona-cocoa", job_name="dbs-budget-check")
+    config = yaml.safe_load((tmp_path / "configs/dbs-budget-check.yaml").read_text())
+    assert config["agents"][0]["kwargs"]["max_iterations"] == 80
 
 
 def test_launch_writes_job_config(tmp_path, monkeypatch):

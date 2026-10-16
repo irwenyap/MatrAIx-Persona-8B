@@ -20,6 +20,7 @@ agents:
   - name: persona-cocoa
     model_name: anthropic/claude-sonnet-4-6
     kwargs:
+      max_iterations: 80
       persona_path: persona/datasets/matraix-persona-dev-sample/persona_0042.yaml
 
 tasks:

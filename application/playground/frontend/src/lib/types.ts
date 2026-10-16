@@ -461,6 +461,16 @@ export interface WebResult {
   createdAt?: string | null;
 }
 
+/** Task-defined web artifact, kept separate from the legacy product-choice result. */
+export interface CustomWebResult {
+  submissionProfile: string;
+  artifactName: string;
+  taskResult: Record<string, unknown> | null;
+  source: "artifact" | "agent_final_result" | null;
+  authoritative: boolean;
+  missingArtifactWarning?: string | null;
+}
+
 export interface WebEvalJobView {
   jobId: string;
   applicationType: "web";
@@ -472,7 +482,10 @@ export interface WebEvalJobView {
   personaName: string;
   status: string;
   phase?: string | null;
+  submissionProfile?: string | null;
+  outputArtifact?: string | null;
   webResult?: WebResult | null;
+  customResult?: CustomWebResult | null;
   trace?: WebTrace | null;
   verifier?: VerifierSummary | null;
   userFeedback?: UserFeedbackArtifact | null;

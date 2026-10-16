@@ -66,6 +66,7 @@ import type {
   SurveyTrajectoryEvent,
   TrialEvaluationArtifact,
   UserFeedbackArtifact,
+  CustomWebResult,
   WebTrace,
 } from "@/lib/types";
 
@@ -1057,12 +1058,13 @@ function fmtAnswerValue(
 function WebDebrief({ run }: { run: RunDetailView }) {
   const { t } = useI18n();
   const result = run.webResult;
+  const customResult = run.customResult as CustomWebResult | null | undefined;
   const persona = run.persona ?? {};
   const trace = runWebTrace(run);
   const events = trace?.events ?? [];
   const feedback = resolveUserFeedback(run);
 
-  if (!result) {
+  if (!result && !customResult) {
     return (
       <TrialDebriefChrome
         prompts={run.prompts}
@@ -1077,6 +1079,21 @@ function WebDebrief({ run }: { run: RunDetailView }) {
         </DebriefPanel>
       </TrialDebriefChrome>
     );
+  }
+
+  if (customResult) {
+    const payload = customResult.taskResult ?? {};
+    const steps = Array.isArray(payload.steps) ? payload.steps.filter((step): step is Record<string, unknown> => Boolean(step) && typeof step === "object") : [];
+    const findings = payload.findings && typeof payload.findings === "object" ? payload.findings as Record<string, Record<string, unknown>> : null;
+    return <TrialDebriefChrome prompts={run.prompts} persona={persona} instructionMarkdown={run.instructionMarkdown} contextMarkdown={run.contextMarkdown} questionnaireMarkdown={run.questionnaireMarkdown} outputSchemaMarkdown={run.outputSchemaMarkdown}>
+      <DebriefPanel title={customResult.submissionProfile === "dbs_information_findability" ? "DBS information findability" : "Task result"} icon="fact_check">
+        {!customResult.authoritative ? <div className="m-4 rounded border border-warn/50 bg-warn/10 px-3 py-2 text-[13px] font-medium text-warn">Unverified recovered result — required artifact was not produced.</div> : null}
+        <div className="p-4 text-[13px] text-text-variant"><span className="font-mono text-text-main">{customResult.artifactName}</span> · {customResult.authoritative ? "authoritative artifact" : "agent final result"}</div>
+        {steps.length > 0 ? <div className="space-y-2 px-4 pb-4">{steps.map((step, index) => <div key={`${String(step.id ?? index)}`} className="rounded border border-outline bg-surface-low px-3 py-2"><div className="font-medium text-text-main"><span className={step.found === true ? "text-secondary" : "text-danger"}>{step.found === true ? "✓" : "×"}</span> {index + 1}. {String(step.id ?? "Goal")}</div>{typeof step.answer === "string" && step.answer ? <p className="mt-1 text-text-variant">{step.answer}</p> : null}{typeof step.final_url === "string" ? <a href={step.final_url} target="_blank" rel="noreferrer" className="mt-1 block break-all text-primary underline">{step.final_url}</a> : null}</div>)}</div> : findings ? <pre className="mx-4 mb-4 max-h-96 overflow-auto rounded bg-surface-low p-3 text-[12px]">{JSON.stringify(findings, null, 2)}</pre> : <DashedNote>No recoverable findings were available.</DashedNote>}
+      </DebriefPanel>
+      <UserFeedbackPanel feedback={feedback} />
+      <DebriefPanel title={t("runs.browserTrace", { count: events.length })} icon="route">{trace && events.length ? <div className="p-4"><HarborTraceReplay trace={trace} /></div> : <DashedNote>{t("runs.noBrowserSteps")}</DashedNote>}</DebriefPanel>
+    </TrialDebriefChrome>;
   }
 
   return (

@@ -115,6 +115,7 @@ export type RunDetailView = Omit<
   surveyResult?: SurveyResult | null;
   /** Web result + browser trace, present only on a persisted web run. */
   webResult?: WebResult | null;
+  customResult?: import("@/lib/types").CustomWebResult | null;
   webTrace?: WebTrace | null;
   trace?: WebTrace | null;
   /** Human labels a survey/web artifact may carry for the run-meta line. */
@@ -165,7 +166,7 @@ export function runApplicationType(run: RunDetailView): RunApplicationType {
   }
   const runRecord = run as Record<string, unknown>;
   if (runRecord.osAppResult) return "os-app";
-  if (run.webResult || run.webTrace || run.trace) return "web";
+  if (run.webResult || run.customResult || run.webTrace || run.trace) return "web";
   if (run.surveyResult) return "survey";
   return "chatbot";
 }

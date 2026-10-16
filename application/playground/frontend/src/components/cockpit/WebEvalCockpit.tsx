@@ -36,6 +36,7 @@ import type {
   WebEvalJobView,
   WebEvalTask,
   WebEvalTasksResponse,
+  CustomWebResult,
   WebResult,
   WebTrace,
 } from "@/lib/types";
@@ -274,6 +275,7 @@ export function WebEvalCockpit({
   }, [isActive, task, onFooterContextChange, t]);
 
   const webResult = job?.webResult ?? null;
+  const customResult = job?.customResult ?? null;
   const verifier = job?.verifier ?? null;
   const trace = job?.trace ?? liveTrace;
   const instructionView = useCockpitInstruction({
@@ -398,11 +400,14 @@ export function WebEvalCockpit({
   }, [timedOut, phase, retry, handleRun]);
 
   const handleExport = useCallback(() => {
-    if (!exportSnapshot || !webResult) return;
+    if (!exportSnapshot || (!webResult && !customResult)) return;
     const payload = {
       applicationType: "web",
       config: exportSnapshot,
       webResult,
+      customResult,
+      userFeedback: job?.userFeedback ?? null,
+      submissionProfile: job?.submissionProfile ?? null,
       trace,
       exportedAt: new Date().toISOString(),
     };
@@ -413,7 +418,7 @@ export function WebEvalCockpit({
     a.download = `web-eval-${exportSnapshot.persona?.id ?? "run"}.json`;
     a.click();
     URL.revokeObjectURL(url);
-  }, [exportSnapshot, webResult, trace]);
+  }, [exportSnapshot, webResult, customResult, job?.userFeedback, job?.submissionProfile, trace]);
 
   const runBusy = isRunning || isBatchActive;
   const showLiveCenter = phase !== "idle" || Boolean(batchJobName);
@@ -476,13 +481,14 @@ export function WebEvalCockpit({
               ? t("eval.progress.runStopped")
               : displayError ?? t("eval.web.progress.error")
             : undefined;
-  const canExport = exportSnapshot !== null && webResult !== null;
+  const canExport = exportSnapshot !== null && (webResult !== null || customResult !== null);
 
   const webLiveContent = (
     <>
               <WebResults
                 task={task}
                 webResult={webResult}
+                customResult={customResult}
                 trace={trace}
                 phase={phase}
                 status={status}
@@ -621,7 +627,7 @@ export function WebEvalCockpit({
             active={tab}
             onChange={setTab}
             evaluation={
-              <WebEvalScorecard webResult={webResult} verifier={verifier} phase={phase} />
+              <WebEvalScorecard webResult={webResult} customResult={customResult} userFeedback={job?.userFeedback ?? null} verifier={verifier} phase={phase} />
             }
             instruction={
               <InstructionPanel
@@ -688,6 +694,7 @@ export function WebEvalCockpit({
 function WebResults({
   task,
   webResult,
+  customResult,
   trace,
   phase,
   status,
@@ -697,6 +704,7 @@ function WebResults({
 }: {
   task: WebEvalTask | null;
   webResult: WebResult | null;
+  customResult: CustomWebResult | null;
   trace: WebTrace | null;
   phase: HarborCockpitPhase;
   status: string | null;
@@ -727,7 +735,7 @@ function WebResults({
       </div>
 
       {/* Live "browsing" banner */}
-      {running && !webResult && (
+      {running && !webResult && !customResult && (
         <div className="rise-in rounded-md border border-outline bg-surface-lowest px-4 py-4">
           <div className="flex items-center gap-2">
             <Sym name="autorenew" size={16} className="animate-rb-spin text-primary" />
@@ -762,7 +770,7 @@ function WebResults({
       )}
 
       {/* Loading skeleton before any result/trace lands */}
-      {running && !webResult && !trace && (
+      {running && !webResult && !customResult && !trace && (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4" aria-hidden>
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="h-32 animate-rb-pulse rounded-md bg-surface-high" />

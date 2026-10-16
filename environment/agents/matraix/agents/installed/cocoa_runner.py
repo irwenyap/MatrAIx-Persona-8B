@@ -10,6 +10,7 @@ import importlib
 import json
 import os
 import sys
+import subprocess
 import time
 from pathlib import Path
 from typing import Any
@@ -17,6 +18,49 @@ from uuid import uuid4
 
 _COCOA_ROOT = os.environ.get("COCOA_ROOT", "/opt/cocoa-agent")
 _PREPARED = False
+
+
+def prepare_output(sandbox: Any) -> None:
+    """Discover tool identities and verify submissions through the sandbox SDK."""
+    token = uuid4().hex
+    identity_file = f"/tmp/cocoa-output-{token}"
+    probe = f"/app/output/.cocoa-write-{token}"
+    try:
+        sandbox.file.write_file(file=identity_file, content=token)
+        result = sandbox.code.execute_code(language="python", code=(
+            "import os, json\n"
+            f"s = os.stat({identity_file!r})\n"
+            "print(json.dumps([os.geteuid(), os.getegid(), s.st_uid, s.st_gid]))"
+        ))
+        uid, gid, file_uid, file_gid = json.loads(result.data.stdout.strip())
+        if not all(type(value) is int and value >= 0 for value in (uid, gid, file_uid, file_gid)):
+            raise ValueError("Sandbox returned invalid tool identities")
+        subprocess.run(["mkdir", "-p", "/app/output"], check=True, capture_output=True)
+        subprocess.run(["chown", "-R", f"{uid}:{gid}", "/app/output"], check=True, capture_output=True)
+        subprocess.run(["chmod", "u+rwx", "/app/output"], check=True, capture_output=True)
+        if file_uid != uid and file_uid != 0:
+            subprocess.run(["setfacl", "-m", f"u:{file_uid}:rwx", "/app/output"], check=True, capture_output=True)
+        sandbox.file.write_file(file=probe, content=token)
+        verified = sandbox.code.execute_code(language="python", code=(
+            "from pathlib import Path\n"
+            f"p = Path({probe!r})\n"
+            f"assert p.read_text() == {token!r}\n"
+            "p.unlink()\n"
+            f"p.write_text({token!r})\n"
+            "p.unlink()\n"
+            "print('COCOA_OUTPUT_WRITABLE')"
+        ))
+        if verified.data.stdout.strip() != "COCOA_OUTPUT_WRITABLE":
+            raise RuntimeError(f"Sandbox write/delete check failed: {verified.data.stderr}")
+        print(f"[cocoa] output verified for code uid={uid}, file uid={file_uid}", flush=True)
+    except Exception as exc:
+        raise RuntimeError(f"Cocoa output setup failed: cannot provision or verify /app/output: {exc}") from exc
+    finally:
+        for temporary in (identity_file, probe):
+            try:
+                Path(temporary).unlink(missing_ok=True)
+            except OSError:
+                pass
 
 
 def _prepare_cocoa() -> None:
@@ -641,6 +685,12 @@ def cocoa_to_atif(
 
 
 def main() -> int:
+    if sys.argv[1:] == ["--prepare-output"]:
+        from agent_sandbox import Sandbox
+
+        port = int(os.environ.get("COCOA_SANDBOX_PORT", "8080"))
+        prepare_output(Sandbox(base_url=os.environ.get("COCOA_SANDBOX_URL", f"http://localhost:{port}")))
+        return 0
     parser = argparse.ArgumentParser()
     parser.add_argument("--instruction", required=True)
     parser.add_argument("--model", required=True)

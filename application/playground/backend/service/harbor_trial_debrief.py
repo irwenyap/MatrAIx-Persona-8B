@@ -1225,6 +1225,85 @@ def _web_result_from_decision_artifact(
     }
 
 
+def _custom_submission_from_logs(logs_dir: Path | None) -> dict[str, Any] | None:
+    """Recover an agent's declared final JSON without pretending it is an artifact.
+
+    Cocoa stores its final response in the ATIF trajectory.  This is useful for
+    diagnosing a failed run, but it is not verifier-authoritative evidence.
+    """
+    if logs_dir is None:
+        return None
+    trajectory_path = logs_dir / "trajectory.json"
+    if not trajectory_path.is_file():
+        return None
+    try:
+        trajectory = _read_json(trajectory_path)
+    except (OSError, ValueError, json.JSONDecodeError):
+        return None
+    steps = trajectory.get("steps")
+    if not isinstance(steps, list):
+        return None
+    for step in reversed(steps):
+        if not isinstance(step, dict):
+            continue
+        final_result = step.get("final_result")
+        if isinstance(final_result, dict):
+            return final_result
+        if isinstance(final_result, str):
+            try:
+                parsed = json.loads(final_result)
+            except json.JSONDecodeError:
+                continue
+            if isinstance(parsed, dict):
+                return parsed
+    return None
+
+
+def _custom_web_result(
+    *,
+    task: "WebEvalTask",
+    output_dir: Path,
+    logs_dir: Path | None,
+) -> dict[str, Any] | None:
+    """Read a task-defined web submission, with clearly non-authoritative recovery."""
+    artifact_path = output_dir / task.output_artifact
+    if artifact_path.is_file():
+        try:
+            task_result = _read_json(artifact_path)
+        except (OSError, ValueError, json.JSONDecodeError):
+            return None
+        return {
+            "submissionProfile": task.submission_profile,
+            "artifactName": task.output_artifact,
+            "taskResult": task_result,
+            "source": "artifact",
+            "authoritative": True,
+            "missingArtifactWarning": None,
+        }
+
+    recovered = _custom_submission_from_logs(logs_dir)
+    if recovered is None:
+        return {
+            "submissionProfile": task.submission_profile,
+            "artifactName": task.output_artifact,
+            "taskResult": None,
+            "source": None,
+            "authoritative": False,
+            "missingArtifactWarning": "Required submission artifact was not produced.",
+        }
+    return {
+        "submissionProfile": task.submission_profile,
+        "artifactName": task.output_artifact,
+        "taskResult": recovered,
+        "source": "agent_final_result",
+        "authoritative": False,
+        "missingArtifactWarning": (
+            "Required submission artifact was not produced; this is an unverified "
+            "recovered agent final result."
+        ),
+    }
+
+
 def _map_web_debrief(
     *,
     output_dir: Path,
@@ -1241,16 +1320,10 @@ def _map_web_debrief(
         HarborWebEvalConfig,
         WebEvalResultArtifact,
         _extract_web_submission_from_logs,
-        _materialize_missing_web_artifact,
         build_result_from_harbor_web_artifacts,
     )
 
     task = _resolve_web_eval_task(repo_root, trial_dir, output_dir)
-    _materialize_missing_web_artifact(
-        output_dir=output_dir,
-        logs_dir=logs_dir,
-        task=task,
-    )
     from backend.service.harbor_web_trace import read_harbor_web_trace
 
     trace = read_harbor_web_trace(
@@ -1260,57 +1333,48 @@ def _map_web_debrief(
     )
     feedback = _read_user_feedback_artifact(trial_dir, output_dir=output_dir)
     web_result: dict[str, Any] | None = None
+    custom_result: dict[str, Any] | None = None
     prompts: dict[str, Any] | None = None
-    try:
-        result = build_result_from_harbor_web_artifacts(
-            output_dir=output_dir,
-            logs_dir=logs_dir,
-            config=HarborWebEvalConfig(),
-            persona=persona,
-            task=task,
-            created_at=created_at,
-        )
-        payload = result.to_dict()
-        web_result = payload.get("webResult")
-        prompts = payload.get("prompts")
-    except (ValueError, FileNotFoundError):
-        artifact_path = output_dir / task.output_artifact
-        if artifact_path.is_file():
-            artifact_data = _read_json(artifact_path)
-            if (
-                artifact_data.get("decision_subject_id")
-                or artifact_data.get("decision_subject_label")
-            ):
-                web_result = _web_result_from_decision_artifact(
-                    artifact_data,
-                    created_at=created_at,
-                    user_feedback=feedback,
-                )
-            elif artifact_path.name == "book_interest.json":
-                web_result = _web_result_from_book_interest(
-                    artifact_data,
-                    created_at=created_at,
-                )
-        elif web_result is None:
-            recovered = _extract_web_submission_from_logs(logs_dir)
-            if recovered is not None:
-                if (
-                    recovered.get("decision_subject_id")
-                    or recovered.get("decision_subject_label")
-                ):
-                    web_result = _web_result_from_decision_artifact(
-                        recovered,
-                        created_at=created_at,
-                        user_feedback=feedback,
-                    )
-                else:
-                    try:
-                        web_result = WebEvalResultArtifact.from_dict(
-                            recovered,
-                            created_at=created_at,
-                        ).to_dict()
-                    except ValueError:
-                        web_result = None
+    # Product-choice tasks retain their legacy result contract.  Profiles with
+    # task-defined artifacts are additive and never coerced into that schema.
+    if task.submission_profile == "dbs_information_findability":
+        custom_result = _custom_web_result(task=task, output_dir=output_dir, logs_dir=logs_dir)
+    else:
+        try:
+            result = build_result_from_harbor_web_artifacts(
+                output_dir=output_dir,
+                logs_dir=logs_dir,
+                config=HarborWebEvalConfig(),
+                persona=persona,
+                task=task,
+                created_at=created_at,
+            )
+            payload = result.to_dict()
+            web_result = payload.get("webResult")
+            prompts = payload.get("prompts")
+        except (ValueError, FileNotFoundError):
+            artifact_path = output_dir / task.output_artifact
+            if artifact_path.is_file():
+                artifact_data = _read_json(artifact_path)
+                if artifact_data.get("decision_subject_id") or artifact_data.get("decision_subject_label"):
+                    web_result = _web_result_from_decision_artifact(artifact_data, created_at=created_at, user_feedback=feedback)
+                elif artifact_path.name == "book_interest.json":
+                    web_result = _web_result_from_book_interest(artifact_data, created_at=created_at)
+            elif web_result is None:
+                recovered = _extract_web_submission_from_logs(logs_dir)
+                if recovered is not None:
+                    if recovered.get("decision_subject_id") or recovered.get("decision_subject_label"):
+                        web_result = _web_result_from_decision_artifact(recovered, created_at=created_at, user_feedback=feedback)
+                    else:
+                        try:
+                            web_result = WebEvalResultArtifact.from_dict(recovered, created_at=created_at).to_dict()
+                        except ValueError:
+                            web_result = None
+    if web_result is None and custom_result is None:
+        # Future task profiles may use an arbitrary artifact schema.  Preserve
+        # it for the generic frontend instead of dropping it or fabricating a
+        # product-choice scorecard.
+        custom_result = _custom_web_result(task=task, output_dir=output_dir, logs_dir=logs_dir)
     return {
         "id": "harbor-trial",
         "applicationType": "web",
@@ -1318,7 +1382,10 @@ def _map_web_debrief(
         "persona": run_store.persona_summary(persona),
         "siteName": task.site_name,
         "taskTitle": task.title,
+        "submissionProfile": task.submission_profile,
+        "outputArtifact": task.output_artifact,
         "webResult": web_result,
+        "customResult": custom_result,
         "webTrace": trace,
         "prompts": prompts,
     }

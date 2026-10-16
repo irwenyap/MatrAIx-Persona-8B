@@ -221,6 +221,14 @@ class CocoaHarborAgent(BaseInstalledAgent):
         if self._sandbox_port is not None:
             env["COCOA_SANDBOX_PORT"] = str(self._sandbox_port)
 
+        setup = await environment.exec(
+            command=f"{_COCOA_PYTHON} {self._RUNNER_PATH} --prepare-output",
+            user="root",
+            env={key: value for key, value in env.items() if key.startswith("COCOA_")},
+        )
+        if setup.return_code != 0:
+            raise RuntimeError(f"Cocoa output setup failed: {setup.stderr or setup.stdout}")
+
         escaped_instruction = shlex.quote(instruction)
         escaped_model = shlex.quote(self.model_name)
         command = f"""
