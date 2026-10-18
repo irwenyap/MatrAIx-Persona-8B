@@ -1,0 +1,68 @@
+Downloading pygments (1.2MiB)
+ Downloading pygments
+Installed 6 packages in 37ms
+============================= test session starts ==============================
+platform linux -- Python 3.12.11, pytest-8.4.1, pluggy-1.6.0
+rootdir: /tests
+plugins: json-ctrf-0.3.5
+collected 2 items
+
+../tests/test_state.py .F                                                [100%]
+
+=================================== FAILURES ===================================
+____________________ test_output_schema_and_emit_evaluation ____________________
+
+    def test_output_schema_and_emit_evaluation() -> None:
+        try:
+>           _validate_and_emit_evaluation()
+
+/tests/test_state.py:88: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _validate_and_emit_evaluation() -> None:
+        data = _load(OUTPUT, OUTPUT.name)
+        feedback = _feedback()
+        assert data.get("start_url") == START_URL, f"start_url must be {START_URL}"
+        _nonempty(data.get("start_title"), "start_title", 1000)
+        completed_at = _nonempty(data.get("completed_at"), "completed_at", 100)
+        datetime.fromisoformat(completed_at.replace("Z", "+00:00"))
+        for key in data:
+            assert not key.endswith(SUBJECTIVE_SUFFIXES), f"subjective field {key} belongs in user_feedback.json"
+    
+        steps = data.get("steps")
+        assert isinstance(steps, list) and len(steps) == 8, "steps must contain exactly eight records"
+        assert [step.get("id") if isinstance(step, dict) else None for step in steps] == STEP_IDS, "step IDs/order are incorrect"
+        navigation_sequences: list[list[object]] = []
+        for index, step in enumerate(steps):
+            assert isinstance(step, dict), f"steps[{index}] must be an object"
+            path = step.get("navigation_path")
+            assert isinstance(path, list), f"steps[{index}].navigation_path must be an array"
+            sequences = [
+                nav.get("sequence") if isinstance(nav, dict) else None for nav in path
+            ]
+            for sequence_index, sequence in enumerate(sequences):
+                _integer(sequence, f"steps[{index}].navigation_path[{sequence_index}].sequence", 1)
+            navigation_sequences.append(sequences)
+        per_step_sequences = all(
+            sequences == list(range(1, len(sequences) + 1))
+            for sequences in navigation_sequences
+        )
+        flattened_sequences = [sequence for sequences in navigation_sequences for sequence in sequences]
+        session_sequences = flattened_sequences == list(range(1, len(flattened_sequences) + 1))
+        assert per_step_sequences or session_sequences, (
+            "navigation sequences must be contiguous, using either per-step or session-global numbering"
+        )
+        total_actions = total_search = total_backtracking = found_count = 0
+        contexts: list[dict[str, object]] = []
+        all_evidence = json.dumps(data, ensure_ascii=False).lower()
+>       assert not any(marker in all_evidence for marker in FORBIDDEN_MARKERS), "artifact records a forbidden state-changing action"
+E       AssertionError: artifact records a forbidden state-changing action
+E       assert not True
+E        +  where True = any(<generator object _validate_and_emit_evaluation.<locals>.<genexpr> at 0x75b0a66c9e50>)
+
+/tests/test_state.py:147: AssertionError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED ../tests/test_state.py::test_output_exists
+FAILED ../tests/test_state.py::test_output_schema_and_emit_evaluation - Asser...
+========================= 1 failed, 1 passed in 0.12s ==========================

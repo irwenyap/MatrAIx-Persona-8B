@@ -1,0 +1,61 @@
+{
+  "schemaVersion": "1.0",
+  "artifactType": "matraix.trial_evaluation",
+  "taskType": "web",
+  "presenceCheck": {
+    "passed": true,
+    "requiredArtifacts": [
+      "dbs_information_findability.json",
+      "user_feedback.json"
+    ],
+    "missingArtifacts": []
+  },
+  "sourceArtifacts": {
+    "taskOutput": "/app/output/dbs_information_findability.json",
+    "userFeedback": "/app/output/user_feedback.json"
+  },
+  "contexts": [
+    {
+      "key": "task_outcome.primary",
+      "label": "Task outcome",
+      "contextType": "task_outcome",
+      "facets": [
+        {
+          "key": "outcome_status",
+          "label": "Outcome status",
+          "role": "primary",
+          "kind": "categorical",
+          "value": "failed"
+        },
+        {
+          "key": "completion_evidence",
+          "label": "Failure reason",
+          "role": "evidence",
+          "kind": "textual",
+          "value": "AssertionError: artifact records a forbidden state-changing action\nassert not True\n +  where True = any(<generator object _validate_and_emit_evaluation.<locals>.<genexpr> at 0x75b0a66c9e50>)"
+        }
+      ]
+    },
+    {
+      "key": "web_artifact.primary",
+      "label": "Web artifact",
+      "contextType": "web_artifact",
+      "facets": [
+        {
+          "key": "artifact_status",
+          "label": "Artifact status",
+          "role": "primary",
+          "kind": "categorical",
+          "value": "invalid"
+        },
+        {
+          "key": "artifact_evidence",
+          "label": "Artifact evidence",
+          "role": "evidence",
+          "kind": "textual",
+          "value": "AssertionError: artifact records a forbidden state-changing action\nassert not True\n +  where True = any(<generator object _validate_and_emit_evaluation.<locals>.<genexpr> at 0x75b0a66c9e50>)"
+        }
+      ]
+    }
+  ]
+}

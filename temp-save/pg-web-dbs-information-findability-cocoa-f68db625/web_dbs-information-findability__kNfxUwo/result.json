@@ -1,0 +1,211 @@
+{
+    "id": "61b8619b-aa1b-4cc1-b118-55e3f5552b87",
+    "task_name": "application/dbs-information-findability-cocoa",
+    "trial_name": "web_dbs-information-findability__kNfxUwo",
+    "trial_uri": "file:///mnt/c/Users/dbsin/Projects/MatrAIx-Persona-8B/jobs/pg-web-dbs-information-findability-cocoa-f68db625/web_dbs-information-findability__kNfxUwo",
+    "task_id": {
+        "path": "application/tasks/web_dbs-information-findability-cocoa"
+    },
+    "source": null,
+    "task_checksum": "4b842aab765e5e5c7411778211d3310e3eb41edc858ebf5952d555f1a70b6948",
+    "config": {
+        "task": {
+            "path": "application/tasks/web_dbs-information-findability-cocoa",
+            "git_url": null,
+            "git_commit_id": null,
+            "name": null,
+            "ref": null,
+            "overwrite": false,
+            "download_dir": null,
+            "source": null
+        },
+        "trial_name": "web_dbs-information-findability__kNfxUwo",
+        "trials_dir": "jobs/pg-web-dbs-information-findability-cocoa-f68db625",
+        "timeout_multiplier": 1.0,
+        "agent_timeout_multiplier": null,
+        "verifier_timeout_multiplier": null,
+        "agent_setup_timeout_multiplier": null,
+        "environment_build_timeout_multiplier": null,
+        "agent": {
+            "name": "persona-cocoa",
+            "import_path": null,
+            "model_name": "anthropic/claude-sonnet-4-6",
+            "skills": [],
+            "override_timeout_sec": null,
+            "override_setup_timeout_sec": null,
+            "max_timeout_sec": null,
+            "extra_allowed_hosts": [],
+            "kwargs": {
+                "max_iterations": 80,
+                "persona_path": "persona/datasets/matraix-persona-1m/cohorts/cohort-3139dd062910/persona_wiki-e5550a9e2691.yaml",
+                "model_info": {
+                    "max_input_tokens": 1000000,
+                    "max_output_tokens": 16384
+                }
+            },
+            "env": {},
+            "mcp_servers": []
+        },
+        "environment": {
+            "type": "docker",
+            "import_path": null,
+            "force_build": false,
+            "delete": true,
+            "cpu_enforcement_policy": "auto",
+            "memory_enforcement_policy": "auto",
+            "override_cpus": null,
+            "override_memory_mb": null,
+            "override_storage_mb": null,
+            "override_gpus": null,
+            "override_tpu": null,
+            "mounts": null,
+            "extra_docker_compose": [],
+            "env": {},
+            "kwargs": {},
+            "extra_allowed_hosts": []
+        },
+        "verifier": {
+            "override_timeout_sec": null,
+            "max_timeout_sec": null,
+            "env": {},
+            "disable": false
+        },
+        "artifacts": [],
+        "extra_instruction_paths": [],
+        "job_id": "ec101021-a526-4a73-b747-31fafc0fd3b3"
+    },
+    "agent_info": {
+        "name": "persona-cocoa",
+        "version": "unknown",
+        "model_info": {
+            "name": "claude-sonnet-4-6",
+            "provider": "anthropic"
+        }
+    },
+    "agent_result": {
+        "n_input_tokens": 5878828,
+        "n_cache_tokens": 5878648,
+        "n_output_tokens": 19820,
+        "cost_usd": 2.683238,
+        "rollout_details": null,
+        "metadata": {
+            "cocoa": {
+                "final_result": "Task completed",
+                "is_done": true,
+                "is_successful": true,
+                "urls": [
+                    "https://www.dbs.com.sg/personal/default.page",
+                    "https://www.dbs.com.sg/personal/rates-online/fixed-deposits-rates.page",
+                    "https://www.dbs.com.sg/personal/default.page",
+                    "https://www.dbs.com.sg/personal/rates-online/singapore-dollar-fixed-deposits.page",
+                    "https://www.dbs.com.sg/personal/cards/cards-comparator.page#miles",
+                    "https://www.dbs.com.sg/personal/cards/credit-cards/dbs-altitude-cards",
+                    "https://www.dbs.com.sg/personal/loans/home-loans/default.page",
+                    "https://www.dbs.com.sg/personal/rates-online/default.page",
+                    "https://www.dbs.com.sg/personal/rates-online/sgd-deposit-accounts.page",
+                    "https://www.dbs.com.sg/personal/rates-online/default.page",
+                    "https://www.dbs.com.sg/personal/rates-online/deposit-rates.page",
+                    "https://www.dbs.com.sg/personal/cards/cards-rates-fees.page",
+                    "https://www.dbs.com.sg/personal/support/bank-overseas-fund-transfer.html",
+                    "https://www.dbs.com.sg/personal/support/bank-pay-overseas-transfer.html",
+                    "https://www.dbs.com.sg/personal/support/home.html",
+                    "https://www.dbs.com.sg/personal/support/bank-overseas-funds-transfer-new-remittance.html",
+                    "https://www.dbs.com.sg/personal/support/banking-product.html",
+                    "https://www.dbs.com.sg/personal/accounts/default.page",
+                    "https://www.dbs.com.sg/personal/investments/default.page"
+                ],
+                "action_names": [
+                    "shell_execute",
+                    "file_read",
+                    "browser_navigate",
+                    "browser_get_viewport_info",
+                    "dom_mark_elements",
+                    "dom_click",
+                    "dom_get_text",
+                    "browser_navigate",
+                    "browser_navigate",
+                    "dom_extract_links",
+                    "browser_navigate",
+                    "dom_scroll",
+                    "dom_get_text",
+                    "code_execute",
+                    "browser_navigate",
+                    "dom_scroll",
+                    "dom_scroll",
+                    "dom_get_text",
+                    "browser_navigate",
+                    "code_execute",
+                    "browser_navigate",
+                    "dom_get_text",
+                    "code_execute",
+                    "browser_navigate",
+                    "dom_get_text",
+                    "browser_navigate",
+                    "browser_navigate",
+                    "dom_extract_links",
+                    "browser_navigate",
+                    "dom_mark_elements",
+                    "dom_click",
+                    "browser_type",
+                    "browser_click",
+                    "browser_type",
+                    "browser_press",
+                    "browser_wait",
+                    "dom_extract_links",
+                    "browser_navigate",
+                    "dom_get_text",
+                    "code_execute",
+                    "browser_navigate",
+                    "browser_navigate",
+                    "browser_navigate",
+                    "dom_extract_links",
+                    "browser_navigate",
+                    "dom_get_text",
+                    "code_execute",
+                    "browser_navigate",
+                    "dom_get_text",
+                    "code_execute",
+                    "browser_navigate",
+                    "dom_get_text",
+                    "code_execute",
+                    "browser_navigate",
+                    "dom_get_text",
+                    "code_execute",
+                    "file_read",
+                    "code_execute",
+                    "file_write",
+                    "code_execute",
+                    "task_complete"
+                ],
+                "promoted_outputs": [],
+                "status": "success",
+                "iterations": 60
+            }
+        }
+    },
+    "verifier_result": {
+        "rewards": {
+            "reward": 0.0
+        }
+    },
+    "exception_info": null,
+    "started_at": "2026-10-13T05:52:14.287610Z",
+    "finished_at": "2026-10-13T06:08:11.120820Z",
+    "environment_setup": {
+        "started_at": "2026-10-13T05:52:15.261727Z",
+        "finished_at": "2026-10-13T05:52:57.184182Z"
+    },
+    "agent_setup": {
+        "started_at": "2026-10-13T05:52:57.985236Z",
+        "finished_at": "2026-10-13T05:53:05.676737Z"
+    },
+    "agent_execution": {
+        "started_at": "2026-10-13T05:53:05.686673Z",
+        "finished_at": "2026-10-13T06:07:51.728204Z"
+    },
+    "verifier": {
+        "started_at": "2026-10-13T06:07:53.728075Z",
+        "finished_at": "2026-10-13T06:07:57.142998Z"
+    },
+    "step_results": null
+}

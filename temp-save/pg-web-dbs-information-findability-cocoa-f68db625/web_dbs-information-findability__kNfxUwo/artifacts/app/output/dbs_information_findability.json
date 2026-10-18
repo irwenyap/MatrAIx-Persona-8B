@@ -1,0 +1,212 @@
+{
+  "start_url": "https://www.dbs.com.sg/personal/default.page",
+  "start_title": "DBS Singapore - Asia's Safest Bank | DBS Singapore",
+  "completed_at": "2026-10-13T06:05:36.858395+00:00",
+  "steps": [
+    {
+      "id": "fixed_deposit_rates",
+      "found": true,
+      "answer": "SGD Fixed Deposit rates effective 13/10/2026 (% p.a.): For $1,000\u2013$9,999 and $10,000\u2013$19,999: 1 mth 0.0500, 2 mths 0.0500, 3 mths 0.1500, 4 mths 0.2500, 5 mths 0.4000, 6 mths 0.8000, 7 mths 0.9500, 8\u201360 mths 1.0000. For $20,000 and above: 0.0500% p.a. across all tenors. New placements accepted for tenors 12 months and below only.",
+      "final_url": "https://www.dbs.com.sg/personal/rates-online/singapore-dollar-fixed-deposits.page",
+      "final_title": "Fixed Deposit Best Rate, S$ Fixed Deposit | DBS Singapore",
+      "navigation_path": [
+        {
+          "sequence": 1,
+          "action": "Navigated to DBS Personal Banking homepage",
+          "url": "https://www.dbs.com.sg/personal/default.page",
+          "title": "DBS Singapore - Asia's Safest Bank | DBS Singapore"
+        },
+        {
+          "sequence": 2,
+          "action": "Attempted direct URL guess for fixed deposit rates (resulted in 404)",
+          "url": "https://www.dbs.com.sg/personal/404.page",
+          "title": "dbs.com.sg/personal/404"
+        },
+        {
+          "sequence": 3,
+          "action": "Backtracked to homepage to find correct link",
+          "url": "https://www.dbs.com.sg/personal/default.page",
+          "title": "DBS Singapore - Asia's Safest Bank | DBS Singapore"
+        },
+        {
+          "sequence": 4,
+          "action": "Clicked 'Fixed deposit rates' link from Plan & Manage section",
+          "url": "https://www.dbs.com.sg/personal/rates-online/singapore-dollar-fixed-deposits.page",
+          "title": "Fixed Deposit Best Rate, S$ Fixed Deposit | DBS Singapore"
+        }
+      ],
+      "meaningful_action_count": 4,
+      "used_site_search": false,
+      "used_backtracking": true,
+      "backtracking_details": "Attempted guessed URL for fixed deposit rates page which resulted in a 404 error; backtracked to homepage and used link extraction to find the correct URL in the Plan & Manage section."
+    },
+    {
+      "id": "travel_rewards_card",
+      "found": true,
+      "answer": "DBS Altitude Card (Visa Signature and American Express variants) is DBS's primary travel miles card. Key features: Earn up to 2.2 miles per S$1 on overseas spend (in foreign currency), 1.3 miles per S$1 on local spend. Miles for Life \u2013 DBS Points earned do not expire. Welcome gift: Samsonite MINTER 80/30 Trunk Luggage (worth S$680) or up to 38,000 miles. Also available: DBS Vantage Visa Infinite Card (switch between 2.2 miles/S$1 or 2.2% cashback, with Accor Plus Explorer membership and Priority Pass).",
+      "final_url": "https://www.dbs.com.sg/personal/cards/credit-cards/dbs-altitude-cards",
+      "final_title": "Earn More Air Miles with DBS Altitude Card | DBS Singapore",
+      "navigation_path": [
+        {
+          "sequence": 5,
+          "action": "Navigated to Cards comparator page filtered to Miles",
+          "url": "https://www.dbs.com.sg/personal/cards/cards-comparator.page#miles",
+          "title": "DBS Bank Cards - Credit Cards, Debit Cards | DBS Singapore"
+        },
+        {
+          "sequence": 6,
+          "action": "Navigated to DBS Altitude Card detail page",
+          "url": "https://www.dbs.com.sg/personal/cards/credit-cards/dbs-altitude-cards",
+          "title": "Earn More Air Miles with DBS Altitude Card | DBS Singapore"
+        }
+      ],
+      "meaningful_action_count": 2,
+      "used_site_search": false,
+      "used_backtracking": false,
+      "backtracking_details": ""
+    },
+    {
+      "id": "home_loans",
+      "found": true,
+      "answer": "DBS offers multiple home loan options: (1) DBS HDB Home Loan - rates lower than HDB Concessionary Loan (from 1.78% p.a.), no penalty fees for early partial repayment, complimentary LPA certification. (2) DBS Private Home Loan - competitive rate packages, up to S$1,200 shopping voucher rewards, online pre-approval within minutes. (3) Refinance Your Home Loan - competitive interest rates, up to S$4,000 cash rewards. (4) DBS Green Home Loan - preferential rates for Green Mark-certified properties, FHR6 or 3M SORA packages. Other loans include Renovation Loan (3.38% p.a.), Cash-out Loan, Commercial & Industrial Property Loan, and Home Equity Income Loan (fixed 3.88% p.a.).",
+      "final_url": "https://www.dbs.com.sg/personal/loans/home-loans/default.page",
+      "final_title": "DBS Home Loans and Refinancing | DBS Singapore",
+      "navigation_path": [
+        {
+          "sequence": 7,
+          "action": "Navigated to DBS Home Loans page via Loans menu",
+          "url": "https://www.dbs.com.sg/personal/loans/home-loans/default.page",
+          "title": "DBS Home Loans and Refinancing | DBS Singapore"
+        }
+      ],
+      "meaningful_action_count": 1,
+      "used_site_search": false,
+      "used_backtracking": false,
+      "backtracking_details": ""
+    },
+    {
+      "id": "rates_and_fees",
+      "found": true,
+      "answer": "DBS banking rates and fees are available at the 'Rates & Tools' hub page. Key fees: Credit Card: Late payment charge S$100; Finance charge 27.8% p.a.; Cash advance fee 8% (min S$15) + 28.5% p.a. finance charge. Debit Card: Foreign currency transactions admin fee up to 2.65% (total not exceeding 3.25% with conversion factor); Overseas ATM cash withdrawal S$7 per transaction. Deposit account rates also available (My Account: 0.050% p.a.). SGD Fixed Deposit rates visible from Rates & Tools page.",
+      "final_url": "https://www.dbs.com.sg/personal/cards/cards-rates-fees.page",
+      "final_title": "Card Rates - DBS Cards Fees | DBS Singapore",
+      "navigation_path": [
+        {
+          "sequence": 8,
+          "action": "Navigated to Rates & Tools hub page",
+          "url": "https://www.dbs.com.sg/personal/rates-online/default.page",
+          "title": "Rates & Tools | DBS Singapore"
+        },
+        {
+          "sequence": 9,
+          "action": "Navigated to SGD Deposit Accounts rates page",
+          "url": "https://www.dbs.com.sg/personal/rates-online/deposit-rates.page",
+          "title": "S$ Deposit - Deposit Accounts | DBS Singapore"
+        },
+        {
+          "sequence": 10,
+          "action": "Used site search for 'banking fees'",
+          "url": "https://www.dbs.com.sg/personal/searchresults.page?q=banking%20fees",
+          "title": "Search Results | DBS Singapore"
+        },
+        {
+          "sequence": 11,
+          "action": "Clicked 'Card Rates - DBS Cards Fees' from search results",
+          "url": "https://www.dbs.com.sg/personal/cards/cards-rates-fees.page",
+          "title": "Card Rates - DBS Cards Fees | DBS Singapore"
+        }
+      ],
+      "meaningful_action_count": 4,
+      "used_site_search": true,
+      "used_backtracking": false,
+      "backtracking_details": ""
+    },
+    {
+      "id": "overseas_transfer",
+      "found": true,
+      "answer": "To make an overseas transfer via DBS digibank: Pre-transfer checklist: gather recipient's Bank Name, Account Number, Full Name, and Address. Steps via digibank mobile: (1) Log in with Touch/Face ID or User ID & PIN; (2) Tap 'Pay & Transfer' and select 'Overseas'; (3) Select recipient; (4) Select account, enter amount and purpose; (5) Review and tap 'Transfer now'; (6) Transfer submitted. Also available via digibank Online and DBS/POSB Branches. Service covers 200+ markets in 19+ currencies. An eAdvice is sent to registered email upon success.",
+      "final_url": "https://www.dbs.com.sg/personal/support/bank-overseas-funds-transfer-new-remittance.html",
+      "final_title": "Transfer Funds to Overseas Account | DBS Singapore",
+      "navigation_path": [
+        {
+          "sequence": 12,
+          "action": "Navigated to DBS Help & Support home page",
+          "url": "https://www.dbs.com.sg/personal/support/home.html",
+          "title": "DBS Help & Support"
+        },
+        {
+          "sequence": 13,
+          "action": "Clicked 'Transfer Funds to Overseas Account' from featured articles",
+          "url": "https://www.dbs.com.sg/personal/support/bank-overseas-funds-transfer-new-remittance.html",
+          "title": "Transfer Funds to Overseas Account | DBS Singapore"
+        }
+      ],
+      "meaningful_action_count": 2,
+      "used_site_search": false,
+      "used_backtracking": false,
+      "backtracking_details": ""
+    },
+    {
+      "id": "account_help",
+      "found": true,
+      "answer": "For account help, go to DBS Help & Support (dbs.com.sg/personal/support/home.html) and select 'Bank'. Categories include: Account Enquiries (via digibank online or mobile), Applications & Facilities, Card Enquiries, Cheques, DBS digibank, DBS Multiplier Account, Fixed Deposit, Local/Overseas Funds Transfer, PayNow, DBS PayLah!, Payments, Payment Controls, and Statements. Phone: 1800 111 1111. Popular articles: Check Account Transaction, Set up Digital Token. Popular Guides: Your Guide to digibank.",
+      "final_url": "https://www.dbs.com.sg/personal/support/banking-product.html",
+      "final_title": "DBS Help & Support - Bank",
+      "navigation_path": [
+        {
+          "sequence": 14,
+          "action": "Navigated to Banking Help & Support page (Bank category)",
+          "url": "https://www.dbs.com.sg/personal/support/banking-product.html",
+          "title": "DBS Help & Support - Bank"
+        }
+      ],
+      "meaningful_action_count": 1,
+      "used_site_search": false,
+      "used_backtracking": false,
+      "backtracking_details": ""
+    },
+    {
+      "id": "deposit_accounts",
+      "found": true,
+      "answer": "DBS deposit account options (categorized as Daily Use, Multi Currency, Fixed Deposits, Special Savings, Retirement Savings, Kids): (1) Multiplier Account - up to 4.1% p.a. interest, no FX fees for 13 currencies; (2) My Account - no service charge, exchange/store 13 currencies; (3) Payroll Account - for Work Permit Holders; (4) MySavings Account - min S$50/month, up to 0.25% p.a. interest; (5) SAYE Account - 3.5% p.a. additional interest for first 2 years, S$50-S$3,000/month; (6) My Account with Child; (7) Fixed Deposits - wide range of currencies and tenors; (8) Child Development Account - up to 2% p.a., for Singapore citizen children; (9) Supplementary Retirement Scheme (SRS) - tax savings with retirement fund accumulation.",
+      "final_url": "https://www.dbs.com.sg/personal/accounts/default.page",
+      "final_title": "Find your account for everyday banking needs | DBS Singapore",
+      "navigation_path": [
+        {
+          "sequence": 15,
+          "action": "Navigated to DBS Accounts page via Accounts menu",
+          "url": "https://www.dbs.com.sg/personal/accounts/default.page",
+          "title": "Find your account for everyday banking needs | DBS Singapore"
+        }
+      ],
+      "meaningful_action_count": 1,
+      "used_site_search": false,
+      "used_backtracking": false,
+      "backtracking_details": ""
+    },
+    {
+      "id": "investing_getting_started",
+      "found": true,
+      "answer": "To get started with investing through DBS: (1) DBS digiWealth - start with ready-made portfolios professionally managed by DBS CIO, invest from S$100 with zero sales charges on Regular Savings Plans, track portfolio and total net worth in one app. (2) Trade with DBS Vickers - access 7 global markets (SG, US, HK, CAD, UK, AUS, JP), reduced online commissions on cash upfront trades. (3) Equity Products - apply for DBS Vickers account, multi-currency account linkage for seamless settlement. (4) Funds - invest in mutual funds. (5) Singapore Government Securities (SGS Bonds/T-Bills). Resources: 'Need help getting started?' section with New to Investing guides, investment tips, user guides, and articles.",
+      "final_url": "https://www.dbs.com.sg/personal/investments/default.page",
+      "final_title": "DBS Singapore | Mutual Funds, Equities & Investment Products",
+      "navigation_path": [
+        {
+          "sequence": 16,
+          "action": "Navigated to DBS Investments page via Investments menu",
+          "url": "https://www.dbs.com.sg/personal/investments/default.page",
+          "title": "DBS Singapore | Mutual Funds, Equities & Investment Products"
+        }
+      ],
+      "meaningful_action_count": 1,
+      "used_site_search": false,
+      "used_backtracking": false,
+      "backtracking_details": ""
+    }
+  ],
+  "totals": {
+    "meaningful_actions": 16,
+    "steps_using_site_search": 1,
+    "steps_using_backtracking": 1
+  }
+}

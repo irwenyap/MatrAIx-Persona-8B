@@ -1,0 +1,9 @@
+{
+  "persona_path": "/mnt/c/Users/dbsin/Projects/MatrAIx-Persona-8B/persona/datasets/matraix-persona-1m/cohorts/cohort-3139dd062910/persona_wiki-e5550a9e2691.yaml",
+  "schema_version": "v2",
+  "persona_id": "wiki-e5550a9e2691",
+  "version": "1.0",
+  "display_name": "Avery Lee",
+  "summary": null,
+  "agent": "persona-cocoa"
+}

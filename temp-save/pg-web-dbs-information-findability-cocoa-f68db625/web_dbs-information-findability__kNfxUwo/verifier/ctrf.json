@@ -1,0 +1,41 @@
+{
+    "results": {
+        "tool": {
+            "name": "pytest",
+            "version": "8.4.1"
+        },
+        "summary": {
+            "tests": 2,
+            "passed": 1,
+            "failed": 1,
+            "skipped": 0,
+            "pending": 0,
+            "other": 0,
+            "start": 1791871676.7943113,
+            "stop": 1791871676.906459
+        },
+        "tests": [
+            {
+                "name": "test_state.py::test_output_exists",
+                "status": "passed",
+                "duration": 0.0013097669998387573,
+                "start": 1791871676.860649,
+                "stop": 1791871676.8662724,
+                "retries": 0,
+                "file_path": "test_state.py"
+            },
+            {
+                "name": "test_state.py::test_output_schema_and_emit_evaluation",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.008129548999932013,
+                "start": 1791871676.866671,
+                "stop": 1791871676.9058094,
+                "retries": 0,
+                "file_path": "test_state.py",
+                "trace": "def test_output_schema_and_emit_evaluation() -> None:\n        try:\n>           _validate_and_emit_evaluation()\n\n/tests/test_state.py:88: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\n    def _validate_and_emit_evaluation() -> None:\n        data = _load(OUTPUT, OUTPUT.name)\n        feedback = _feedback()\n        assert data.get(\"start_url\") == START_URL, f\"start_url must be {START_URL}\"\n        _nonempty(data.get(\"start_title\"), \"start_title\", 1000)\n        completed_at = _nonempty(data.get(\"completed_at\"), \"completed_at\", 100)\n        datetime.fromisoformat(completed_at.replace(\"Z\", \"+00:00\"))\n        for key in data:\n            assert not key.endswith(SUBJECTIVE_SUFFIXES), f\"subjective field {key} belongs in user_feedback.json\"\n    \n        steps = data.get(\"steps\")\n        assert isinstance(steps, list) and len(steps) == 8, \"steps must contain exactly eight records\"\n        assert [step.get(\"id\") if isinstance(step, dict) else None for step in steps] == STEP_IDS, \"step IDs/order are incorrect\"\n        navigation_sequences: list[list[object]] = []\n        for index, step in enumerate(steps):\n            assert isinstance(step, dict), f\"steps[{index}] must be an object\"\n            path = step.get(\"navigation_path\")\n            assert isinstance(path, list), f\"steps[{index}].navigation_path must be an array\"\n            sequences = [\n                nav.get(\"sequence\") if isinstance(nav, dict) else None for nav in path\n            ]\n            for sequence_index, sequence in enumerate(sequences):\n                _integer(sequence, f\"steps[{index}].navigation_path[{sequence_index}].sequence\", 1)\n            navigation_sequences.append(sequences)\n        per_step_sequences = all(\n            sequences == list(range(1, len(sequences) + 1))\n            for sequences in navigation_sequences\n        )\n        flattened_sequences = [sequence for sequences in navigation_sequences for sequence in sequences]\n        session_sequences = flattened_sequences == list(range(1, len(flattened_sequences) + 1))\n        assert per_step_sequences or session_sequences, (\n            \"navigation sequences must be contiguous, using either per-step or session-global numbering\"\n        )\n        total_actions = total_search = total_backtracking = found_count = 0\n        contexts: list[dict[str, object]] = []\n        all_evidence = json.dumps(data, ensure_ascii=False).lower()\n>       assert not any(marker in all_evidence for marker in FORBIDDEN_MARKERS), \"artifact records a forbidden state-changing action\"\nE       AssertionError: artifact records a forbidden state-changing action\nE       assert not True\nE        +  where True = any(<generator object _validate_and_emit_evaluation.<locals>.<genexpr> at 0x75b0a66c9e50>)\n\n/tests/test_state.py:147: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            }
+        ]
+    }
+}

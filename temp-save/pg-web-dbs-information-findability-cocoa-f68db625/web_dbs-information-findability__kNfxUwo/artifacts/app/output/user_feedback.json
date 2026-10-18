@@ -1,0 +1,47 @@
+{
+  "fixed_deposit_rates_confidence": 5,
+  "fixed_deposit_rates_initial_expectation": "I expected to find the fixed deposit rates prominently displayed under an 'Accounts' or 'Savings' section, or via a dedicated 'Rates' page linked from the main navigation. The 'Plan & Manage' quick-links section at the bottom of the homepage was where I ultimately spotted it, which was not immediately obvious from the top navigation.",
+  "fixed_deposit_rates_friction": "The main navigation does not surface 'Fixed Deposit Rates' directly; I had to scroll down to the 'What brings you here today?' section to find the quick link. My initial attempt to guess the URL failed with a 404, which forced me to backtrack. The distinction between the new DBS website structure (using React-based routing) and the older legacy URLs was disorienting.",
+  "fixed_deposit_rates_completion_rationale": "I marked this found because I reached a dedicated page (S$ Deposits – Fixed Deposits) showing a full rate table by tenor and deposit amount band, effective 13/10/2026. The data was clear and unambiguous.",
+
+  "travel_rewards_card_confidence": 5,
+  "travel_rewards_card_initial_expectation": "I expected to find miles/travel cards under the 'Cards' navigation menu, which did indeed contain a 'Miles credit cards' sub-link. This was intuitive and well-structured.",
+  "travel_rewards_card_friction": "Minimal friction. The 'Cards' dropdown in the main navigation lists 'Miles credit cards' explicitly, which led directly to a filtered comparator. The card names (Altitude, Vantage) are not self-evidently travel-focused without prior knowledge, but the 'MILES' category label is clear.",
+  "travel_rewards_card_completion_rationale": "Found three miles cards on the comparator page and navigated to the DBS Altitude Card detail page, which confirmed it as the principal travel rewards card with clear earn rates (up to 2.2 miles per S$1 overseas). The information was comprehensive and publicly accessible.",
+
+  "home_loans_confidence": 5,
+  "home_loans_initial_expectation": "I expected home loan information under 'Loans' in the main navigation, which is exactly where it was. The information architecture here was logical and matched my expectations.",
+  "home_loans_friction": "No significant friction. The 'Loans' dropdown lists 'Home loans' as the first option. The page itself presented multiple loan types clearly, including HDB, private property, refinancing, and green home loans. The rate of 1.78% p.a. for HDB loans was mentioned in a banner slide, though detailed rate tables required further navigation.",
+  "home_loans_completion_rationale": "Found comprehensive home loan information including product types, key features, and indicative rates on a single page. All major loan variants were covered with clear descriptions.",
+
+  "rates_and_fees_confidence": 4,
+  "rates_and_fees_initial_expectation": "I expected a consolidated 'Rates & Fees' or 'Pricing' page accessible from the main navigation. There is no such top-level link; I had to navigate to a legacy 'Rates & Tools' page and then use site search to find banking fees. This was somewhat fragmented.",
+  "rates_and_fees_friction": "The new DBS website navigation does not include a prominent 'Rates & Fees' section in the main menu. I had to use site search (which has a non-standard interaction pattern requiring keyboard type rather than clipboard paste) to locate the Card Rates & Fees page. The banking fees are split across multiple pages (card fees separate from deposit rates, loan rates, etc.). The lack of a unified fees hub is a notable gap.",
+  "rates_and_fees_completion_rationale": "Found both rates (deposit account rates on the Rates & Tools hub) and fees (Card Rates & Fees page) though they were on separate pages. The card fees page was detailed and covered credit and debit card charges. Confidence is 4 not 5 because a comprehensive banking tariff page (service fees, account maintenance fees) was not clearly surfaced.",
+
+  "overseas_transfer_confidence": 5,
+  "overseas_transfer_initial_expectation": "I expected to find overseas transfer instructions under 'Digital Banking' or 'Payments & Transfers', or possibly under Help & Support. The Help & Support portal had featured articles on this topic visible on the homepage.",
+  "overseas_transfer_friction": "Navigating directly via guessed URLs failed. The Help & Support portal (separate subdomain structure) was effective once reached - it featured 'Transfer Funds to Overseas Account' as a prominent article. The step-by-step guide was clearly written and included the pre-transfer checklist and channel-specific instructions.",
+  "overseas_transfer_completion_rationale": "Found a dedicated help article with full instructions for overseas fund transfer via digibank mobile, digibank Online, and branches. The 6-step process was clearly documented. Marked found.",
+
+  "account_help_confidence": 5,
+  "account_help_initial_expectation": "I expected to find account help via the 'Help & Support' link in the top navigation, which led directly to a well-organized support portal. The 'Bank' category covered all account-related topics.",
+  "account_help_friction": "Minimal friction. The Help & Support portal has a clean structure with categories (Bank, Credit Card, General Help, etc.). The 'Bank' section lists all relevant account topics. Phone number (1800 111 1111) and online support portal are clearly visible.",
+  "account_help_completion_rationale": "The Help & Support portal under the Bank category provides comprehensive coverage: Account Enquiries, Applications & Facilities, DBS digibank help, Fixed Deposit, funds transfer, PayNow, PayLah!, Payments, Statements, and more. Contact options are clearly listed.",
+
+  "deposit_accounts_confidence": 5,
+  "deposit_accounts_initial_expectation": "I expected to find deposit account options under 'Accounts' in the main navigation, which was exactly correct. The Accounts page provides a comprehensive comparator with filter tabs.",
+  "deposit_accounts_friction": "Very little friction. The main navigation 'Accounts' menu lists account sub-categories explicitly (Daily use, Fixed deposits, Special savings, etc.). The Accounts landing page has a well-designed comparator interface. The only minor issue is that additional accounts loaded via a 'Load More' button, which slightly obscures the full range.",
+  "deposit_accounts_completion_rationale": "Found nine distinct deposit account options including Multiplier, My Account, Payroll Account, MySavings, SAYE, My Account with Child, Fixed Deposits, Child Development Account, and SRS. Each was described with key features and interest rates where applicable.",
+
+  "investing_getting_started_confidence": 5,
+  "investing_getting_started_initial_expectation": "I expected investment getting-started information under 'Investments' in the main navigation. The page delivered this with both product information and a dedicated 'Need help getting started?' section with guides and educational resources.",
+  "investing_getting_started_friction": "Minimal friction. The 'Investments' dropdown in the main navigation lists product categories and resources. The Investments landing page includes a 'Need help getting started?' section with links for new investors, investment tips, user guides, and how to trade with DBS Vickers. The digiWealth platform is prominently featured as the entry point for new investors.",
+  "investing_getting_started_completion_rationale": "Found comprehensive investment getting-started information: digiWealth (ready-made portfolios from S$100, zero sales charges), DBS Vickers (equity trading in 7 markets), Funds, Singapore Government Securities, and educational resources for new investors. Marked found.",
+
+  "overall_ease": 4,
+  "navigation_consistency": 3,
+  "recurring_friction": "The most consistent friction was the disconnect between the new DBS website (new navigation, new URL patterns) and the legacy pages still in use for rates and support. Guessed URLs frequently resulted in 404 errors. The main navigation does not expose all product information equally - rates and fees require deeper exploration. The site search required keyboard entry rather than clipboard paste in this environment. Some goals required navigating between the main DBS website and the Help & Support subdomain (different visual design), which created a somewhat fragmented experience.",
+  "confusing_labels_information_architecture": "The 'Accounts' menu label in the main navigation is less intuitive for finding deposit rates (which sit under 'Rates Online', a legacy section). 'Rates & Tools' is buried in footers and legacy navigation rather than the main menu. The split between the main DBS website and the Help & Support portal creates two separate information architectures to navigate. The label 'Plan & Manage' on the homepage quick-links is somewhat generic - it houses 'Fixed deposit rates' alongside 'Foreign exchange rates' and 'Mortgage affordability calculator', which is a useful but unexpected combination. 'digiWealth' as a navigation label is opaque for new users who do not know what it refers to.",
+  "confidence_finding_similar_information_later": 4
+}

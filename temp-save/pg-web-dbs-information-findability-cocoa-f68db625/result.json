@@ -1,0 +1,39 @@
+{
+    "id": "ec101021-a526-4a73-b747-31fafc0fd3b3",
+    "started_at": "2026-10-13T13:52:11.683511",
+    "updated_at": "2026-10-13T14:08:11.170780",
+    "finished_at": "2026-10-13T14:08:11.170780",
+    "n_total_trials": 1,
+    "stats": {
+        "n_completed_trials": 1,
+        "n_errored_trials": 0,
+        "n_running_trials": 0,
+        "n_pending_trials": 0,
+        "n_cancelled_trials": 0,
+        "n_retries": 0,
+        "evals": {
+            "persona-cocoa__claude-sonnet-4-6__adhoc": {
+                "n_trials": 1,
+                "n_errors": 0,
+                "metrics": [
+                    {
+                        "mean": 0.0
+                    }
+                ],
+                "pass_at_k": {},
+                "reward_stats": {
+                    "reward": {
+                        "0.0": [
+                            "web_dbs-information-findability__kNfxUwo"
+                        ]
+                    }
+                },
+                "exception_stats": {}
+            }
+        },
+        "n_input_tokens": 5878828,
+        "n_cache_tokens": 5878648,
+        "n_output_tokens": 19820,
+        "cost_usd": 2.683238
+    }
+}
