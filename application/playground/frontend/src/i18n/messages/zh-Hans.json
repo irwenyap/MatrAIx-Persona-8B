@@ -1491,5 +1491,16 @@
   "personaSetup.synth.customDimsNote": "任务方案声明的自定义属性（{count}）— 将自动写入。",
   "personaSetup.synth.sizeFromCells": "队列规模由 单元格 × 每格 决定。",
   "personaSetup.progress.independentDataset": "独立数据集",
-  "personaSetup.progress.waiting": "等待中…"
+  "personaSetup.progress.waiting": "等待中…",
+  "replay.open": "在 Playground 中回放",
+  "replay.description": "请选择 10–600 秒。保存的轨迹和截图准备就绪后开始回放，结束后返回此结果页面。",
+  "replay.duration": "时长（秒）",
+  "replay.cancel": "取消",
+  "replay.preparing": "正在准备保存的轨迹和截图…",
+  "replay.start": "开始回放",
+  "replay.recorded": "录制回放",
+  "replay.stop": "停止",
+  "replay.ready": "已准备好回放 {seconds} 秒。请选择“开始回放”。",
+  "replay.progress": "{elapsed} / {seconds} 秒",
+  "replay.unavailable": "回放需要已完成且保存了轨迹的网页试验。请检查后端和保存的文件是否可用，然后刷新或选择其他试验。"
 }

@@ -67,6 +67,7 @@ import type {
 import { personaModelPipelineLabel } from "@/lib/personaAgentCatalog";
 import { chatbotEvalTaskCards, sortByAvailability } from "./setup/cockpitTaskCards";
 import { mergeChatbotTaskAvailability } from "@/lib/chatbotTaskAvailability";
+import type { RunDetailView } from "../runsShared";
 
 type Translate = ReturnType<typeof useI18n>["t"];
 /** Per-app display name + icon (presentational; the data layer is app-agnostic). */
@@ -145,6 +146,9 @@ interface ExportSnapshot {
 }
 
 export interface PlaygroundCockpitProps {
+  replayCenter?: ReactNode;
+  replayExplanation?: ReactNode;
+  replayRun?: RunDetailView;
   /** Config metadata (knobs + defaults + environment) from the app. */
   options: ConfigOptionsResponse | null;
   /** Navigate to the Runs surface. */
@@ -180,7 +184,15 @@ function parsePlaygroundTask(value: string | null): PlaygroundTaskType {
     : "survey";
 }
 
-export function PlaygroundCockpit({
+export function PlaygroundCockpit(props: PlaygroundCockpitProps) {
+  if (props.replayCenter !== undefined) {
+    return <WebEvalCockpit options={props.options} taskType="web" onTaskTypeChange={() => {}}
+      centerContentOverride={props.replayCenter} replayRun={props.replayRun} replayExplanation={props.replayExplanation} />;
+  }
+  return <LivePlaygroundCockpit {...props} />;
+}
+
+function LivePlaygroundCockpit({
   options,
   onOpenRuns,
   onOpenHarborJob,

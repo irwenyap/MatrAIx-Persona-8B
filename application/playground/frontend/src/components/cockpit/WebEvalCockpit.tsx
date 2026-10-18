@@ -16,7 +16,7 @@
  * export logic, and every result/trace shape are wired exactly as before. Only
  * the structure and presentation are rebuilt.
  */
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import { useI18n } from "@/i18n/I18nProvider";
@@ -75,10 +75,15 @@ import {
   personaDescriptiveTitle,
 } from "./cockpitShared";
 import type { PlaygroundTaskType } from "./TaskTypeSwitch";
+import type { RunDetailView } from "../runsShared";
+import { RecordedWebCockpit } from "./RecordedWebCockpit";
 
 type Translate = ReturnType<typeof useI18n>["t"];
 
 export interface WebEvalCockpitProps {
+  centerContentOverride?: ReactNode;
+  replayExplanation?: ReactNode;
+  replayRun?: RunDetailView;
   options: ConfigOptionsResponse | null;
   taskType: PlaygroundTaskType;
   onTaskTypeChange: (value: PlaygroundTaskType) => void;
@@ -120,7 +125,14 @@ function formatDate(value: string | null | undefined): string | null {
   });
 }
 
-export function WebEvalCockpit({
+export function WebEvalCockpit(props: WebEvalCockpitProps) {
+  if (props.centerContentOverride !== undefined) {
+    return <RecordedWebCockpit run={props.replayRun} center={props.centerContentOverride} explanation={props.replayExplanation} />;
+  }
+  return <LiveWebEvalCockpit {...props} />;
+}
+
+function LiveWebEvalCockpit({
   options,
   taskType,
   onTaskTypeChange,

@@ -8,6 +8,7 @@ import { useI18n } from "@/i18n/I18nProvider";
 export interface RunHeaderProps {
   taskType: PlaygroundTaskType;
   onTaskTypeChange: (value: PlaygroundTaskType) => void;
+  disabled?: boolean;
 }
 
 type Translate = ReturnType<typeof useI18n>["t"];
@@ -22,7 +23,7 @@ function subtitle(t: Translate, taskType: PlaygroundTaskType): string {
 }
 
 /** Dense one-line header: title · subtitle inline · app-type switch right. */
-export function RunHeader({ taskType, onTaskTypeChange }: RunHeaderProps) {
+export function RunHeader({ taskType, onTaskTypeChange, disabled }: RunHeaderProps) {
   const { t } = useI18n();
   const taskSubtitle = subtitle(t, taskType);
   return (
@@ -37,6 +38,7 @@ export function RunHeader({ taskType, onTaskTypeChange }: RunHeaderProps) {
         {taskSubtitle}
       </p>
       <TaskTypeSwitch
+        disabled={disabled}
         value={taskType}
         onChange={onTaskTypeChange}
         showLabel={false}

@@ -9,7 +9,7 @@
  * application artifact shape: chatbot, survey, web, or OS app.
  */
 import { useMemo, type ReactNode } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
   StatTile,
@@ -25,6 +25,8 @@ import {
 } from "./runsShared";
 import { ChatTrialDebriefBody } from "./ChatTrialDebrief";
 import { TrialDebriefRails } from "./TrialDebriefRails";
+import { ReplayLaunchButton } from "./ReplayLaunchButton";
+import type { PreparedReplay } from "@/lib/savedReplay";
 import { HarborTraceReplay } from "./cockpit/HarborTraceReplay";
 import { OsAppEvalScorecard } from "./cockpit/TaskEvalScorecard";
 import {
@@ -73,6 +75,7 @@ import type {
 export interface RunDetailProps {
   harborTrial: { jobName: string; trialName: string };
   onBack: () => void;
+  onReplay?: (replay: PreparedReplay) => void;
 }
 
 type Translate = I18nContextValue["t"];
@@ -126,8 +129,9 @@ function runDebriefMetaLine(
   return parts.join(" · ");
 }
 
-export function RunDetail({ harborTrial, onBack }: RunDetailProps) {
+export function RunDetail({ harborTrial, onBack, onReplay }: RunDetailProps) {
   const { t } = useI18n();
+  const queryClient = useQueryClient();
   const query = useQuery<PlaygroundResult>({
     queryKey: [
       "harbor-trial-debrief",
@@ -163,12 +167,19 @@ export function RunDetail({ harborTrial, onBack }: RunDetailProps) {
         meta={run ? <AppTypeTag type={appType} /> : null}
         actions={
           <>
+            {appType === "web" && query.data && onReplay && <ReplayLaunchButton
+              {...harborTrial} debrief={query.data} onPrepared={onReplay}
+            />}
             <StudioToolbarButton icon="arrow_back" onClick={onBack}>
               {t("runs.backToJob")}
             </StudioToolbarButton>
             <StudioToolbarButton
               icon="refresh"
-              onClick={() => query.refetch()}
+              onClick={() => {
+                void query.refetch();
+                void queryClient.invalidateQueries({ queryKey: ["saved-replay-job", harborTrial.jobName] });
+                void queryClient.invalidateQueries({ queryKey: ["saved-replay-trace", harborTrial.jobName, harborTrial.trialName] });
+              }}
               disabled={query.isFetching}
             >
               {t("runs.refresh")}
@@ -1095,6 +1106,8 @@ function WebDebrief({ run }: { run: RunDetailView }) {
       <DebriefPanel title={t("runs.browserTrace", { count: events.length })} icon="route">{trace && events.length ? <div className="p-4"><HarborTraceReplay trace={trace} /></div> : <DashedNote>{t("runs.noBrowserSteps")}</DashedNote>}</DebriefPanel>
     </TrialDebriefChrome>;
   }
+
+  if (!result) return null;
 
   return (
     <TrialDebriefChrome

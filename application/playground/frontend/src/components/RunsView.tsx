@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { RunDetail } from "./RunDetail";
+import type { PreparedReplay } from "@/lib/savedReplay";
 import { HarborJobDetail } from "./HarborJobDetail";
 import { FOCUS_RING, Sym } from "./cockpit/cockpitShared";
 import { AppTypeTag } from "./runsShared";
@@ -33,6 +34,7 @@ export interface RunsViewProps {
   backToHarborJob: () => void;
   onClose: () => void;
   backLabel?: string;
+  onReplay?: (replay: PreparedReplay) => void;
 }
 
 export function RunsView({
@@ -44,6 +46,7 @@ export function RunsView({
   backToHarborJob,
   onClose,
   backLabel,
+  onReplay,
 }: RunsViewProps) {
   const { t } = useI18n();
   const resolvedBackLabel = backLabel ?? t("runs.back");
@@ -53,6 +56,7 @@ export function RunsView({
         <RunDetail
           harborTrial={{ jobName: harborJobId, trialName: harborTrialId }}
           onBack={backToHarborJob}
+          onReplay={onReplay}
         />
       </StudioMeshShell>
     );

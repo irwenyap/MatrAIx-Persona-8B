@@ -1491,5 +1491,16 @@
   "personaSetup.synth.customDimsNote": "Custom attributes ({count}) declared by the task plan — stamped automatically.",
   "personaSetup.synth.sizeFromCells": "Cohort size is fixed by cells × per-cell.",
   "personaSetup.progress.independentDataset": "Independent",
-  "personaSetup.progress.waiting": "Waiting…"
+  "personaSetup.progress.waiting": "Waiting…",
+  "replay.open": "Replay in Playground",
+  "replay.description": "Choose 10–600 seconds. Playback starts after the saved trace and screenshots are prepared, then returns to these results.",
+  "replay.duration": "Duration (seconds)",
+  "replay.cancel": "Cancel",
+  "replay.preparing": "Preparing saved trace and screenshots…",
+  "replay.start": "Start replay",
+  "replay.recorded": "Recorded replay",
+  "replay.stop": "Stop",
+  "replay.ready": "Ready to replay for {seconds} seconds. Select Start replay to begin.",
+  "replay.progress": "{elapsed} / {seconds} seconds",
+  "replay.unavailable": "Replay needs a completed web trial with a saved trace. Check that the backend and saved artifacts are available, then refresh or choose another trial."
 }

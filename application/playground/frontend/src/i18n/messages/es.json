@@ -1491,5 +1491,16 @@
   "personaSetup.synth.customDimsNote": "Atributos personalizados ({count}) declarados por el plan de tarea: se aplican automáticamente.",
   "personaSetup.synth.sizeFromCells": "El tamaño del cohorte lo fijan celdas × por celda.",
   "personaSetup.progress.independentDataset": "Independiente",
-  "personaSetup.progress.waiting": "Esperando…"
+  "personaSetup.progress.waiting": "Esperando…",
+  "replay.open": "Reproducir en Playground",
+  "replay.description": "Elige entre 10 y 600 segundos. La reproducción comienza cuando la traza y las capturas guardadas estén listas y vuelve a estos resultados al finalizar.",
+  "replay.duration": "Duración (segundos)",
+  "replay.cancel": "Cancelar",
+  "replay.preparing": "Preparando la traza y las capturas guardadas…",
+  "replay.start": "Iniciar reproducción",
+  "replay.recorded": "Reproducción grabada",
+  "replay.stop": "Detener",
+  "replay.ready": "Todo listo para reproducir durante {seconds} segundos. Selecciona Iniciar reproducción.",
+  "replay.progress": "{elapsed} / {seconds} segundos",
+  "replay.unavailable": "La reproducción requiere una prueba web completada con una traza guardada. Comprueba que el backend y los archivos guardados estén disponibles; luego actualiza o elige otra prueba."
 }

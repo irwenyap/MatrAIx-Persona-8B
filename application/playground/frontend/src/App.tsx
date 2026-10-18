@@ -3,7 +3,7 @@
  *
  * Routes: Persona World · Task Gallery · Home · Playground · Runs.
  */
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import { useI18n } from "@/i18n/I18nProvider";
@@ -15,10 +15,12 @@ import { PersonaStoreView } from "@/components/PersonaStoreView";
 import { RunsView } from "@/components/RunsView";
 import { TaskGalleryView } from "@/components/TaskGalleryView";
 import { AppFooter } from "@/components/AppFooter";
+import { SavedSimulationReplay } from "@/components/SavedSimulationReplay";
+import type { PreparedReplay } from "@/lib/savedReplay";
 
 import { api } from "@/lib/api";
 import { writePersonaHandoff } from "@/lib/personaHandoffStorage";
-import { useUrlState } from "@/lib/useUrlState";
+import { useUrlState, type UrlState } from "@/lib/useUrlState";
 import type { ConfigOptionsResponse, Domain } from "@/lib/types";
 
 function parseMode(value: string | null): StudioMode {
@@ -28,8 +30,23 @@ function parseMode(value: string | null): StudioMode {
 
 export default function App() {
   const { t } = useI18n();
-  const { state: urlState, setState: setUrlState } = useUrlState();
+  const { state: urlState, setState: updateUrlState } = useUrlState();
+  const setUrlState = useCallback((patch: Partial<UrlState>) => {
+    updateUrlState({ replayJob: null, replayTrial: null, replayDuration: null, ...patch });
+  }, [updateUrlState]);
+  const [preparedReplay, setPreparedReplay] = useState<(PreparedReplay & { returnMode: string | null }) | undefined>();
+  const replayActive = Boolean(urlState.mode === "playground" && !urlState.view && urlState.replayJob && urlState.replayTrial);
+  useEffect(() => {
+    if (!replayActive) setPreparedReplay(undefined);
+  }, [replayActive]);
   const mode = parseMode(urlState.mode);
+  const openReplay = useCallback((replay: PreparedReplay) => {
+    setPreparedReplay({ ...replay, returnMode: urlState.mode });
+    setUrlState({
+      mode: "playground", view: null, harborJob: null, harborTrial: null,
+      replayJob: replay.jobName, replayTrial: replay.trialName, replayDuration: String(replay.duration),
+    });
+  }, [setUrlState, urlState.mode]);
   const activeHarborJobId = urlState.harborJob;
   const activeHarborTrialId = urlState.harborTrial;
   const galleryViewActive = urlState.view === "gallery";
@@ -154,6 +171,22 @@ export default function App() {
   );
   const topBar = renderTopBar();
 
+  if (replayActive) {
+    const source = {
+      jobName: urlState.replayJob!, trialName: urlState.replayTrial!,
+      duration: urlState.replayDuration === null ? 60 : Number(urlState.replayDuration),
+    };
+    const initial = preparedReplay?.jobName === source.jobName && preparedReplay.trialName === source.trialName && preparedReplay.duration === source.duration
+      ? preparedReplay : undefined;
+    return <div className="flex h-screen flex-col">
+      {topBar}
+      <SavedSimulationReplay key={JSON.stringify(source)} source={source} initial={initial} options={optionsQuery.data ?? null}
+        onReturn={() => setUrlState({
+          mode: initial?.returnMode ?? null, view: "runs", harborJob: source.jobName, harborTrial: source.trialName,
+        })} />
+    </div>;
+  }
+
   if (galleryViewActive) {
     return (
       <div className="flex h-screen flex-col">
@@ -188,6 +221,7 @@ export default function App() {
               />
             </div>
             <RunsView
+              onReplay={openReplay}
               harborJobId={activeHarborJobId}
               harborTrialId={activeHarborTrialId}
               openHarborJob={openHarborJob}
@@ -206,6 +240,7 @@ export default function App() {
       <div className="flex h-screen flex-col">
         {topBar}
         <RunsView
+          onReplay={openReplay}
           harborJobId={activeHarborJobId}
           harborTrialId={activeHarborTrialId}
           openHarborJob={openHarborJob}

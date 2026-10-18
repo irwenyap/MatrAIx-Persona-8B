@@ -72,6 +72,10 @@ export interface HarborTraceReplayProps {
   trace: WebTrace;
   autoFollowLatest?: boolean;
   emptyMessage?: string;
+  /** Presenter mode: reveal only this prefix and let the external clock lead. */
+  revealedCount?: number;
+  /** The presenter can place the active explanation in a separate panel. */
+  hideStepDetail?: boolean;
 }
 
 /** Screenshot scrubber + tile grid for Harbor web/CUA trajectories. */
@@ -79,12 +83,15 @@ export function HarborTraceReplay({
   trace,
   autoFollowLatest = false,
   emptyMessage,
+  revealedCount,
+  hideStepDetail = false,
 }: HarborTraceReplayProps) {
   const { t } = useI18n();
   const [scrubIndex, setScrubIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [lightboxStep, setLightboxStep] = useState<number | null>(null);
-  const events = trace.events;
+  const controlled = revealedCount !== undefined;
+  const events = controlled ? trace.events.slice(0, Math.max(0, revealedCount)) : trace.events;
 
   useEffect(() => {
     if (!autoFollowLatest || isPlaying) return;
@@ -92,7 +99,7 @@ export function HarborTraceReplay({
   }, [autoFollowLatest, events.length, isPlaying]);
 
   useEffect(() => {
-    if (!isPlaying) return;
+    if (!isPlaying || controlled) return;
     const id = window.setInterval(() => {
       setScrubIndex((prev) => {
         if (prev >= events.length - 1) {
@@ -105,7 +112,7 @@ export function HarborTraceReplay({
       });
     }, 1200);
     return () => window.clearInterval(id);
-  }, [isPlaying, events.length]);
+  }, [isPlaying, events.length, controlled]);
 
   useEffect(() => {
     setScrubIndex((prev) => Math.min(prev, Math.max(0, events.length - 1)));
@@ -119,19 +126,22 @@ export function HarborTraceReplay({
     );
   }
 
-  const previewEvent = events[Math.min(scrubIndex, events.length - 1)];
+  const previewEvent = events[controlled ? events.length - 1 : Math.min(scrubIndex, events.length - 1)];
+  const screenshotEvent = controlled
+    ? [...events].reverse().find((event) => event.screenshotUrl || event.screenshotFile) ?? previewEvent
+    : previewEvent;
   const activeStep = previewEvent.step;
   const lightboxEvent = lightboxStep != null ? events.find((event) => event.step === lightboxStep) ?? null : null;
 
   return (
     <div className="space-y-3">
       <TraceHeroScreenshot
-        event={previewEvent}
+        event={screenshotEvent}
         t={t}
-        onOpenImage={() => setLightboxStep(previewEvent.step)}
+        onOpenImage={() => setLightboxStep(screenshotEvent.step)}
       />
 
-      <div className="flex flex-wrap items-center gap-3 rounded-md border border-outline/50 bg-surface-low px-3 py-2">
+      {!controlled && <div className="flex flex-wrap items-center gap-3 rounded-md border border-outline/50 bg-surface-low px-3 py-2">
         <button
           type="button"
           onClick={() => {
@@ -163,9 +173,9 @@ export function HarborTraceReplay({
         <span className="font-mono text-[12px] text-text-dim">
           {t("cockpit.harbor.step", { step: previewEvent.step, count: events.length })}
         </span>
-      </div>
+      </div>}
 
-      <TraceStepDetail key={previewEvent.step} event={previewEvent} t={t} />
+      {!hideStepDetail && <HarborTraceStepDetail key={previewEvent.step} event={previewEvent} />}
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
         {events.map((event, index) => (
@@ -174,6 +184,7 @@ export function HarborTraceReplay({
             index={index}
             event={event}
             active={event.step === activeStep}
+            disabled={controlled}
             t={t}
             onClick={() => {
               setIsPlaying(false);
@@ -239,7 +250,8 @@ function TraceHeroScreenshot({
   );
 }
 
-function TraceStepDetail({ event, t }: { event: WebTraceEvent; t: Translate }) {
+export function HarborTraceStepDetail({ event }: { event: WebTraceEvent }) {
+  const { t } = useI18n();
   const message = event.message.trim();
   return (
     <div className="rounded-md border border-outline bg-surface p-3">
@@ -275,12 +287,14 @@ function TraceTile({
   index,
   event,
   active,
+  disabled,
   t,
   onClick,
 }: {
   index: number;
   event: WebTraceEvent;
   active: boolean;
+  disabled?: boolean;
   t: Translate;
   onClick: () => void;
 }) {
@@ -295,6 +309,7 @@ function TraceTile({
   return (
     <button
       type="button"
+      disabled={disabled}
       onClick={onClick}
       style={{ animationDelay: `${Math.min(index, 6) * 30}ms` }}
       className={`rise-in overflow-hidden rounded-md border bg-surface text-left transition active:scale-[0.98] ${FOCUS_RING} ${

@@ -7,6 +7,10 @@ export interface UrlState {
   view: string | null;
   harborJob: string | null;
   harborTrial: string | null;
+  /** Saved replay navigation only; never mirrored into local storage. */
+  replayJob: string | null;
+  replayTrial: string | null;
+  replayDuration: string | null;
   /** Playground task tab (chatbot | survey | web | os-app). */
   pgTask: string | null;
   /** Deep-link task id from Task Gallery into Playground selection. */
@@ -27,6 +31,9 @@ const KEYS = [
   "view",
   "harborJob",
   "harborTrial",
+  "replayJob",
+  "replayTrial",
+  "replayDuration",
   "pgTask",
   "pgTaskId",
   "pgPersonaHandoff",

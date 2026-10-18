@@ -1491,5 +1491,16 @@
   "personaSetup.synth.customDimsNote": "任務方案宣告的自訂屬性（{count}）— 將自動寫入。",
   "personaSetup.synth.sizeFromCells": "世代規模由 儲存格 × 每格 決定。",
   "personaSetup.progress.independentDataset": "獨立資料集",
-  "personaSetup.progress.waiting": "等待中…"
+  "personaSetup.progress.waiting": "等待中…",
+  "replay.open": "在 Playground 中重播",
+  "replay.description": "請選擇 10–600 秒。已儲存的軌跡和螢幕擷取畫面準備就緒後開始重播，結束後返回此結果頁面。",
+  "replay.duration": "時間長度（秒）",
+  "replay.cancel": "取消",
+  "replay.preparing": "正在準備已儲存的軌跡和螢幕擷取畫面…",
+  "replay.start": "開始重播",
+  "replay.recorded": "錄製重播",
+  "replay.stop": "停止",
+  "replay.ready": "已準備好重播 {seconds} 秒。請選擇「開始重播」。",
+  "replay.progress": "{elapsed} / {seconds} 秒",
+  "replay.unavailable": "重播需要已完成且儲存了軌跡的網頁試驗。請檢查後端和已儲存的檔案是否可用，然後重新整理或選擇其他試驗。"
 }

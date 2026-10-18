@@ -1491,5 +1491,16 @@
   "personaSetup.synth.customDimsNote": "タスク計画で宣言されたカスタム属性（{count}）— 自動的に付与されます。",
   "personaSetup.synth.sizeFromCells": "コホート数はセル×セルごとで決まります。",
   "personaSetup.progress.independentDataset": "独立",
-  "personaSetup.progress.waiting": "待機中…"
+  "personaSetup.progress.waiting": "待機中…",
+  "replay.open": "Playground でリプレイ",
+  "replay.description": "10～600 秒を選択してください。保存済みのトレースとスクリーンショットの準備ができたら再生し、終了後にこの結果画面に戻ります。",
+  "replay.duration": "再生時間（秒）",
+  "replay.cancel": "キャンセル",
+  "replay.preparing": "保存済みのトレースとスクリーンショットを準備中…",
+  "replay.start": "リプレイを開始",
+  "replay.recorded": "録画リプレイ",
+  "replay.stop": "停止",
+  "replay.ready": "{seconds} 秒間のリプレイの準備ができました。「リプレイを開始」を選択してください。",
+  "replay.progress": "{elapsed} / {seconds} 秒",
+  "replay.unavailable": "リプレイには、トレースが保存された完了済みの Web 試行が必要です。バックエンドと保存済みファイルを確認してから、更新するか別の試行を選択してください。"
 }

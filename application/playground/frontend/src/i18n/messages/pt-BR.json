@@ -1491,5 +1491,16 @@
   "personaSetup.synth.customDimsNote": "Atributos personalizados ({count}) declarados pelo plano da tarefa — aplicados automaticamente.",
   "personaSetup.synth.sizeFromCells": "O tamanho do cohorte é fixado por células × por célula.",
   "personaSetup.progress.independentDataset": "Independente",
-  "personaSetup.progress.waiting": "Aguardando…"
+  "personaSetup.progress.waiting": "Aguardando…",
+  "replay.open": "Reproduzir no Playground",
+  "replay.description": "Escolha entre 10 e 600 segundos. A reprodução começa quando o rastreamento e as capturas salvas estiverem prontos e retorna a estes resultados ao terminar.",
+  "replay.duration": "Duração (segundos)",
+  "replay.cancel": "Cancelar",
+  "replay.preparing": "Preparando o rastreamento e as capturas salvas…",
+  "replay.start": "Iniciar reprodução",
+  "replay.recorded": "Reprodução gravada",
+  "replay.stop": "Parar",
+  "replay.ready": "Tudo pronto para reproduzir por {seconds} segundos. Selecione Iniciar reprodução.",
+  "replay.progress": "{elapsed} / {seconds} segundos",
+  "replay.unavailable": "A reprodução requer um teste web concluído com um rastreamento salvo. Verifique se o backend e os arquivos salvos estão disponíveis; depois atualize ou escolha outro teste."
 }
